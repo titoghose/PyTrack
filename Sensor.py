@@ -1,9 +1,11 @@
 class Sensor:
 
-	def __init__(self, name, col_names):
-		self.name = name
-		self.col_names = col_names
-		self.metadata = {key:None for key in self.col_names}
+	eye_cols = ["GazeX", "GazeY", "PupilLeft", "PupilRight", "FixationSeq"]
+	eeg_cols = ["O1Pz_Epoc","SystemTimestamp_Epoc", "EmoTimestamp_Epoc"]
 
-s = Sensor("",["c", "d"])
-print(s.metadata)
+	sensor_names = ["Eye Tracker", "EEG"]
+	meta_cols = [["sacc_count", "sacc_dur", "blink_count", "ms_count", "ms_duration", "pupil_size", "fixation_count"], []]
+
+	def __init__(self, name):
+		self.name = name 
+		self.metadata = {key:None for key in self.meta_cols[self.sensor_names.index(name)]}
