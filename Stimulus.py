@@ -1,3 +1,9 @@
+import numpy as np
+import pandas as pd
+from scipy import signal
+import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse
+import matplotlib.animation as animation
 from Sensor import Sensor
 
 class Stimulus:
@@ -5,9 +11,10 @@ class Stimulus:
 	def __init__(self, name, stim_type, sensor_names, data, start_time, end_time, roi_time):
 		self.name = name
 		self.stim_type = stim_type
-		self.data = data
+		self.data = self.getData(data)
 		self.start_time = start_time
 		self.end_time = end_time
+		self.response_time = self.end_time - self.start_time
 		self.roi_time = roi_time
 		self.sensors = []
 		for sn in sensor_names:
@@ -410,7 +417,85 @@ class Stimulus:
 		return all_MS, ms_count, ms_duration
 
 
-	def findEyeMetaData(self):
+	def visualize(self):
+		"""
+		Function to create dynamic plot of subject data (gaze, pupil size, eeg(Pz))
+		
+		Input:
+			
+		Output:
+			NA
+		"""
+		
+		total_range = range(len(self.data["ETRows"]))
+		
+		# Initialising Plots
+		fig = plt.figure()
+		ax = fig.add_subplot(3, 1, 1)
+		ax2 = fig.add_subplot(3, 1, 2)
+		ax3 = fig.add_subplot(3, 1, 3)
+		
+		# Plot for eye gaze
+		# img = plt.imread(slides_path + sn + ".jpg")
+		# ax.imshow(img)
+		line, = ax.plot(self.data["Gaze"]["x"][:1], self.data["Gaze"]["y"][:1], 'r-', alpha=0.5)
+		circle, = ax.plot(self.data["Gaze"]["x"][1], self.data["Gaze"]["y"][1], 'go', markersize=15, alpha=0.4)
+		ax.set_title("Gaze")
+		
+		# Plot for eeg (Pz)
+		line2, = ax2.plot(total_range[:1], self.data["EEG"][:1])
+		ax2.set_xlim([0, len(total_range)])
+		ax2.set_title("Usampled EEG (Pz) : [256Hz to 1000Hz] vs. Time")
+		ax2.set_xlabel("Time (ms)")
+		ax2.set_ylabel("EEG")
+		
+		# Plot for pupil size
+		line3, = ax3.plot(total_range[:1], self.data["PupilSize"][:1])
+		ax3.set_xlim([0, len(total_range)])
+		ax3.set_ylim([-2, 11])
+		ax3.set_title("Pupil Size vs. Time")
+		ax3.set_xlabel("Time (ms)")
+		ax3.set_ylabel("Pupil Size")
+		
+		def gen_ind():
+			for i in total_range:
+				yield i
+		
+		def animate(i):
+			if i < 2000:
+				line.set_xdata(self.data["Gaze"]["x"][:i])
+				line.set_ydata(self.data["Gaze"]["y"][:i])
+			else:
+				line.set_xdata(self.data["Gaze"]["x"][i - 2000:i])
+				line.set_ydata(self.data["Gaze"]["y"][i - 2000:i])
+		
+			circle.set_xdata(self.data["Gaze"]["x"][i])
+			circle.set_ydata(self.data["Gaze"]["y"][i])
+		
+			line2.set_xdata(total_range[:i])
+			line2.set_ydata(self.data["EEG"][:i])
+			ax2.set_ylim([min(self.data["EEG"][:i]) - 10, max(self.data["EEG"][:i]) + 10])
+		
+			line3.set_xdata(total_range[:i])
+			line3.set_ydata(self.data["PupilSize"][:i])
+			ax3.set_ylim([min(self.data["PupilSize"][:i]) - 5, max(self.data["PupilSize"][:i]) + 5])
+		
+			return line, circle, line2, line3,
+		
+		ani = animation.FuncAnimation(fig, animate, frames=gen_ind, interval=0, blit=True)
+		# ani.save('GazePlot.mp4')
+		
+		for i in range(len(blinks["blink_onset"])):
+			plt.axvline(x=self.data["Binks"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
+			plt.axvline(x=self.data["Binks"]["blink_offset"][i], linestyle="--", color="g", alpha=0.6)
+		
+			plt.axvline(x=self.data["Binks"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
+			plt.axvline(x=self.data["Binks"]["blink_offset"][i], linestyle="--", color="g", alpha=0.6)
+		
+		plt.show()
+
+
+	def findEyeMetaData(self, sampling_freq=1000):
 		"""
 		Input:
 			subject_name : [string] Name of subject to visualize data for 
@@ -419,14 +504,28 @@ class Stimulus:
 			NA
 		"""
 
+		# Finding response time based on number of eye tracker samples 
+		self.response_time = len(self.data["ETRows"]) * (1000 / sampling_freq)
+
+		# Find microsaccades
+		all_MS, ms_count, ms_duration = findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
+
+		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_count"] = ms_count
+		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_duration"] = ms_duration
+		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"] = self.data["InterpPupilSize"]
+		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["blink_count"] = len(self.data["Blinks"])
+		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["fixation_count"] = len(np.unique(self.data["FixationSeq"])) - 1
+
+
+	def getData(self, data):
 		# Extracting data for particular stimulus
-		event_type = self.data.EventType
-		gazex_df = self.data.GazeX
-		gazey_df = self.data.GazeY
-		eeg_pz_df = self.data.O1Pz_Epoc
-		pupil_size_l_df = self.data.PupilLeft
-		pupil_size_r_df = self.data.PupilRight
-		fixation_seq_df = self.data.FixationSeq
+		event_type = data.EventType
+		gazex_df = data.GazeX
+		gazey_df = data.GazeY
+		eeg_pz_df = data.O1Pz_Epoc
+		pupil_size_l_df = data.PupilLeft
+		pupil_size_r_df = data.PupilRight
+		fixation_seq_df = data.FixationSeq
 		
 		# Extracting fixation sequences
 		et_rows = np.where(event_type.EventSource.str.contains("ET"))[0]
@@ -450,12 +549,17 @@ class Stimulus:
 		gaze_x = new_gaze["x"]
 		gaze_y = new_gaze["y"]
 
-		# Find microsaccades
-		all_MS, ms_count, ms_duration = findMicrosaccades(fixation_seq, gaze)
+		# Extracting and upsampling eeg data from Pz
+		eeg_rows = np.where(event_type.EventSource.str.contains("Raw EEG Epoc"))[0]
+		eeg_unique = np.squeeze(np.array([eeg_pz_df.O1Pz_Epoc[i] for i in sorted(eeg_rows)], dtype="float32"))
+		(eeg_pz, eeg_time) = signal.resample(eeg_unique, len(total_range), t=sorted(eeg_rows))
 
-		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_count"] = ms_count
-		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_duration"] = ms_duration
-		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"] = interp_pupil_size
-		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["blink_count"] = len(blinks)
-		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["fixation_count"] = len(np.unique(fixation_seq)) - 1
+		extracted_data = {"ETRows" : et_rows,
+							"FixationSeq" : fixation_seq,
+							"Gaze" : gaze,
+							"PupilSize" : pupil_size,
+							"InterpPupilSize" : interp_pupil_size,
+							"Blinks" : blinks,
+							"EEG" : eeg_pz}
 
+		return extracted_data
