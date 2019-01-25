@@ -1,10 +1,14 @@
+import numpy as np
+import pandas as pd
+from Stimulus import Stimulus
+
 class Subject:
 
 	def __init__(self, name,subj_type,stimuli_names,columns,json_file):
 
 		self.name = name
 		self.subj_type = subj_type
-		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns) #dictionary of objects of class stimulus demarcated by categories
+		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns,json_file) #dictionary of objects of class stimulus demarcated by categories
 
 
 	def dataExtraction(columns,json_file):
@@ -78,7 +82,7 @@ class Subject:
         return start,end,roi
 
 	
-	def stimulusDictInitialisation(stimuli_names,columns):
+	def stimulusDictInitialisation(stimuli_names,columns,json_file):
 
 		'''
 		Creates  a list of objects of class Stimuli
@@ -91,7 +95,7 @@ class Subject:
 		1.	stimulus_object_dict: [dictionary] dictionary of objects of class stimulus ordered by category
 		'''	
 
-		question_column = dataExtraction(self.name,["StimulusName"])
+		question_column = dataExtraction(columns,json_file,)
 
 		data = dataExtraction(self.name,columns)
 

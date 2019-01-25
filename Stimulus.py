@@ -99,7 +99,7 @@ class Stimulus:
 		sampling_interval = 1000 // sampling_freq
 		
 		missing_data = np.array(pupil_size == -1, dtype="float32")
-		difference = diff(missing_data)
+		difference = self.diff(missing_data)
 		
 		blink_onset = np.where(difference == 1)[0]
 		blink_offset = np.where(difference == -1)[0] + 1
@@ -122,10 +122,10 @@ class Stimulus:
 		
 		ms_4_smoothing = 10
 		samples2smooth = ms_4_smoothing // sampling_interval
-		smooth_pupil_size = smooth(pupil_size, 10, "flat")
+		smooth_pupil_size = self.smooth(pupil_size, 10, "flat")
 		
 		smooth_pupil_size[np.where(pupil_size == -1)[0]] = float('nan')
-		smooth_pupil_size_diff = diff(smooth_pupil_size)
+		smooth_pupil_size_diff = self.diff(smooth_pupil_size)
 		
 		monotonically_dec = smooth_pupil_size_diff <= 0
 		monotonically_inc = smooth_pupil_size_diff >= 0
@@ -197,7 +197,7 @@ class Stimulus:
 		"""	
 	
 		fixation_ind = np.where(fixation_seq != -1)[0]
-		fixation_ind_diff = diff(fixation_ind)
+		fixation_ind_diff = self.diff(fixation_ind)
 		indices = np.where(fixation_ind_diff != 1)
 	
 		fixation_onset = []
@@ -295,7 +295,7 @@ class Stimulus:
 		MINDUR = (1000/sampling_freq) * 6
 		gaze_x = gaze["x"]
 		gaze_y = gaze["y"]
-		fixation_indices = findFixationsIDT(fixation_seq)
+		fixation_indices = self.findFixationsIDT(fixation_seq)
 		
 		all_MS = []
 		
@@ -304,14 +304,14 @@ class Stimulus:
 			curr_gaze_x = gaze_x[fixation_indices["start"][i] : fixation_indices["end"][i]]
 			curr_gaze_y = gaze_y[fixation_indices["start"][i] : fixation_indices["end"][i]]
 		
-			vel_x = position2Velocity(curr_gaze_x, sampling_freq)
-			vel_y = position2Velocity(curr_gaze_y, sampling_freq)
+			vel_x = self.position2Velocity(curr_gaze_x, sampling_freq)
+			vel_y = self.position2Velocity(curr_gaze_y, sampling_freq)
 		
-			smooth_gaze_x = smoothGaze(vel_x, curr_gaze_x, sampling_freq)
-			smooth_gaze_y = smoothGaze(vel_y, curr_gaze_y, sampling_freq)	
+			smooth_gaze_x = self.smoothGaze(vel_x, curr_gaze_x, sampling_freq)
+			smooth_gaze_y = self.smoothGaze(vel_y, curr_gaze_y, sampling_freq)	
 		
-			radius_x = calculateMSThreshold(vel_x, sampling_freq)
-			radius_y = calculateMSThreshold(vel_y, sampling_freq)
+			radius_x = self.calculateMSThreshold(vel_x, sampling_freq)
+			radius_y = self.calculateMSThreshold(vel_y, sampling_freq)
 		
 			temp = (vel_x/radius_x)**2 + (vel_y/radius_y)**2
 			ms_indices = np.where(temp > 1)[0]
@@ -544,7 +544,7 @@ class Stimulus:
 		pupil_size = np.mean([pupil_size_r, pupil_size_l], axis=0)
 		
 		# Fixing Blinks and interpolating pupil size and gaze data
-		blinks, interp_pupil_size, new_gaze = fix_blinks(pupil_size, gaze)
+		blinks, interp_pupil_size, new_gaze = self.fix_blinks(pupil_size, gaze)
 		gaze_x, gaze_y = None, None
 		gaze_x = new_gaze["x"]
 		gaze_y = new_gaze["y"]
