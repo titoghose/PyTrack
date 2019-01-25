@@ -24,10 +24,10 @@ class Experiment:
 		This functions instialises the dictionary 'stimuli' with the list of names of the different stimuli by category
 
 		Input:
-		json_file : [string]Name of the json file which contains details of the experiment
+		1.	json_file : [string]Name of the json file which contains details of the experiment
 
 		Output:
-		data_dict : [dictionary]Dictionary containing the names of the different stimuli categorised by type
+		1.	data_dict : [dictionary]Dictionary containing the names of the different stimuli categorised by type
 		'''
 
 		with open(self.json_file) as json_f:
@@ -49,11 +49,11 @@ class Experiment:
 		This function initialises an list of objects of class Subject
 
 		Input:
-		json_file : [string]Name of the json file which contains details of the experiment
-		stimuli : [dictionary] Dictionary containing the names of the stimulus ordred by category 
+		1.	json_file : [string]Name of the json file which contains details of the experiment
+		2.	stimuli : [dictionary] Dictionary containing the names of the stimulus ordred by category 
 
 		Output:
-		subject_list : [list] list of objects of class Subject
+		1.	subject_list : [list] list of objects of class Subject
 		'''
 
 		with open(self.json_file) as json_f:
@@ -67,7 +67,7 @@ class Experiment:
 
 			for subject_name in subject_data[k]:
 
-				subject_object = Subject(subject_name,k,self.stimuli,self.columns,self.json_file)
+				subject_object = Subject(subject_name,k,self.stimuli,self.columns,self.json_file,self.sensors)
 
 				subject_list.append(subject_object)
 
@@ -81,12 +81,10 @@ class Experiment:
 		The functions extracts the names of the columns that are to analysed
 
 		Input:
-
-		json_file: [string]Name of the json file which contains details of the experiment
+		1.	json_file: [string]Name of the json file which contains details of the experiment
 
 		Output:
-
-		columns_list: [list]list of names of columns of interest
+		1.	columns_list: [list]list of names of columns of interest
 		'''
 
 		with open(self.json_file) as json_f:

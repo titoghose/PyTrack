@@ -1,14 +1,18 @@
-import numpy as np
+#Subject class
+
 import pandas as pd
 from Stimulus import Stimulus
+from sqlalchemy import create_engine
+import os
+import pickle
 
 class Subject:
 
-	def __init__(self, name,subj_type,stimuli_names,columns,json_file):
+	def __init__(self, name,subj_type,stimuli_names,columns,json_file,sensors):
 
 		self.name = name
 		self.subj_type = subj_type
-		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns,json_file) #dictionary of objects of class stimulus demarcated by categories
+		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns,json_file,sensors) #dictionary of objects of class stimulus demarcated by categories
 
 
 	def dataExtraction(columns,json_file):
@@ -53,13 +57,14 @@ class Subject:
 	    return df
 		
 
-	def timeIndexInitialisation(stimulus_name):
+	def timeIndexInitialisation(stimulus_column_name,stimulus_name):
 
 		'''
 		This function that will retireve the index of the start, end and roi of a question
 
 		Input:
-		1.	stimulus_name: [string] Name of the stimulus 
+		1.	stimulus_column_name: [string] Name of the column where the stimuli names are present 
+		2.	stimulus_name: [string] Name of the stimulus 
 
 		Output:
 		1.	start:[integer] the index of the start of a queation
@@ -67,14 +72,13 @@ class Subject:
 		3.	roi:[integer] the index when the eye lands on the region of interest
 		'''
 
-		index = df[df[question_column_name] == stimulus_name].index
+		index = df[df[stimulus_column_name] == stimulus_name].index
 
         try:
             start = min(index)
             end = max(index)
             roi = -1
         except:
-            print("Error: ", question_name)
             start = -1
             end = -1
             roi = -1
@@ -82,7 +86,7 @@ class Subject:
         return start,end,roi
 
 	
-	def stimulusDictInitialisation(stimuli_names,columns,json_file):
+	def stimulusDictInitialisation(stimuli_names,columns,json_file,sensors):
 
 		'''
 		Creates  a list of objects of class Stimuli
@@ -95,9 +99,20 @@ class Subject:
 		1.	stimulus_object_dict: [dictionary] dictionary of objects of class stimulus ordered by category
 		'''	
 
-		question_column = dataExtraction(columns,json_file,)
+		if os.path.isfile('question_indices.pickle') == True:
 
-		data = dataExtraction(self.name,columns)
+			flag = 1
+
+			pickle_in = open("dict.pickle","rb")
+			question_indices_dict = pickle.load(pickle_in)
+
+		else:
+			flag = 0
+
+			question_indices_dict = {}
+
+
+		data = dataExtraction(columns,json_file)
 
 		stimulus_object_dict = {}
 
@@ -105,19 +120,26 @@ class Subject:
 			
 			stimulus_object_list = []
 
-			for name in stimuli_names[category]:
-
-				#Check if the pickle file exists, if it exists then pull data from it else get it from the 
-
-
-				start_time,end_time,roi_time = self.timeIndexInitialisation(stimulus_name)
+			for stimulus_name in stimuli_names[category]: 
 				
+				if flag == 1:
+					[start_time,end_time,roi_time] = question_indices_dict[stimulus_name]  
+				else:
+					start_time,end_time,roi_time = self.timeIndexInitialisation("Stimulus_Name",stimulus_name)
+
+					question_indices_dict[stimulus_name] = [start_time,end_time,roi_time]	
+
 				stimuli_data = data[start_time:end_time+1]
 
-				stimulus_object = stimulus(name, category, ["Eye Tracker", "EEG"], stimuli_data, start_time, end_time, roi_time)
+				stimulus_object = Stimulus(name, category, sensors, stimuli_data, start_time, end_time, roi_time)
 
 				stimulus_object_list.append(stimulus_object)
 
 			stimulus_object_dict[k] = stimulus_object_list
-
+		
+		if flag == 0:	
+			pickle_out = open("question_indices.pickle","wb")
+			pickle.dump(question_indices_dict, pickle_out)
+			pickle_out.close()
+	
 		return stimulus_object_dict
