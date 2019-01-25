@@ -7,13 +7,13 @@ class Experiment:
 	def __init__(self, name,json_file,sensors):
 		self.name = name #string
 		self.json_file = json_file #string
-		self.columns = columnsArrayInitialisation(self.json_file)
-		self.stimuli = self.stimuliArrayInitialisation(json_file) #dict of names of stimuli demarcated by category
-		self.subjects = subjectArrayInitialisation(self.json_file,self.stimuli,self.columns) #list of subject objects
+		self.columns = self.columnsArrayInitialisation()
+		self.stimuli = self.stimuliArrayInitialisation() #dict of names of stimuli demarcated by category
+		self.subjects = self.subjectArrayInitialisation() #list of subject objects
 		self.sensors = sensors
 		
 
-	def stimuliNameInitialisation(self.json_file):
+	def stimuliNameInitialisation():
 
 		'''
 		This functions instialises the dictionary 'stimuli' with the list of names of the different stimuli by category
@@ -38,7 +38,7 @@ class Experiment:
 		return data_dict
 
 
-	def subjectArrayInitialisation(self.json_file,self.stimuli):
+	def subjectArrayInitialisation():
 
 		'''
 		This function initialises an list of objects of class Subject
@@ -62,13 +62,13 @@ class Experiment:
 
 			for subject_name in subject_data[k]:
 
-				subject_object = subject(subject_name,k,self.stimuli)
+				subject_object = subject(subject_name,k,self.stimuli,self.columns,self.json_file)
 
 				subject_list.append(subject_object)
 
 		return subject_list
 
-	def columnsArrayInitialisation(self.json_file):
+	def columnsArrayInitialisation():
 
 		'''
 

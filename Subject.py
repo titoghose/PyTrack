@@ -1,26 +1,29 @@
 class Subject:
 
-	def __init__(self, name,subj_type,stimuli_names,columns):
+	def __init__(self, name,subj_type,stimuli_names,columns,json_file):
 
 		self.name = name
 		self.subj_type = subj_type
-		self.stimulus = stimulusDictInitialisation(stimuli_names,columns) #dictionary of objects of class stimulus demarcated by categories
+		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns) #dictionary of objects of class stimulus demarcated by categories
 
 
-	def dataExtraction(name_of_database,columns):
+	def dataExtraction(columns,json_file):
 
 		'''
 		Extracts the required columns from the data base and returns a pandas datastructure
 
 		Input:
-
-		name_of_database: [string] name of the database
-		columns: [list] list of the names of the columns of interest
+		1.	name_of_database: [string] name of the database
+		2.	columns: [list] list of the names of the columns of interest
 
 		Output:
-
-		df: [pandas datastructure] contains the data of columns of our interest
+		1.	df: [pandas datastructure] contains the data of columns of our interest
 		'''
+
+	    with open(json_file) as json_f:
+			json_data = json.load(json_f)
+
+		name_of_database = json_data[Database_name]
 
 	    extended_name = "sqlite:///" + name_of_database
 	    database = create_engine(extended_name)
@@ -52,16 +55,12 @@ class Subject:
 		This function that will retireve the index of the start, end and roi of a question
 
 		Input:
-
-		stimulus_name: [string] 
+		1.	stimulus_name: [string] Name of the stimulus 
 
 		Output:
-
-		start:[integer] the index of the start of a queation
-
-		end:[integer] the index of the end of a question
-
-		roi:[integer] the index when the eye lands on the region of interest
+		1.	start:[integer] the index of the start of a queation
+		2.	end:[integer] the index of the end of a question
+		3.	roi:[integer] the index when the eye lands on the region of interest
 		'''
 
 		index = df[df[question_column_name] == stimulus_name].index
@@ -81,25 +80,20 @@ class Subject:
 	
 	def stimulusDictInitialisation(stimuli_names,columns):
 
-	'''
+		'''
+		Creates  a list of objects of class Stimuli
 
-	Creates  a list of objects of class Stimuli
+		Input:
+		1.	stimuli_names:[list] list of names of different stimulus
+		2.	columns: [list] list of names of the columns of interest
 
-	Input:
+		Output:
+		1.	stimulus_object_dict: [dictionary] dictionary of objects of class stimulus ordered by category
+		'''	
 
-	stimuli_names:[list] list of names of different stimulus
+		question_column = dataExtraction(self.name,["StimulusName"])
 
-	columns: [list] list of names of the columns of interest
-
-	Output:
-
-	stimulus_object_dict: [dictionary] dictionary of objects of class stimulus ordered by category
-	'''	
-
-		question_column = dataExtraction(name_of_database,self.name,["StimulusName"])
-
-		data = dataExtraction(name_of_database,self.name,columns)
-
+		data = dataExtraction(self.name,columns)
 
 		stimulus_object_dict = {}
 
@@ -109,15 +103,17 @@ class Subject:
 
 			for name in stimuli_names[category]:
 
-				start_time,end_time,roi_time = self.timeIndexInitialisation(stimulus_name)
+				#Check if the pickle file exists, if it exists then pull data from it else get it from the 
 
-				stimuli_data = data[start:end+1]
+
+				start_time,end_time,roi_time = self.timeIndexInitialisation(stimulus_name)
+				
+				stimuli_data = data[start_time:end_time+1]
 
 				stimulus_object = stimulus(name, category, ["Eye Tracker", "EEG"], stimuli_data, start_time, end_time, roi_time)
 
 				stimulus_object_list.append(stimulus_object)
 
 			stimulus_object_dict[k] = stimulus_object_list
-
 
 		return stimulus_object_dict
