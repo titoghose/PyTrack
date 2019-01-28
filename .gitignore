@@ -1,0 +1,13 @@
+
+# File types to ignore #
+*.db
+*.pickle
+*.h5
+*.hdf5
+*.h5py
+*.sql
+*.sqlite
+*.pyc
+.DS_Store
+.DS_Store?
+.Trashes

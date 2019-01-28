@@ -1,0 +1,67 @@
+{
+   "Name":"Corpus description",
+   "Database_name":"lie_detection_database.db",
+   "Author Details":{
+      "Name":"Arvind A S",
+      "Date":"21/01/2018",
+      "Location":"NTU, Singapore"
+   },
+   "Subjects":{
+      "innocent":[
+         "Innocent Subject 05",
+         "Innocent Subject 06"
+      ],
+      "guilty":[
+         "Guilty Subject 06",
+         "Guilty Subject 07"
+      ]
+   },
+   "Stimuli":{
+      "alpha":[
+         "Alpha10",
+         "Alpha11"
+      ],
+      "general":[
+         "Gen15",
+         "Gen16"
+      ],
+      "general_lie":[
+         "GenLie44",
+         "GenLie45",
+         "GenLie46",
+         "GenLie47",
+         "GenLie48"
+      ],
+      "relevant":[
+         "Relevant14",
+         "Relevant1"
+      ],
+      "pictures":[
+         "Irrelevant_Secretary2-1-10",
+         "Irrelevant_Secretary2-1-6"
+      ]
+   },
+   "Columns_of_interest":{
+      "GazeX":{
+         "Description" : "X coordinate of the Pupil Gaze"
+      },
+      "GazeY":{
+         "Description" : "Y coordinate of the Pupil Gaze"
+      },
+      "PupilLeft":{
+         "Description" : "Size of the Left Pupil"
+      },
+      "PupilRight":{
+         "Description" : "Size of the Right Pupil"
+      },
+      "FixationSeq":{
+         "Description" : "Numbered instance of a fixation for a Sequence, for ex: 1 means 1st instance fixation"
+      },
+      "O1Pz_Epoc":{
+         "Description" : "The EEG signal for the Occipital region of the brain"
+      },
+      "EventSource":{
+         "Description" : "The EEG signal for the Occipital region of the brain"
+      }
+   }
+}

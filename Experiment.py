@@ -1,10 +1,6 @@
 #Experiment class
 from Subject import Subject
 
-exp = Experiment("Exp1", "Corpus_description.json", ["Eye Tracker"])
-
-
-
 import json
 
 class Experiment:
@@ -12,13 +8,14 @@ class Experiment:
 	def __init__(self, name,json_file,sensors):
 		self.name = name #string
 		self.json_file = json_file #string
+		self.sensors = sensors
 		self.columns = self.columnsArrayInitialisation()
 		self.stimuli = self.stimuliArrayInitialisation() #dict of names of stimuli demarcated by category
 		self.subjects = self.subjectArrayInitialisation() #list of subject objects
-		self.sensors = sensors
+		
 		
 
-	def stimuliArrayInitialisation():
+	def stimuliArrayInitialisation(self):
 
 		'''
 		This functions instialises the dictionary 'stimuli' with the list of names of the different stimuli by category
@@ -43,7 +40,7 @@ class Experiment:
 		return data_dict
 
 
-	def subjectArrayInitialisation():
+	def subjectArrayInitialisation(self):
 
 		'''
 		This function initialises an list of objects of class Subject
@@ -67,14 +64,14 @@ class Experiment:
 
 			for subject_name in subject_data[k]:
 
-				subject_object = Subject(subject_name,k,self.stimuli,self.columns,self.json_file,self.sensors)
+				subject_object = Subject(subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors)
 
 				subject_list.append(subject_object)
 
 		return subject_list
 
 
-	def columnsArrayInitialisation():
+	def columnsArrayInitialisation(self):
 
 		'''
 
@@ -97,3 +94,8 @@ class Experiment:
 			column_list.append(name)
 
 		return column_list
+
+
+print("Start")
+exp = Experiment("Exp1", "trial_data.json", ["Eye Tracker"])
+print("End")

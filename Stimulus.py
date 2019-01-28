@@ -11,7 +11,6 @@ class Stimulus:
 	def __init__(self, name, stim_type, sensor_names, data, start_time, end_time, roi_time):
 		self.name = name
 		self.stim_type = stim_type
-		self.data = self.getData(data)
 		self.start_time = start_time
 		self.end_time = end_time
 		self.response_time = self.end_time - self.start_time
@@ -19,6 +18,11 @@ class Stimulus:
 		self.sensors = []
 		for sn in sensor_names:
 			self.sensors.append(Sensor(sn))
+
+		if(self.start_time == -1):
+			self.data = None
+		else:
+			self.data = self.getData(data)
 
 
 	def diff(self, series):
@@ -111,14 +115,14 @@ class Stimulus:
 		
 		if (length_blinks == 0):
 			return blinks, pupil_size, gaze
-		
+
 		# starts with a blink
 		if len(blink_onset) < len(blink_offset):
 			blink_onset.insert(0, 0)
 		
 		# ends on blink
 		if len(blink_onset) > len(blink_offset):
-			blink_onset.append(len(difference))
+			blink_offset.append(len(difference))
 		
 		ms_4_smoothing = 10
 		samples2smooth = ms_4_smoothing // sampling_interval
@@ -450,7 +454,7 @@ class Stimulus:
 		ax2.set_ylabel("EEG")
 		
 		# Plot for pupil size
-		line3, = ax3.plot(total_range[:1], self.data["PupilSize"][:1])
+		line3, = ax3.plot(total_range[:1], self.data["InterpPupilSize"][:1])
 		ax3.set_xlim([0, len(total_range)])
 		ax3.set_ylim([-2, 11])
 		ax3.set_title("Pupil Size vs. Time")
@@ -477,20 +481,20 @@ class Stimulus:
 			ax2.set_ylim([min(self.data["EEG"][:i]) - 10, max(self.data["EEG"][:i]) + 10])
 		
 			line3.set_xdata(total_range[:i])
-			line3.set_ydata(self.data["PupilSize"][:i])
-			ax3.set_ylim([min(self.data["PupilSize"][:i]) - 5, max(self.data["PupilSize"][:i]) + 5])
+			line3.set_ydata(self.data["InterpPupilSize"][:i])
+			ax3.set_ylim([min(self.data["InterpPupilSize"][:i]) - 5, max(self.data["InterpPupilSize"][:i]) + 5])
 		
 			return line, circle, line2, line3,
 		
 		ani = animation.FuncAnimation(fig, animate, frames=gen_ind, interval=0, blit=True)
 		# ani.save('GazePlot.mp4')
 		
-		for i in range(len(blinks["blink_onset"])):
-			plt.axvline(x=self.data["Binks"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
-			plt.axvline(x=self.data["Binks"]["blink_offset"][i], linestyle="--", color="g", alpha=0.6)
+		for i in range(len(self.data["BlinksLeft"]["blink_onset"])):
+			plt.axvline(x=self.data["BinksLeft"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
+			plt.axvline(x=self.data["BinksLeft"]["blink_offset"][i], linestyle="--", color="g", alpha=0.6)
 		
-			plt.axvline(x=self.data["Binks"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
-			plt.axvline(x=self.data["Binks"]["blink_offset"][i], linestyle="--", color="g", alpha=0.6)
+			plt.axvline(x=self.data["BinksLeft"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
+			plt.axvline(x=self.data["BinksLeft"]["blink_offset"][i], linestyle="--", color="g", alpha=0.6)
 		
 		plt.show()
 
@@ -519,47 +523,50 @@ class Stimulus:
 
 	def getData(self, data):
 		# Extracting data for particular stimulus
-		event_type = data.EventType
-		gazex_df = data.GazeX
-		gazey_df = data.GazeY
-		eeg_pz_df = data.O1Pz_Epoc
-		pupil_size_l_df = data.PupilLeft
-		pupil_size_r_df = data.PupilRight
-		fixation_seq_df = data.FixationSeq
-		
+		event_type = np.array(data.EventSource)
+		gazex_df = np.array(data.GazeX)
+		gazey_df = np.array(data.GazeY)
+		eeg_pz_df = np.array(data.O1Pz_Epoc)
+		pupil_size_l_df = np.array(data.PupilLeft)
+		pupil_size_r_df = np.array(data.PupilRight)
+
 		# Extracting fixation sequences
-		et_rows = np.where(event_type.EventSource.str.contains("ET"))[0]
-		fixation_seq_df = np.array(fixation_seq_df.FixationSeq.fillna(-1), dtype='float32')
+		et_rows = np.where(data.EventSource.str.contains("ET"))[0]
+		fixation_seq_df = np.array(data.FixationSeq.fillna(-1), dtype='float32')
 		fixation_seq = np.squeeze(np.array([fixation_seq_df[i] for i in sorted(et_rows)], dtype="float32"))
 		
+		total_range = range(len(et_rows))
+
 		# Extracting the eye gaze data
-		et_rows = np.where(event_type.EventSource.str.contains("ET"))[0]
-		gaze_x = np.squeeze(np.array([gazex_df.GazeX[i] for i in sorted(et_rows)], dtype="float32"))
-		gaze_y = np.squeeze(np.array([gazey_df.GazeY[i] for i in sorted(et_rows)], dtype="float32"))
+		et_rows = np.where(data.EventSource.str.contains("ET"))[0]
+		gaze_x = np.squeeze(np.array([gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
+		gaze_y = np.squeeze(np.array([gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
 		gaze = {"x": gaze_x, "y": gaze_y}
 		
 		# Extracting Pupil Size Data
-		pupil_size_r = np.squeeze(np.array([pupil_size_r_df.PupilRight[i] for i in sorted(et_rows)], dtype="float32"))
-		pupil_size_l = np.squeeze(np.array([pupil_size_l_df.PupilLeft[i] for i in sorted(et_rows)], dtype="float32"))
-		pupil_size = np.mean([pupil_size_r, pupil_size_l], axis=0)
+		pupil_size_r = np.squeeze(np.array([pupil_size_r_df[i] for i in sorted(et_rows)], dtype="float32"))
+		pupil_size_l = np.squeeze(np.array([pupil_size_l_df[i] for i in sorted(et_rows)], dtype="float32"))
 		
 		# Fixing Blinks and interpolating pupil size and gaze data
-		blinks, interp_pupil_size, new_gaze = self.fix_blinks(pupil_size, gaze)
+		blinks_l, interp_pupil_size_l, new_gaze_l = self.fix_blinks(pupil_size_l, gaze)
+		blinks_r, interp_pupil_size_r, new_gaze_r = self.fix_blinks(pupil_size_r, gaze)
+		interp_pupil_size = np.mean([interp_pupil_size_r, interp_pupil_size_l], axis=0)
 		gaze_x, gaze_y = None, None
-		gaze_x = new_gaze["x"]
-		gaze_y = new_gaze["y"]
+		gaze_x = np.mean([new_gaze_r["x"], new_gaze_l["x"]], axis=0)
+		gaze_y = np.mean([new_gaze_r["y"], new_gaze_l["y"]], axis=0)
 
 		# Extracting and upsampling eeg data from Pz
-		eeg_rows = np.where(event_type.EventSource.str.contains("Raw EEG Epoc"))[0]
-		eeg_unique = np.squeeze(np.array([eeg_pz_df.O1Pz_Epoc[i] for i in sorted(eeg_rows)], dtype="float32"))
+		eeg_rows = np.where(data.EventSource.str.contains("Raw EEG Epoc"))[0]
+		eeg_unique = np.squeeze(np.array([eeg_pz_df[i] for i in sorted(eeg_rows)], dtype="float32"))
+
 		(eeg_pz, eeg_time) = signal.resample(eeg_unique, len(total_range), t=sorted(eeg_rows))
 
 		extracted_data = {"ETRows" : et_rows,
 							"FixationSeq" : fixation_seq,
 							"Gaze" : gaze,
-							"PupilSize" : pupil_size,
 							"InterpPupilSize" : interp_pupil_size,
-							"Blinks" : blinks,
+							"BlinksLeft" : blinks_l,
+							"BlinksRight" : blinks_r,
 							"EEG" : eeg_pz}
 
 		return extracted_data

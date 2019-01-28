@@ -1,5 +1,6 @@
 #Subject class
 
+import json
 import pandas as pd
 from Stimulus import Stimulus
 from sqlalchemy import create_engine
@@ -15,7 +16,7 @@ class Subject:
 		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns,json_file,sensors) #dictionary of objects of class stimulus demarcated by categories
 
 
-	def dataExtraction(columns,json_file):
+	def dataExtraction(self, columns,json_file):
 
 		'''
 		Extracts the required columns from the data base and returns a pandas datastructure
@@ -28,36 +29,36 @@ class Subject:
 		1.	df: [pandas datastructure] contains the data of columns of our interest
 		'''
 
-	    with open(json_file) as json_f:
+		with open(json_file) as json_f:
 			json_data = json.load(json_f)
 
-		name_of_database = json_data[Database_name]
+		name_of_database = json_data["Database_name"]
 
-	    extended_name = "sqlite:///" + name_of_database
-	    database = create_engine(extended_name)
+		extended_name = "sqlite:///" + name_of_database
+		database = create_engine(extended_name)
 
-	    string = 'SELECT '
+		string = 'SELECT '
 
-	    index = 0
+		index = 0
 
-	    for name in columns:
+		for name in columns:
 
-	    	if index == 0:
-	    		string = string + name
-	    		index = index + 1
+			if index == 0:
+				string = string + name
+				index = index + 1
 
-	    	else:   
-	    		string = string + ',' + name
-	    		index = index + 1
+			else:   
+				string = string + ',' + name
+				index = index + 1
 
-	    string = string + ' FROM "' + self.name + '"'
+		string = string + ' FROM "' + self.name + '"'
 
-	    df = pd.read_sql_query(string, database)
+		df = pd.read_sql_query(string, database)
 
-	    return df
+		return df
 		
 
-	def timeIndexInitialisation(stimulus_column_name,stimulus_name):
+	def timeIndexInitialisation(self, stimulus_column_name,stimulus_name, df):
 
 		'''
 		This function that will retireve the index of the start, end and roi of a question
@@ -74,19 +75,22 @@ class Subject:
 
 		index = df[df[stimulus_column_name] == stimulus_name].index
 
-        try:
-            start = min(index)
-            end = max(index)
-            roi = -1
-        except:
-            start = -1
-            end = -1
-            roi = -1
+		try:
+			start = min(index)
+			end = max(index)
+			if end - start < 1000:
+				start = -1
+				end = -1
+			roi = -1
+		except:
+			start = -1
+			end = -1
+			roi = -1
 
-        return start,end,roi
+		return start,end,roi
 
 	
-	def stimulusDictInitialisation(stimuli_names,columns,json_file,sensors):
+	def stimulusDictInitialisation(self, stimuli_names,columns,json_file,sensors):
 
 		'''
 		Creates  a list of objects of class Stimuli
@@ -103,16 +107,17 @@ class Subject:
 
 			flag = 1
 
-			pickle_in = open("dict.pickle","rb")
+			pickle_in = open("question_indices.pickle","rb")
 			question_indices_dict = pickle.load(pickle_in)
 
 		else:
 			flag = 0
 
 			question_indices_dict = {}
+			stimulus_column = self.dataExtraction(["StimulusName"],json_file)
 
 
-		data = dataExtraction(columns,json_file)
+		data = self.dataExtraction(columns,json_file)
 
 		stimulus_object_dict = {}
 
@@ -125,17 +130,21 @@ class Subject:
 				if flag == 1:
 					[start_time,end_time,roi_time] = question_indices_dict[stimulus_name]  
 				else:
-					start_time,end_time,roi_time = self.timeIndexInitialisation("Stimulus_Name",stimulus_name)
+					start_time,end_time,roi_time = self.timeIndexInitialisation("StimulusName",stimulus_name, stimulus_column)
 
-					question_indices_dict[stimulus_name] = [start_time,end_time,roi_time]	
+					question_indices_dict[stimulus_name] = [start_time, end_time, roi_time]	
 
-				stimuli_data = data[start_time:end_time+1]
+				stimuli_data = data[start_time : end_time+1]
 
-				stimulus_object = Stimulus(name, category, sensors, stimuli_data, start_time, end_time, roi_time)
+				# print(self.name)
+				# print(stimulus_name)
+				# print(stimuli_data)
+
+				stimulus_object = Stimulus(stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time)
 
 				stimulus_object_list.append(stimulus_object)
 
-			stimulus_object_dict[k] = stimulus_object_list
+			stimulus_object_dict[category] = stimulus_object_list
 		
 		if flag == 0:	
 			pickle_out = open("question_indices.pickle","wb")
