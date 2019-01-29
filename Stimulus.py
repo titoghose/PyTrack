@@ -516,7 +516,7 @@ class Stimulus:
 
 		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_count"] = ms_count
 		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_duration"] = ms_duration
-		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"] = self.data["InterpPupilSize"]
+		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
 		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["blink_count"] = len(self.data["Blinks"])
 		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["fixation_count"] = len(np.unique(self.data["FixationSeq"])) - 1
 

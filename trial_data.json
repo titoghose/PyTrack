@@ -18,6 +18,15 @@
    },
    "Stimuli":{
       "alpha":[
+         "Alpha1",
+         "Alpha2",
+         "Alpha3",
+         "Alpha4",
+         "Alpha5",
+         "Alpha6",
+         "Alpha7",
+         "Alpha8",
+         "Alpha9",
          "Alpha10",
          "Alpha11"
       ],
@@ -41,6 +50,18 @@
          "Irrelevant_Secretary2-1-6"
       ]
    },
+   "Control_Questions":[
+         "Alpha1",
+         "Alpha2",
+         "Alpha3",
+         "Alpha4",
+         "Alpha5",
+         "Alpha6",
+         "Alpha7",
+         "Alpha8",
+         "Alpha9",
+         "Alpha10",
+         "Alpha11"],
    "Columns_of_interest":{
       "GazeX":{
          "Description" : "X coordinate of the Pupil Gaze"

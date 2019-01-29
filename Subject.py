@@ -9,12 +9,13 @@ import pickle
 
 class Subject:
 
+
 	def __init__(self, name,subj_type,stimuli_names,columns,json_file,sensors):
 
 		self.name = name
 		self.subj_type = subj_type
 		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns,json_file,sensors) #dictionary of objects of class stimulus demarcated by categories
-
+		self.control_data = self.getControlData(columns, json_file, sensors)
 
 	def dataExtraction(self, columns,json_file):
 
@@ -152,3 +153,25 @@ class Subject:
 			pickle_out.close()
 	
 		return stimulus_object_dict
+
+
+	def getControlData(self, columns, json_file, sensors):
+
+		with open(json_file) as json_f:
+			json_data = json.load(json_f)
+
+		control_questions = {"Alpha" : json_data["Control_Questions"]}
+
+		control_q_objects = self.stimulusDictInitialisation(control_questions, columns, json_file, sensors)
+
+		control = {"sacc_count" : 0, 
+					"sacc_duration" : [],
+					"blink_count" : 0,
+					"ms_count" : 0,
+					"ms_duration" : [],
+					"pupil_size" : [],
+					"fixation_count" : 0}
+
+		for cqo in control_q_objects:
+			cqo.findEyeMetaData()
+

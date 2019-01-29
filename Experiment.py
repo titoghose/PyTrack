@@ -1,9 +1,16 @@
 #Experiment class
+import numpy as np
+from datetime import datetime
+from scipy import stats
+from Sensor import Sensor
 from Subject import Subject
+
 
 import json
 
 class Experiment:
+
+	stimuli_classes = ["Relevant", "GenLie", "General", "Alpha"]
 
 	def __init__(self, name,json_file,sensors):
 		self.name = name #string
@@ -12,8 +19,15 @@ class Experiment:
 		self.columns = self.columnsArrayInitialisation()
 		self.stimuli = self.stimuliArrayInitialisation() #dict of names of stimuli demarcated by category
 		self.subjects = self.subjectArrayInitialisation() #list of subject objects
-		
-		
+		self.meta_matrix_dict = (np.array(len(self.subjects), dtype=object), 
+								{"sacc_count" : np.array((len(self.subjects), 4), dtype=object), 
+								"sacc_dur" : np.array((len(self.subjects), 4), dtype=object),
+								"blink_count" : np.array((len(self.subjects), 4), dtype=object),
+								"ms_count" : np.array((len(self.subjects), 4), dtype=object), 
+								"ms_duration" : np.array((len(self.subjects), 4), dtype=object), 
+								"pupil_size" : np.array((len(self.subjects), 4), dtype=object),
+								"fixation_count" : np.array((len(self.subjects), 4), dtype=object)})
+
 
 	def stimuliArrayInitialisation(self):
 
@@ -96,6 +110,35 @@ class Experiment:
 		return column_list
 
 
+	def analyse(self):
+		cnt = 0
+		
+		for i, sub in enumerate(self.subjects):
+			sub.subjectAnalysis()
+			meta_matrix_dict[0][i] = sub.subj_type
+			for ind, j in enumerate(stimuli_classes):
+				for k in Sensor.meta_cols[0]:
+					meta_matrix_dict[1][k][i, ind] = sub.metadata_aggregate[j][k]
+
+	
+	def compareStimuliClasses(self, stim_class_1, stim_class_2, metadata):
+		subj_types = self.meta_matrix_dict[0]
+		for meta in metadata:
+			stim_1_data = self.meta_matrix_dict[1][meta][:, stimuli_classes.index(stim_class_1)]
+			stim_2_data = self.meta_matrix_dict[1][meta][:, stimuli_classes.index(stim_class_2)]
+
+			innocent_data = stim_1_data[np.where(subj_types == "Innocent")[0]]
+			guilty_data = stim_1_data[np.where(subj_types == "Guilty")[0]]
+
+			(f_score_innocent, p_value_innocent) = stats.f_oneway([id for id in innocent_data])
+			(f_score_guilty, p_value_guilty) = stats.f_oneway([id for id in guilty_data])
+
+
+
+
 print("Start")
+a = datetime.now()
 exp = Experiment("Exp1", "trial_data.json", ["Eye Tracker"])
+b = datetime.now()
 print("End")
+print((b-a).seconds)
