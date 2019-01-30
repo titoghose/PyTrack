@@ -24,7 +24,6 @@ class Stimulus:
 		else:
 			self.data = self.getData(data)
 
-
 	def diff(self, series):
 		"""
 		Python implementation of Matlab's 'diff' function. Returns (a[n+1] - a[n]) for all n.
@@ -302,9 +301,12 @@ class Stimulus:
 		fixation_indices = self.findFixationsIDT(fixation_seq)
 		
 		all_MS = []
-		
+
 		for i in range(len(fixation_indices["start"])):
 		
+			if fixation_indices["end"][i] - fixation_indices["start"][i] < 10:
+				continue
+
 			curr_gaze_x = gaze_x[fixation_indices["start"][i] : fixation_indices["end"][i]]
 			curr_gaze_y = gaze_y[fixation_indices["start"][i] : fixation_indices["end"][i]]
 		
@@ -512,13 +514,16 @@ class Stimulus:
 		self.response_time = len(self.data["ETRows"]) * (1000 / sampling_freq)
 
 		# Find microsaccades
-		all_MS, ms_count, ms_duration = findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
+		all_MS, ms_count, ms_duration = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
 
-		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_count"] = ms_count
-		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_duration"] = ms_duration
-		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
-		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["blink_count"] = len(self.data["Blinks"])
-		sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["fixation_count"] = len(np.unique(self.data["FixationSeq"])) - 1
+		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["sacc_count"] = 0
+		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["sacc_duration"] = 0
+		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_count"] = ms_count
+		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_duration"] = ms_duration
+		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
+
+		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["blink_count"] = len(self.data["BlinksLeft"])
+		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["fixation_count"] = len(np.unique(self.data["FixationSeq"])) - 1
 
 
 	def getData(self, data):
@@ -555,12 +560,16 @@ class Stimulus:
 		gaze_x = np.mean([new_gaze_r["x"], new_gaze_l["x"]], axis=0)
 		gaze_y = np.mean([new_gaze_r["y"], new_gaze_l["y"]], axis=0)
 
+
 		# Extracting and upsampling eeg data from Pz
 		eeg_rows = np.where(data.EventSource.str.contains("Raw EEG Epoc"))[0]
-		eeg_unique = np.squeeze(np.array([eeg_pz_df[i] for i in sorted(eeg_rows)], dtype="float32"))
-
-		(eeg_pz, eeg_time) = signal.resample(eeg_unique, len(total_range), t=sorted(eeg_rows))
-
+		
+		if len(eeg_rows) != 0:
+			eeg_unique = np.squeeze(np.array([eeg_pz_df[i] for i in sorted(eeg_rows)], dtype="float32"))
+			(eeg_pz, eeg_time) = signal.resample(eeg_unique, len(total_range), t=sorted(eeg_rows))
+		else:
+			eeg_pz = []
+		
 		extracted_data = {"ETRows" : et_rows,
 							"FixationSeq" : fixation_seq,
 							"Gaze" : gaze,
