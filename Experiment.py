@@ -1,12 +1,16 @@
 #Experiment class
-import numpy as np
-from datetime import datetime
-from scipy import stats
+
 from Sensor import Sensor
 from Subject import Subject
 
-
+import numpy as np
+from datetime import datetime
+from scipy import stats
 import json
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+import statsmodels.stats.multicomp
+import pandas as pd
 
 class Experiment:
 
@@ -115,10 +119,87 @@ class Experiment:
 		
 		for i, sub in enumerate(self.subjects):
 			sub.subjectAnalysis()
+			
 			meta_matrix_dict[0][i] = sub.subj_type
+			
 			for ind, j in enumerate(stimuli_classes):
 				for k in Sensor.meta_cols[0]:
 					meta_matrix_dict[1][k][i, ind] = sub.metadata_aggregate[j][k]
+
+		#Lets assume the meta_matrix_dict is instantiated for non_temporal data
+
+		#1. Make a pandas dataframe containing the required columns
+
+		#Creation of the dataframe skeleton
+
+		data =  pd.DataFrame()
+
+		cols = []
+
+		for sensor_type in Sensor.meta_cols:
+			for name in sensor_type:
+				cols.append(name)
+
+		cols.append("stimuli_count")
+		cols.append("individual_type")
+
+
+		#Instantiation of values into data dataframe
+
+		#For each subject
+		for sub_index, sub in enumerate(self.subjects):
+
+			#For each Question Type
+			for stimuli_index, stimuli_type in enumerate(stimuli_classes):
+
+				#For each column parameter
+				for sensor_type in Sensor.meta_cols:
+					for name in sensor_type:
+
+						
+						#Value is an array	
+						value_array = meta_matrix_dict[1][name][sub_index,stimuli_index]
+
+						for value in value_array:
+
+							row = []
+
+							row.append(value)
+							row.append(stimuli_type)
+							row.append(sub.subj_type)
+
+							#Instantiate into the pandas dataframe
+
+							data.loc[len(data)] = row
+
+		#2.Run the anlaysis
+
+		# Fits the model with the interaction term
+	    # This will also automatically include the main effects for each factor
+	    
+	    #For each column parameter
+		for sensor_type in Sensor.meta_cols:
+			for name in sensor_type:
+
+			    model_statement = name + ' ~ C(stimuli_count)*C(individual_type)' 
+
+
+			    model = ols(model_statement, data).fit()
+
+			    #3. Print the Results
+			    #Results for testing significance of overall model
+			    print("\n\n\n\t\t\t\t********Analysis for sensor: ", name,"********")
+			    print(f"Overall model F({model.df_model: .0f},{model.df_resid: .0f}) = {model.fvalue: .3f}, p = {model.f_pvalue: .4f}")
+				print("Overall model is valid if p value is less than 0.05")
+				print("\n\n")	
+				
+				#Results of the summary for the model (used to check autocorelation, normality, homoscedasticity)
+				print(model.summary())
+				print("\n\n")
+
+				#Seeing the anova statistics for the independent variables (stimulus_type and individual_type) and the interaction effect
+				print(sm.stats.anova_lm(model, typ= 2))
+				print("A parameter is significant if the corresponding p value is less than 0.05")
 
 	
 	def compareStimuliClasses(self, stim_class_1, stim_class_2, metadata):
@@ -132,7 +213,6 @@ class Experiment:
 
 			(f_score_innocent, p_value_innocent) = stats.f_oneway([id for id in innocent_data])
 			(f_score_guilty, p_value_guilty) = stats.f_oneway([id for id in guilty_data])
-
 
 
 
