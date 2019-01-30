@@ -44,7 +44,6 @@
    },
    "Stimuli":{
       "alpha":[
-         "Alpha_Instructions",
          "Alpha1",
          "Alpha2",
          "Alpha3",
@@ -76,7 +75,6 @@
          "Gen16"
       ],
       "general_lie":[
-         "GenLie_Instructions",
          "GenLie1",
          "GenLie2",
          "GenLie3",
@@ -127,7 +125,6 @@
          "GenLie48"
       ],
       "relevant":[
-         "Rel_Instr",
          "Relevant7",
          "Relevant3",
          "Relevant16",
@@ -146,7 +143,6 @@
          "Relevant1"
       ],
       "pictures":[
-         "First Instruction Slide",
          "Wallet-1-1",
          "Irrelevant_Room-1-1",
          "Jon_Secretary2-1-1",
