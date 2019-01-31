@@ -122,7 +122,7 @@ class Stimulus:
 		# ends on blink
 		if len(blink_onset) > len(blink_offset):
 			blink_offset.append(len(difference))
-		
+
 		ms_4_smoothing = 10
 		samples2smooth = ms_4_smoothing // sampling_interval
 		smooth_pupil_size = self.smooth(pupil_size, 10, "flat")
@@ -153,6 +153,9 @@ class Stimulus:
 			blink_onset = np.unique(blink_onset)
 			blink_offset = np.unique(blink_offset)
 		
+		blinks["blink_onset"] = blink_onset
+		blinks["blink_offset"] = blink_offset
+
 		pupil_size_no_blinks = []
 		pupil_size_no_blinks_indices = []
 		
@@ -522,7 +525,7 @@ class Stimulus:
 		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_duration"] = ms_duration
 		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
 
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["blink_count"] = len(self.data["BlinksLeft"])
+		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["blink_count"] = len(self.data["BlinksLeft"]["blink_onset"])
 		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["fixation_count"] = len(np.unique(self.data["FixationSeq"])) - 1
 
 

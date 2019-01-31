@@ -1,0 +1,589 @@
+python3 Experiment.py 
+Start
+Innocent Subject 05
+2
+/home/upamanyu/Documents/NTU/ntuExperiment/Stimulus.py:133: RuntimeWarning: invalid value encountered in less_equal
+  monotonically_dec = smooth_pupil_size_diff <= 0
+/home/upamanyu/Documents/NTU/ntuExperiment/Stimulus.py:134: RuntimeWarning: invalid value encountered in greater_equal
+  monotonically_inc = smooth_pupil_size_diff >= 0
+2
+7
+Innocent Subject 06
+23
+23
+2
+55
+Innocent Subject 07
+24
+2
+29
+Innocent Subject 08
+32
+30
+65
+Innocent Subject 09
+42
+42
+87
+Innocent Subject 10
+32
+4
+39
+Innocent Subject 11
+27
+18
+/usr/local/lib/python3.6/dist-packages/numpy/core/fromnumeric.py:2920: RuntimeWarning: Mean of empty slice.
+  out=out, **kwargs)
+/usr/local/lib/python3.6/dist-packages/numpy/core/_methods.py:85: RuntimeWarning: invalid value encountered in double_scalars
+  ret = ret.dtype.type(ret / rcount)
+48
+Innocent Subject 12
+26
+12
+41
+Innocent Subject 13
+27
+27
+57
+Innocent Subject 14
+30
+2
+36
+Innocent Subject 15
+39
+7
+50
+Innocent Subject 16
+31
+28
+62
+Innocent Subject 17
+32
+4
+39
+Innocent Subject 18
+30
+28
+62
+Innocent Subject 19
+27
+2
+32
+Innocent Subject 20
+28
+31
+62
+Guilty Subject 06
+66
+2
+71
+Guilty Subject 07
+24
+27
+54
+Guilty Subject 08
+29
+2
+35
+Guilty Subject 09
+27
+21
+50
+Guilty Subject 10
+28
+2
+33
+Guilty Subject 11
+38
+8
+49
+Guilty Subject 12
+30
+18
+51
+Guilty Subject 14
+39
+2
+45
+Guilty Subject 15
+36
+53
+92
+Guilty Subject 16
+39
+2
+44
+Guilty Subject 17
+20
+2
+25
+Guilty Subject 18
+36
+61
+101
+Guilty Subject 19
+39
+3
+45
+Guilty Subject 20
+38
+19
+60
+/home/upamanyu/Documents/NTU/ntuExperiment/Stimulus.py:325: RuntimeWarning: invalid value encountered in true_divide
+  temp = (vel_x/radius_x)**2 + (vel_y/radius_y)**2
+/home/upamanyu/Documents/NTU/ntuExperiment/Stimulus.py:326: RuntimeWarning: invalid value encountered in greater
+  ms_indices = np.where(temp > 1)[0]
+      blink_count stimuli_type individual_type
+0       -0.300000        alpha        innocent
+1       -0.300000        alpha        innocent
+2       -0.300000        alpha        innocent
+3        0.700000        alpha        innocent
+4       -0.300000        alpha        innocent
+5       -0.300000        alpha        innocent
+6       -0.300000        alpha        innocent
+7        1.700000        alpha        innocent
+8       -0.300000        alpha        innocent
+9       -0.300000        alpha        innocent
+10       5.700000      general        innocent
+11      -0.300000      general        innocent
+12      -0.300000      general        innocent
+13       0.700000      general        innocent
+14       6.700000      general        innocent
+15      -0.300000      general        innocent
+16       2.700000      general        innocent
+17      -0.300000      general        innocent
+18       2.700000      general        innocent
+19       0.700000      general        innocent
+20      -0.300000      general        innocent
+21       6.700000      general        innocent
+22       0.700000      general        innocent
+23       5.700000      general        innocent
+24       3.700000  general_lie        innocent
+25       0.700000  general_lie        innocent
+26       0.700000  general_lie        innocent
+27       0.700000  general_lie        innocent
+28       2.700000  general_lie        innocent
+29       3.700000  general_lie        innocent
+...           ...          ...             ...
+2058    -0.909091  general_lie          guilty
+2059    -3.909091  general_lie          guilty
+2060     3.090909  general_lie          guilty
+2061    -4.909091  general_lie          guilty
+2062    -2.909091  general_lie          guilty
+2063     0.090909  general_lie          guilty
+2064    -3.909091  general_lie          guilty
+2065     4.090909  general_lie          guilty
+2066    -1.909091  general_lie          guilty
+2067    -3.909091  general_lie          guilty
+2068    -4.909091  general_lie          guilty
+2069     0.090909  general_lie          guilty
+2070    -0.909091  general_lie          guilty
+2071    -4.909091  general_lie          guilty
+2072    -0.909091  general_lie          guilty
+2073     2.090909  general_lie          guilty
+2074    -1.909091  general_lie          guilty
+2075    -0.909091     relevant          guilty
+2076    -4.909091     relevant          guilty
+2077    -4.909091     relevant          guilty
+2078    -1.909091     relevant          guilty
+2079    -1.909091     relevant          guilty
+2080     1.090909     relevant          guilty
+2081    -4.909091     relevant          guilty
+2082     2.090909     relevant          guilty
+2083     5.090909     relevant          guilty
+2084    -1.909091     relevant          guilty
+2085     1.090909     relevant          guilty
+2086     1.090909     relevant          guilty
+2087    -4.909091     relevant          guilty
+
+[2088 rows x 3 columns]
+
+
+
+				********Analysis for sensor:  blink_count ********
+Overall model F( 7, 2080) =  12.206, p =  0.0000
+Overall model is valid if p value is less than 0.05
+
+
+
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:            blink_count   R-squared:                       0.039
+Model:                            OLS   Adj. R-squared:                  0.036
+Method:                 Least Squares   F-statistic:                     12.21
+Date:                Thu, 31 Jan 2019   Prob (F-statistic):           2.27e-15
+Time:                        16:41:38   Log-Likelihood:                -6152.7
+No. Observations:                2088   AIC:                         1.232e+04
+Df Residuals:                    2080   BIC:                         1.237e+04
+Df Model:                           7                                         
+Covariance Type:            nonrobust                                         
+=================================================================================================================================
+                                                                    coef    std err          t      P>|t|      [0.025      0.975]
+---------------------------------------------------------------------------------------------------------------------------------
+Intercept                                                     -3.138e-15      0.377  -8.32e-15      1.000      -0.739       0.739
+C(stimuli_type)[T.general]                                       -2.0368      0.509     -4.001      0.000      -3.035      -1.038
+C(stimuli_type)[T.general_lie]                                   -2.6999      0.432     -6.244      0.000      -3.548      -1.852
+C(stimuli_type)[T.relevant]                                      -2.1926      0.514     -4.263      0.000      -3.201      -1.184
+C(individual_type)[T.innocent]                                 1.018e-14      0.522   1.95e-14      1.000      -1.024       1.024
+C(stimuli_type)[T.general]:C(individual_type)[T.innocent]        -0.4236      0.701     -0.604      0.546      -1.798       0.951
+C(stimuli_type)[T.general_lie]:C(individual_type)[T.innocent]    -0.0647      0.597     -0.108      0.914      -1.236       1.106
+C(stimuli_type)[T.relevant]:C(individual_type)[T.innocent]        0.1413      0.714      0.198      0.843      -1.258       1.541
+==============================================================================
+Omnibus:                      637.126   Durbin-Watson:                   0.849
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            13874.661
+Skew:                          -0.906   Prob(JB):                         0.00
+Kurtosis:                      15.498   Cond. No.                         17.1
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+
+
+                                          sum_sq      df          F        PR(>F)
+C(stimuli_type)                      1798.795746     3.0  28.133216  7.881302e-18
+C(individual_type)                      3.899016     1.0   0.182942  6.689012e-01
+C(stimuli_type):C(individual_type)     16.461790     3.0   0.257463  8.560492e-01
+Residual                            44330.696378  2080.0        NaN           NaN
+A parameter is significant if the corresponding p value is less than 0.05
+      ms_count stimuli_type individual_type
+0         -3.0        alpha        innocent
+1          0.0        alpha        innocent
+2         25.0        alpha        innocent
+3          0.0        alpha        innocent
+4        -10.0        alpha        innocent
+5        -11.0        alpha        innocent
+6        -12.0        alpha        innocent
+7         13.0        alpha        innocent
+8         -1.0        alpha        innocent
+9         -1.0        alpha        innocent
+10        15.0      general        innocent
+11        -3.0      general        innocent
+12        -9.0      general        innocent
+13        -3.0      general        innocent
+14         1.0      general        innocent
+15        -8.0      general        innocent
+16         1.0      general        innocent
+17       -12.0      general        innocent
+18        -2.0      general        innocent
+19       -10.0      general        innocent
+20        -1.0      general        innocent
+21         6.0      general        innocent
+22         5.0      general        innocent
+23        -4.0      general        innocent
+24         1.0  general_lie        innocent
+25       -15.0  general_lie        innocent
+26         2.0  general_lie        innocent
+27         1.0  general_lie        innocent
+28        -8.0  general_lie        innocent
+29         9.0  general_lie        innocent
+...        ...          ...             ...
+2058      -3.0  general_lie          guilty
+2059      -1.0  general_lie          guilty
+2060      -5.0  general_lie          guilty
+2061      -3.0  general_lie          guilty
+2062       1.0  general_lie          guilty
+2063       5.0  general_lie          guilty
+2064      -5.0  general_lie          guilty
+2065       7.0  general_lie          guilty
+2066      -4.0  general_lie          guilty
+2067      -3.0  general_lie          guilty
+2068      -5.0  general_lie          guilty
+2069       0.0  general_lie          guilty
+2070       1.0  general_lie          guilty
+2071      -7.0  general_lie          guilty
+2072       8.0  general_lie          guilty
+2073       1.0  general_lie          guilty
+2074      -4.0  general_lie          guilty
+2075       2.0     relevant          guilty
+2076      -6.0     relevant          guilty
+2077      -2.0     relevant          guilty
+2078      -4.0     relevant          guilty
+2079      -6.0     relevant          guilty
+2080       4.0     relevant          guilty
+2081      -2.0     relevant          guilty
+2082       3.0     relevant          guilty
+2083      -3.0     relevant          guilty
+2084      -4.0     relevant          guilty
+2085       1.0     relevant          guilty
+2086       9.0     relevant          guilty
+2087      -4.0     relevant          guilty
+
+[2088 rows x 3 columns]
+
+
+
+				********Analysis for sensor:  ms_count ********
+Overall model F( 7, 2080) =  17.653, p =  0.0000
+Overall model is valid if p value is less than 0.05
+
+
+
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:               ms_count   R-squared:                       0.056
+Model:                            OLS   Adj. R-squared:                  0.053
+Method:                 Least Squares   F-statistic:                     17.65
+Date:                Thu, 31 Jan 2019   Prob (F-statistic):           7.01e-23
+Time:                        16:41:42   Log-Likelihood:                -6974.1
+No. Observations:                2088   AIC:                         1.396e+04
+Df Residuals:                    2080   BIC:                         1.401e+04
+Df Model:                           7                                         
+Covariance Type:            nonrobust                                         
+=================================================================================================================================
+                                                                    coef    std err          t      P>|t|      [0.025      0.975]
+---------------------------------------------------------------------------------------------------------------------------------
+Intercept                                                     -2.222e-14      0.559  -3.98e-14      1.000      -1.096       1.096
+C(stimuli_type)[T.general]                                        4.6284      0.755      6.134      0.000       3.149       6.108
+C(stimuli_type)[T.general_lie]                                    4.6900      0.641      7.319      0.000       3.433       5.947
+C(stimuli_type)[T.relevant]                                       2.5873      0.762      3.394      0.001       1.092       4.082
+C(individual_type)[T.innocent]                                  3.34e-14      0.774   4.31e-14      1.000      -1.518       1.518
+C(stimuli_type)[T.general]:C(individual_type)[T.innocent]        -2.0130      1.039     -1.938      0.053      -4.050       0.024
+C(stimuli_type)[T.general_lie]:C(individual_type)[T.innocent]    -2.4802      0.885     -2.802      0.005      -4.216      -0.744
+C(stimuli_type)[T.relevant]:C(individual_type)[T.innocent]       -2.0067      1.058     -1.897      0.058      -4.081       0.067
+==============================================================================
+Omnibus:                       67.712   Durbin-Watson:                   1.509
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):               88.030
+Skew:                           0.357   Prob(JB):                     7.67e-20
+Kurtosis:                       3.708   Cond. No.                         17.1
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+
+
+                                          sum_sq      df          F        PR(>F)
+C(stimuli_type)                      3533.280449     3.0  25.160105  5.482219e-16
+C(individual_type)                   1952.831321     1.0  41.717697  1.309074e-10
+C(stimuli_type):C(individual_type)    369.106507     3.0   2.628367  4.873065e-02
+Residual                            97366.093054  2080.0        NaN           NaN
+A parameter is significant if the corresponding p value is less than 0.05
+       ms_duration stimuli_type individual_type
+0        -2.166204        alpha        innocent
+1        -2.166204        alpha        innocent
+2         1.833796        alpha        innocent
+3        -2.166204        alpha        innocent
+4         0.833796        alpha        innocent
+5        -2.166204        alpha        innocent
+6        -3.166204        alpha        innocent
+7        -3.166204        alpha        innocent
+8         1.833796        alpha        innocent
+9        -1.166204        alpha        innocent
+10       -2.166204        alpha        innocent
+11        4.833796        alpha        innocent
+12        3.833796        alpha        innocent
+13        0.833796        alpha        innocent
+14       11.833796        alpha        innocent
+15       -1.166204        alpha        innocent
+16       -0.166204        alpha        innocent
+17       -2.166204        alpha        innocent
+18       -1.166204        alpha        innocent
+19       -1.166204        alpha        innocent
+20       -3.166204        alpha        innocent
+21        7.833796        alpha        innocent
+22        2.833796        alpha        innocent
+23       -3.166204        alpha        innocent
+24        0.833796        alpha        innocent
+25       -3.166204        alpha        innocent
+26       -3.166204        alpha        innocent
+27       -1.166204        alpha        innocent
+28       -3.166204        alpha        innocent
+29       -1.166204        alpha        innocent
+...            ...          ...             ...
+27127     3.858625     relevant          guilty
+27128    -2.141375     relevant          guilty
+27129    -0.141375     relevant          guilty
+27130    -2.141375     relevant          guilty
+27131     1.858625     relevant          guilty
+27132     0.858625     relevant          guilty
+27133    -2.141375     relevant          guilty
+27134     4.858625     relevant          guilty
+27135    -2.141375     relevant          guilty
+27136    -1.141375     relevant          guilty
+27137     0.858625     relevant          guilty
+27138     0.858625     relevant          guilty
+27139     0.858625     relevant          guilty
+27140    -1.141375     relevant          guilty
+27141     1.858625     relevant          guilty
+27142    -0.141375     relevant          guilty
+27143    -2.141375     relevant          guilty
+27144     0.858625     relevant          guilty
+27145    -2.141375     relevant          guilty
+27146     9.858625     relevant          guilty
+27147     7.858625     relevant          guilty
+27148    -2.141375     relevant          guilty
+27149     2.858625     relevant          guilty
+27150    -1.141375     relevant          guilty
+27151     3.858625     relevant          guilty
+27152     1.858625     relevant          guilty
+27153     0.858625     relevant          guilty
+27154    -0.141375     relevant          guilty
+27155     4.858625     relevant          guilty
+27156    -2.141375     relevant          guilty
+
+[27157 rows x 3 columns]
+
+
+
+				********Analysis for sensor:  ms_duration ********
+Overall model F( 7, 25542) =  3.687, p =  0.0005
+Overall model is valid if p value is less than 0.05
+
+
+
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:            ms_duration   R-squared:                       0.001
+Model:                            OLS   Adj. R-squared:                  0.001
+Method:                 Least Squares   F-statistic:                     3.687
+Date:                Thu, 31 Jan 2019   Prob (F-statistic):           0.000547
+Time:                        16:42:50   Log-Likelihood:                -67378.
+No. Observations:               25550   AIC:                         1.348e+05
+Df Residuals:                   25542   BIC:                         1.348e+05
+Df Model:                           7                                         
+Covariance Type:            nonrobust                                         
+=================================================================================================================================
+                                                                    coef    std err          t      P>|t|      [0.025      0.975]
+---------------------------------------------------------------------------------------------------------------------------------
+Intercept                                                        -0.0368      0.088     -0.418      0.676      -0.209       0.136
+C(stimuli_type)[T.general]                                        0.2837      0.111      2.559      0.010       0.066       0.501
+C(stimuli_type)[T.general_lie]                                    0.3520      0.097      3.630      0.000       0.162       0.542
+C(stimuli_type)[T.relevant]                                       0.3508      0.115      3.047      0.002       0.125       0.576
+C(individual_type)[T.innocent]                                    0.0375      0.122      0.308      0.758      -0.202       0.277
+C(stimuli_type)[T.general]:C(individual_type)[T.innocent]        -0.0473      0.155     -0.306      0.760      -0.350       0.256
+C(stimuli_type)[T.general_lie]:C(individual_type)[T.innocent]    -0.0780      0.135     -0.576      0.564      -0.343       0.187
+C(stimuli_type)[T.relevant]:C(individual_type)[T.innocent]        0.0285      0.162      0.175      0.861      -0.290       0.346
+==============================================================================
+Omnibus:                    11748.282   Durbin-Watson:                   2.008
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            67449.471
+Skew:                           2.180   Prob(JB):                         0.00
+Kurtosis:                       9.659   Cond. No.                         18.7
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+
+
+                                           sum_sq       df         F    PR(>F)
+C(stimuli_type)                        283.415227      3.0  8.262138  0.000017
+C(individual_type)                       0.441077      1.0  0.038575  0.844295
+C(stimuli_type):C(individual_type)      10.587298      3.0  0.308642  0.819167
+Residual                            292054.837648  25542.0       NaN       NaN
+A parameter is significant if the corresponding p value is less than 0.05
+      fixation_count stimuli_type individual_type
+0          -2.500000        alpha        innocent
+1           3.500000        alpha        innocent
+2          15.500000        alpha        innocent
+3           5.500000        alpha        innocent
+4          -6.500000        alpha        innocent
+5          -9.500000        alpha        innocent
+6          -9.500000        alpha        innocent
+7           7.500000        alpha        innocent
+8          -0.500000        alpha        innocent
+9          -3.500000        alpha        innocent
+10          6.500000      general        innocent
+11         -1.500000      general        innocent
+12         -6.500000      general        innocent
+13         -4.500000      general        innocent
+14          0.500000      general        innocent
+15         -7.500000      general        innocent
+16         -4.500000      general        innocent
+17         -9.500000      general        innocent
+18         -5.500000      general        innocent
+19         -9.500000      general        innocent
+20         -4.500000      general        innocent
+21          3.500000      general        innocent
+22          2.500000      general        innocent
+23          0.500000      general        innocent
+24         -1.500000  general_lie        innocent
+25         -9.500000  general_lie        innocent
+26          0.500000  general_lie        innocent
+27          0.500000  general_lie        innocent
+28         -3.500000  general_lie        innocent
+29          3.500000  general_lie        innocent
+...              ...          ...             ...
+2058        2.818182  general_lie          guilty
+2059        2.818182  general_lie          guilty
+2060       -5.181818  general_lie          guilty
+2061       -7.181818  general_lie          guilty
+2062        2.818182  general_lie          guilty
+2063        2.818182  general_lie          guilty
+2064       -5.181818  general_lie          guilty
+2065        8.818182  general_lie          guilty
+2066       -5.181818  general_lie          guilty
+2067       -4.181818  general_lie          guilty
+2068       -7.181818  general_lie          guilty
+2069        5.818182  general_lie          guilty
+2070        1.818182  general_lie          guilty
+2071       -8.181818  general_lie          guilty
+2072        5.818182  general_lie          guilty
+2073        5.818182  general_lie          guilty
+2074        0.818182  general_lie          guilty
+2075       -2.181818     relevant          guilty
+2076       -5.181818     relevant          guilty
+2077       -1.181818     relevant          guilty
+2078       -2.181818     relevant          guilty
+2079       -7.181818     relevant          guilty
+2080        3.818182     relevant          guilty
+2081       -4.181818     relevant          guilty
+2082        3.818182     relevant          guilty
+2083       -1.181818     relevant          guilty
+2084       -7.181818     relevant          guilty
+2085       -2.181818     relevant          guilty
+2086        9.818182     relevant          guilty
+2087       -3.181818     relevant          guilty
+
+[2088 rows x 3 columns]
+
+
+
+				********Analysis for sensor:  fixation_count ********
+Overall model F( 7, 2080) =  8.214, p =  0.0000
+Overall model is valid if p value is less than 0.05
+
+
+
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:         fixation_count   R-squared:                       0.027
+Model:                            OLS   Adj. R-squared:                  0.024
+Method:                 Least Squares   F-statistic:                     8.214
+Date:                Thu, 31 Jan 2019   Prob (F-statistic):           6.60e-10
+Time:                        16:42:54   Log-Likelihood:                -6443.6
+No. Observations:                2088   AIC:                         1.290e+04
+Df Residuals:                    2080   BIC:                         1.295e+04
+Df Model:                           7                                         
+Covariance Type:            nonrobust                                         
+=================================================================================================================================
+                                                                    coef    std err          t      P>|t|      [0.025      0.975]
+---------------------------------------------------------------------------------------------------------------------------------
+Intercept                                                     -1.213e-14      0.433   -2.8e-14      1.000      -0.850       0.850
+C(stimuli_type)[T.general]                                        2.1172      0.585      3.618      0.000       0.969       3.265
+C(stimuli_type)[T.general_lie]                                    2.3634      0.497      4.755      0.000       1.389       3.338
+C(stimuli_type)[T.relevant]                                       0.6065      0.591      1.026      0.305      -0.553       1.766
+C(individual_type)[T.innocent]                                 1.812e-14      0.600   3.02e-14      1.000      -1.178       1.178
+C(stimuli_type)[T.general]:C(individual_type)[T.innocent]        -0.1519      0.806     -0.188      0.851      -1.732       1.428
+C(stimuli_type)[T.general_lie]:C(individual_type)[T.innocent]    -0.8122      0.687     -1.183      0.237      -2.159       0.534
+C(stimuli_type)[T.relevant]:C(individual_type)[T.innocent]       -0.4351      0.820     -0.530      0.596      -2.044       1.174
+==============================================================================
+Omnibus:                       15.830   Durbin-Watson:                   1.363
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):               22.665
+Skew:                          -0.050   Prob(JB):                     1.20e-05
+Kurtosis:                       3.501   Cond. No.                         17.1
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+
+
+                                          sum_sq      df          F        PR(>F)
+C(stimuli_type)                      1444.683550     3.0  17.099213  5.702686e-11
+C(individual_type)                    130.520251     1.0   4.634496  3.145002e-02
+C(stimuli_type):C(individual_type)     56.500397     3.0   0.668736  5.712196e-01
+Residual                            58578.560783  2080.0        NaN           NaN
+A parameter is significant if the corresponding p value is less than 0.05
+End
+1656

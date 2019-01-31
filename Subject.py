@@ -22,7 +22,7 @@ class Subject:
 		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns,json_file,sensors) #dictionary of objects of class stimulus demarcated by categories
 		self.control_data = self.getControlData(columns, json_file, sensors)
 		self.aggregate_meta = {}
-		self.subjectAnalysis()
+		# self.subjectAnalysis()
 		b = datetime.now()
 		print((b-a).seconds)
 
@@ -212,7 +212,7 @@ class Subject:
 					
 					# Normalizing by subtracting control data
 					for cd in self.control_data:
-						self.aggregate_meta[s][cd].append(stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd] - self.control_data[cd])
+						self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd] - self.control_data[cd])))
 					
 					temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"])
 
@@ -228,5 +228,3 @@ class Subject:
 			self.aggregate_meta[s]["pupil_size"] = temp_agg_pup_size.data
 
 			temp_pup_size = []
-
-

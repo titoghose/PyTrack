@@ -14,8 +14,6 @@ import pandas as pd
 
 class Experiment:
 
-	stimuli_classes = ["Relevant", "GenLie", "General", "Alpha"]
-
 	def __init__(self, name,json_file,sensors):
 		self.name = name #string
 		self.json_file = json_file #string
@@ -23,14 +21,14 @@ class Experiment:
 		self.columns = self.columnsArrayInitialisation()
 		self.stimuli = self.stimuliArrayInitialisation() #dict of names of stimuli demarcated by category
 		self.subjects = self.subjectArrayInitialisation() #list of subject objects
-		self.meta_matrix_dict = (np.array(len(self.subjects), dtype=object), 
-								{"sacc_count" : np.array((len(self.subjects), 4), dtype=object), 
-								"sacc_dur" : np.array((len(self.subjects), 4), dtype=object),
-								"blink_count" : np.array((len(self.subjects), 4), dtype=object),
-								"ms_count" : np.array((len(self.subjects), 4), dtype=object), 
-								"ms_duration" : np.array((len(self.subjects), 4), dtype=object), 
-								"pupil_size" : np.array((len(self.subjects), 4), dtype=object),
-								"fixation_count" : np.array((len(self.subjects), 4), dtype=object)})
+		self.meta_matrix_dict = (np.ndarray(len(self.subjects), dtype=str), 
+								{"sacc_count" : np.ndarray((len(self.subjects), 4), dtype=object), 
+								"sacc_duration" : np.ndarray((len(self.subjects), 4), dtype=object),
+								"blink_count" : np.ndarray((len(self.subjects), 4), dtype=object),
+								"ms_count" : np.ndarray((len(self.subjects), 4), dtype=object), 
+								"ms_duration" : np.ndarray((len(self.subjects), 4), dtype=object), 
+								"pupil_size" : np.ndarray((len(self.subjects), 4), dtype=object),
+								"fixation_count" : np.ndarray((len(self.subjects), 4), dtype=object)})
 
 
 	def stimuliArrayInitialisation(self):
@@ -117,14 +115,16 @@ class Experiment:
 	def analyse(self):
 		cnt = 0
 		
-		for i, sub in enumerate(self.subjects):
+		for sub_index, sub in enumerate(self.subjects):
 			sub.subjectAnalysis()
+
+			self.meta_matrix_dict[0][sub_index] = sub.subj_type
 			
-			meta_matrix_dict[0][i] = sub.subj_type
 			
-			for ind, j in enumerate(stimuli_classes):
-				for k in Sensor.meta_cols[0]:
-					meta_matrix_dict[1][k][i, ind] = sub.metadata_aggregate[j][k]
+
+			for stim_index, stimuli_type in enumerate(sub.aggregate_meta):
+				for meta in sub.aggregate_meta[stimuli_type]:
+					self.meta_matrix_dict[1][meta][sub_index, stim_index] = sub.aggregate_meta[stimuli_type][meta]
 
 		#Lets assume the meta_matrix_dict is instantiated for non_temporal data
 
@@ -132,64 +132,58 @@ class Experiment:
 
 		#Creation of the dataframe skeleton
 
-		data =  pd.DataFrame()
-
-		cols = []
-
-		for sensor_type in Sensor.meta_cols:
-			for name in sensor_type:
-				cols.append(name)
-
-		cols.append("stimuli_count")
-		cols.append("individual_type")
-
 
 		#Instantiation of values into data dataframe
 
-		#For each subject
-		for sub_index, sub in enumerate(self.subjects):
-
-			#For each Question Type
-			for stimuli_index, stimuli_type in enumerate(stimuli_classes):
-
-				#For each column parameter
-				for sensor_type in Sensor.meta_cols:
-					for name in sensor_type:
-
-						
-						#Value is an array	
-						value_array = meta_matrix_dict[1][name][sub_index,stimuli_index]
-
-						for value in value_array:
-
-							row = []
-
-							row.append(value)
-							row.append(stimuli_type)
-							row.append(sub.subj_type)
-
-							#Instantiate into the pandas dataframe
-
-							data.loc[len(data)] = row
-
-		#2.Run the anlaysis
-
-		# Fits the model with the interaction term
-	    # This will also automatically include the main effects for each factor
-	    
-	    #For each column parameter
+		
+		#For each column parameter
 		for sensor_type in Sensor.meta_cols:
-			for name in sensor_type:
+			for meta in sensor_type:
+				if meta == "pupil_size" or meta == "sacc_count" or meta == "sacc_duration":
+					continue
 
-			    model_statement = name + ' ~ C(stimuli_count)*C(individual_type)' 
+				data =  pd.DataFrame(columns=[meta,"stimuli_type","individual_type"])
+
+				#For each subject
+				for sub_index, sub in enumerate(self.subjects):
+
+					#For each Question Type
+					for stimuli_index, stimuli_type in enumerate(sub.aggregate_meta):
+
+						#Value is an array	
+						value_array = self.meta_matrix_dict[1][meta][sub_index,stimuli_index]
+
+						try:					
+							for value in value_array:
+
+								row = []
+
+								row.append(value)
+								row.append(stimuli_type)
+								row.append(sub.subj_type)
+
+								#Instantiate into the pandas dataframe
+
+								data.loc[len(data)] = row
+						except:
+							print(stimuli_type)
+					#2.Run the anlaysis
+
+					# Fits the model with the interaction term
+					# This will also automatically include the main effects for each factor
+					
+				  
+				print(data)
+
+				model_statement = meta + ' ~ C(stimuli_type)*C(individual_type)' 
 
 
-			    model = ols(model_statement, data).fit()
+				model = ols(model_statement, data).fit()
 
-			    #3. Print the Results
-			    #Results for testing significance of overall model
-			    print("\n\n\n\t\t\t\t********Analysis for sensor: ", name,"********")
-			    print(f"Overall model F({model.df_model: .0f},{model.df_resid: .0f}) = {model.fvalue: .3f}, p = {model.f_pvalue: .4f}")
+				#3. Print the Results
+				#Results for testing significance of overall model
+				print("\n\n\n\t\t\t\t********Analysis for sensor: ", meta,"********")
+				print(f"Overall model F({model.df_model: .0f},{model.df_resid: .0f}) = {model.fvalue: .3f}, p = {model.f_pvalue: .4f}")
 				print("Overall model is valid if p value is less than 0.05")
 				print("\n\n")	
 				
@@ -201,24 +195,11 @@ class Experiment:
 				print(sm.stats.anova_lm(model, typ= 2))
 				print("A parameter is significant if the corresponding p value is less than 0.05")
 
-	
-	def compareStimuliClasses(self, stim_class_1, stim_class_2, metadata):
-		subj_types = self.meta_matrix_dict[0]
-		for meta in metadata:
-			stim_1_data = self.meta_matrix_dict[1][meta][:, stimuli_classes.index(stim_class_1)]
-			stim_2_data = self.meta_matrix_dict[1][meta][:, stimuli_classes.index(stim_class_2)]
-
-			innocent_data = stim_1_data[np.where(subj_types == "Innocent")[0]]
-			guilty_data = stim_1_data[np.where(subj_types == "Guilty")[0]]
-
-			(f_score_innocent, p_value_innocent) = stats.f_oneway([id for id in innocent_data])
-			(f_score_guilty, p_value_guilty) = stats.f_oneway([id for id in guilty_data])
-
-
 
 print("Start")
 a = datetime.now()
 exp = Experiment("Exp1", "trial_data.json", ["Eye Tracker"])
+exp.analyse()
 b = datetime.now()
 print("End")
 print((b-a).seconds)
