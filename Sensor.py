@@ -4,7 +4,7 @@ class Sensor:
 	eeg_cols = ["O1Pz_Epoc","SystemTimestamp_Epoc", "EmoTimestamp_Epoc"]
 
 	sensor_names = ["Eye Tracker", "EEG"]
-	meta_cols = [["sacc_count", "sacc_duration", "blink_count", "ms_count" , "ms_duration", "pupil_size", "fixation_count"], []]
+	meta_cols = [["sacc_count", "sacc_duration", "blink_count", "ms_count" , "ms_duration", "pupil_size", "fixation_count", "response_time"], []]
 
 	def __init__(self, name):
 		self.name = name 

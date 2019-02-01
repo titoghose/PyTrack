@@ -166,32 +166,43 @@ class Subject:
 
 
 	def getControlData(self, columns, json_file, sensors):
-		with open(json_file) as json_f:
-			json_data = json.load(json_f)
+		
+		if os.path.isfile('control_values/' + self.name + '.pickle') == True:
+			pickle_in = open('control_values/' + self.name + '.pickle',"rb")
+			control = pickle.load(pickle_in)
 
-		control_questions = {"Alpha" : json_data["Control_Questions"]}
+		else:
+			with open(json_file) as json_f:
+				json_data = json.load(json_f)
 
-		control_q_objects = self.stimulusDictInitialisation(control_questions, columns, json_file, sensors)
+			control_questions = {"Alpha" : json_data["Control_Questions"]}
 
-		control = {"sacc_count" : 0, 
-					"sacc_duration" : 0,
-					"blink_count" : 0,
-					"ms_count" : 0,
-					"ms_duration" : 0,
-					"fixation_count" : 0}
+			control_q_objects = self.stimulusDictInitialisation(control_questions, columns, json_file, sensors)
 
-		temp = []
+			control = {"sacc_count" : 0, 
+						"sacc_duration" : 0,
+						"blink_count" : 0,
+						"ms_count" : 0,
+						"ms_duration" : 0,
+						"fixation_count" : 0}
 
-		cnt = 0
-		for cqo in control_q_objects["Alpha"]:
-			if cqo.data != None:
-				cnt += 1
-				cqo.findEyeMetaData()
-				for c in control:
-					control[c] += np.mean(cqo.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[c])
+			temp = []
 
-		for c in control:
-			control[c] /= cnt
+			cnt = 0
+			for cqo in control_q_objects["Alpha"]:
+				if cqo.data != None:
+					cnt += 1
+					cqo.findEyeMetaData()
+					for c in control:
+						control[c] += np.mean(cqo.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[c])
+
+			for c in control:
+				control[c] /= cnt
+
+			control.update({"response_time" : 0})
+			pickle_out = open('control_values/' + self.name + '.pickle',"wb")
+			pickle.dump(control, pickle_out)
+			pickle_out.close()
 
 		return control
 
@@ -213,7 +224,9 @@ class Subject:
 					# Normalizing by subtracting control data
 					for cd in self.control_data:
 						self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd] - self.control_data[cd])))
-					
+
+						# self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd]))
+
 					temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"])
 
 			max_len = max([len(x) for x in temp_pup_size])
@@ -228,3 +241,9 @@ class Subject:
 			self.aggregate_meta[s]["pupil_size"] = temp_agg_pup_size.data
 
 			temp_pup_size = []
+
+		
+
+		for s in self.stimulus:
+			for cd in self.control_data:
+				self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])

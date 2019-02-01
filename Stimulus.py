@@ -527,6 +527,7 @@ class Stimulus:
 
 		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["blink_count"] = len(self.data["BlinksLeft"]["blink_onset"])
 		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["fixation_count"] = len(np.unique(self.data["FixationSeq"])) - 1
+		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["response_time"] = self.response_time
 
 
 	def getData(self, data):

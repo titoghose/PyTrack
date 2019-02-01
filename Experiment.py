@@ -28,7 +28,8 @@ class Experiment:
 								"ms_count" : np.ndarray((len(self.subjects), 4), dtype=object), 
 								"ms_duration" : np.ndarray((len(self.subjects), 4), dtype=object), 
 								"pupil_size" : np.ndarray((len(self.subjects), 4), dtype=object),
-								"fixation_count" : np.ndarray((len(self.subjects), 4), dtype=object)})
+								"fixation_count" : np.ndarray((len(self.subjects), 4), dtype=object),
+								"response_time" : np.ndarray((len(self.subjects), 4), dtype=object)})
 
 
 	def stimuliArrayInitialisation(self):
@@ -175,7 +176,7 @@ class Experiment:
 				  
 				print(data)
 
-				model_statement = meta + ' ~ C(stimuli_type)*C(individual_type)' 
+				model_statement = meta + ' ~ C(stimuli_type)+C(individual_type)' 
 
 
 				model = ols(model_statement, data).fit()
