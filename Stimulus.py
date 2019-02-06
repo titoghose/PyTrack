@@ -179,16 +179,18 @@ class Stimulus:
 		interp_pupil_size = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices),
 									  pupil_size_no_blinks)
 		
-		gaze_x = gaze["x"]
-		gaze_y = gaze["y"]
-		
-		gaze_x_no_blinks = gaze_x[pupil_size_no_blinks_indices]
-		gaze_y_no_blinks = gaze_y[pupil_size_no_blinks_indices]
-		
-		interp_gaze_x = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices), gaze_x_no_blinks)
-		interp_gaze_y = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices), gaze_y_no_blinks)
-		
-		new_gaze = {"x": interp_gaze_x, "y": interp_gaze_y}
+		new_gaze = {"left" : None, "right" : None}
+		for eye in ["left", "right"]:
+			gaze_x = gaze[eye]["x"]
+			gaze_y = gaze[eye]["y"]
+			
+			gaze_x_no_blinks = gaze_x[pupil_size_no_blinks_indices]
+			gaze_y_no_blinks = gaze_y[pupil_size_no_blinks_indices]
+			
+			interp_gaze_x = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices), gaze_x_no_blinks)
+			interp_gaze_y = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices), gaze_y_no_blinks)
+			
+			new_gaze[eye] = {"x": interp_gaze_x, "y": interp_gaze_y}
 		
 		return blinks, interp_pupil_size, new_gaze
 
@@ -260,7 +262,7 @@ class Stimulus:
 		smooth_gaze = np.zeros(gaze.shape)
 	
 		smooth_gaze[0] = gaze[0]
-		v1 = vel[1] + smooth_gaze[0]
+		vel[1] = vel[1] + smooth_gaze[0]
 		smooth_gaze = np.cumsum(vel)
 	
 		return smooth_gaze
@@ -288,142 +290,267 @@ class Stimulus:
 		return radius
 
 
+	def findBinocularMS(self, msl, msr):
+		numr = len(msl)
+		numl = len(msr)
+
+		bin_ms = np.zeros((1, 18))
+		monol = np.zeros((1, 9))
+		monor = np.zeros((1, 9))
+
+		NB = 0
+		NR = 0
+		NL = 0
+
+		if (numr * numl) > 0:
+			TL = np.max(msl[:, 1])
+			TR = np.max(msr[:, 1])
+			TB = int(np.max((TL, TR)))
+			s = np.zeros(TB+2)
+			
+			for left_coords in msl:
+				s[int(left_coords[0]) : int(left_coords[1]) + 1] = 1
+
+			for right_coords in msr:
+				s[int(right_coords[0]) : int(right_coords[1]) + 1] = 1
+
+			s[0] = 0
+			s[TB+1] = 0
+
+			onoff = np.where(self.diff(s) != 0)[0]
+			m = np.reshape(onoff, (-1, 2))
+			N = m.shape[0]
+			# print(m)
+
+			for i in range(N):
+				left = np.where((msl[:, 0] >= m[i, 0]) & (msl[:, 1] <= m[i, 1]))[0]
+				right = np.where((msr[:, 0] >= m[i, 0]) & (msr[:, 1] <= m[i, 1]))[0]
+
+				if (len(right) * len(left)) > 0:
+					ampr = np.sqrt((msr[right, 5]**2 + msr[right, 6]**2))
+					ampl = np.sqrt((msl[left, 5]**2 + msl[left, 6]**2))
+
+					ir = np.argmax(ampr)
+					il = np.argmax(ampl)
+					NB += 1
+					if NB == 1:
+						bin_ms[0][0:9] = msl[left[il], :]
+						bin_ms[0][9:18] = msr[right[ir], :]
+					else:
+						bin_ms = np.vstack((bin_ms, np.hstack((msl[left[il], :], msr[right[ir], :]))))
+				else:
+					if len(right) == 0:
+						NL += 1
+						ampl = np.sqrt((msl[left, 5]**2 + msl[left, 6]**2))
+						il = np.argmax(ampl)
+						if NL == 1:
+							monol[0] = msl[left[il], :]
+						else:
+							monol = np.vstack((monol, msl[left[il], :]))
+
+					if len(left) == 0:
+						NR += 1
+						ampr = np.sqrt((msr[right, 5]**2 + msr[right, 6]**2))
+						ir = np.argmax(ampr)
+						if NR == 1:
+							monor[0] = msr[right[ir], :]
+						else:
+							monor = np.vstack((monor, msr[right[ir], :]))
+
+		else:
+			if numr == 0:
+				bin_ms = None
+				monor = None
+				monol = sacl
+			if numl == 0:
+				bin_ms = None
+				monor = sacr
+				monol = None
+
+		ms = {"NB" : NB, "NR" : NR, "NL" : NL, "bin" : bin_ms, "left" : monol, "right" : monor}
+
+		return ms	
+
+	
+	def findMonocularMS(self, gaze, vel, sampling_freq=1000):
+
+		MINDUR = int((sampling_freq / 1000) * 6)
+		gaze_x = gaze["x"]
+		gaze_y = gaze["y"]
+
+		vel_x = vel["x"]
+		vel_y = vel["y"]
+
+			# for i in range(len(fixation_indices["start"])):
+		# 	print(fixation_indices["start"][i], fixation_indices["end"][i])
+
+		radius_x = self.calculateMSThreshold(vel_x, sampling_freq)
+		radius_y = self.calculateMSThreshold(vel_y, sampling_freq)
+
+		temp = (vel_x/radius_x)**2 + (vel_y/radius_y)**2
+		ms_indices = np.where(temp > 1)[0]
+
+		# for ind, msi in enumerate(ms_indices):
+		# 	print(ind, msi)
+
+		N = len(ms_indices) 
+		num_ms = 0
+		MS = np.zeros((1, 9))
+		duration = 1
+		a = 0
+		k = 0
+
+		# Loop over saccade candidates
+		while k<N-1:
+			if (ms_indices[k+1] - ms_indices[k]) == 1:
+				duration += 1
+			else:
+				# Minimum duration criterion (exception: last saccade)
+				if duration >= MINDUR:
+					num_ms += 1
+					b = k
+					if num_ms == 1:
+						MS[0][0] = ms_indices[a]
+						MS[0][1] = ms_indices[b]
+					else:
+						new_ms = np.array([ms_indices[a], ms_indices[b], 0, 0, 0, 0, 0, 0, 0])
+						MS = np.vstack((MS, new_ms))
+				
+				a = k+1
+				duration = 1
+
+			k += 1
+
+		# Check minimum duration for last microsaccade
+		if duration >= MINDUR:
+			num_ms += 1
+			b = k
+			if num_ms == 1:
+				MS[0][0] = ms_indices[a]
+				MS[0][1] = ms_indices[b]
+			else:
+				new_ms = np.array([ms_indices[a], ms_indices[b], 0, 0, 0, 0, 0, 0, 0])
+				MS = np.vstack((MS, new_ms))
+
+		if num_ms>0:
+			# Compute peak velocity, horiztonal and vertical components
+			for s in range(num_ms):
+				
+				# Onset and offset for saccades
+				a = int(MS[s][0])
+				b = int(MS[s][1])
+				idx = range(a, b)
+
+				# Saccade peak velocity (vpeak)
+				vpeak = max(np.sqrt(vel_x[idx]**2 + vel_y[idx]**2))
+				MS[s][2] = vpeak
+
+				# Saccade vector (dx,dy)
+				dx = gaze_x[b] - gaze_x[a]
+				dy = gaze_y[b] - gaze_y[a]
+				MS[s][3] = dx
+				MS[s][4] = dy
+
+				# Saccade amplitude (dX,dY)
+				minx = min(gaze_x[idx])
+				maxx = max(gaze_x[idx])
+				miny = min(gaze_y[idx])
+				maxy = max(gaze_y[idx])
+				ix1 = np.argmin(gaze_x[idx])
+				ix2 = np.argmax(gaze_x[idx])
+				iy1 = np.argmin(gaze_y[idx])
+				iy2 = np.argmax(gaze_y[idx])
+				dX = np.sign(ix2 - ix1) * (maxx - minx)
+				dY = np.sign(iy2 - iy1) * (maxy - miny)
+				MS[s][5] = dX
+				MS[s][6] = dY
+
+				MS[s][7] = radius_x
+				MS[s][8] = radius_y
+
+		ms_count = 0
+		ms_duration = []
+
+		ms_count = len(MS)
+		for ms in MS:
+			ms_duration.append(ms[1] - ms[0])
+		return np.array(MS), ms_count, ms_duration
+
+
 	def findMicrosaccades(self, fixation_seq, gaze, sampling_freq=1000):
 		"""
 		Function to detect microsaccades within fixations.
 		Adapted from R. Engbert and K. Mergenthaler, “Microsaccades are triggered by low retinal image slip,” Proc. Natl. Acad. Sci., vol. 103, no. 18, pp. 7192–7197, 2006.
-		
+
 		Input:
-		
+
 		Output:
-		
+
 		"""
-		MINDUR = (1000/sampling_freq) * 6
-		gaze_x = gaze["x"]
-		gaze_y = gaze["y"]
 		fixation_indices = self.findFixationsIDT(fixation_seq)
-		
-		all_MS = []
+		all_bin_MS = []
 
-		for i in range(len(fixation_indices["start"])):
-		
-			if fixation_indices["end"][i] - fixation_indices["start"][i] < 10:
-				continue
+		for fix_ind in range(len(fixation_indices["start"])):
 
-			curr_gaze_x = gaze_x[fixation_indices["start"][i] : fixation_indices["end"][i]]
-			curr_gaze_y = gaze_y[fixation_indices["start"][i] : fixation_indices["end"][i]]
-		
-			vel_x = self.position2Velocity(curr_gaze_x, sampling_freq)
-			vel_y = self.position2Velocity(curr_gaze_y, sampling_freq)
-		
-			smooth_gaze_x = self.smoothGaze(vel_x, curr_gaze_x, sampling_freq)
-			smooth_gaze_y = self.smoothGaze(vel_y, curr_gaze_y, sampling_freq)	
-		
-			radius_x = self.calculateMSThreshold(vel_x, sampling_freq)
-			radius_y = self.calculateMSThreshold(vel_y, sampling_freq)
-		
-			temp = (vel_x/radius_x)**2 + (vel_y/radius_y)**2
-			ms_indices = np.where(temp > 1)[0]
-		
-			N = len(ms_indices) 
-			num_ms = 0
-			MS = np.zeros((1, 7))
-			duration = 1
-			a = 0
-			k = 0
-		
-			# Loop over saccade candidates
-			while k<N-1:
-				if (ms_indices[k+1] - ms_indices[k]) == 1:
-					duration += 1
-				else:
-					# Minimum duration criterion (exception: last saccade)
-					if duration >= MINDUR:
-						num_ms += 1
-						b = k
-						if num_ms == 1:
-							MS[0][0] = ms_indices[a]
-							MS[0][1] = ms_indices[b]
-						else:
-							new_ms = np.array([ms_indices[a], ms_indices[b], 0, 0, 0, 0, 0])
-							MS = np.vstack((MS, new_ms))
-					
-					a = k+1
-					duration = 1
-		
-				k += 1
-		
-			# Check minimum duration for last microsaccade
-			if duration >= MINDUR:
-				num_ms += 1
-				b = k
-				if num_ms == 1:
-					MS[0][0] = ms_indices[a]
-					MS[0][1] = ms_indices[b]
-				else:
-					new_ms = np.array([ms_indices[a], ms_indices[b], 0, 0, 0, 0, 0])
-					MS = np.vstack((MS, new_ms))
-		
-			if num_ms>0:
-				# Compute peak velocity, horiztonal and vertical components
-				for s in range(num_ms):
-					
-					# Onset and offset for saccades
-					a = int(MS[s][0])
-					b = int(MS[s][1])
-					idx = range(a, b)
-		
-					# Saccade peak velocity (vpeak)
-					vpeak = max(np.sqrt(vel_x[idx]**2 + vel_y[idx]**2))
-					MS[s][2] = vpeak
-		
-					# Saccade vector (dx,dy)
-					dx = curr_gaze_x[b] - curr_gaze_x[a]
-					dy = curr_gaze_y[b] - curr_gaze_y[a]
-					MS[s][3] = dx
-					MS[s][4] = dy
-		
-					# Saccade amplitude (dX,dY)
-					minx = min(curr_gaze_x[idx])
-					maxx = max(curr_gaze_x[idx])
-					miny = min(curr_gaze_y[idx])
-					maxy = max(curr_gaze_y[idx])
-					ix1 = np.argmin(curr_gaze_x[idx])
-					ix2 = np.argmax(curr_gaze_x[idx])
-					iy1 = np.argmin(curr_gaze_y[idx])
-					iy2 = np.argmax(curr_gaze_y[idx])
-					dX = np.sign(ix2 - ix1) * (maxx - minx)
-					dY = np.sign(iy2 - iy1) * (maxy - miny)
-					MS[s][5] = dX
-					MS[s][6] = dY
-		
-					all_MS.append((MS[s], radius_x, radius_y))
-		
-				# fig = plt.figure()
-				
-				# a1 = fig.add_subplot(2, 1, 1)
-				# a1.plot(smooth_gaze_x, smooth_gaze_y)
-				# for i in range(len(MS)):
-				# 	a1.plot(smooth_gaze_x[int(MS[i][0]) : int(MS[i][1])], smooth_gaze_y[int(MS[i][0]) : int(MS[i][1])], color='r')
-		
-				
-				# a2 = fig.add_subplot(2, 1, 2)
-				# e = Ellipse((0, 0), radius_x, radius_y, linestyle='--', color='g', fill=False)
-				# a2.add_artist(e)
-		
-				# a2.plot(vel_x, vel_y, alpha=0.5)
-				# for i in range(len(MS)):
-				# 	a2.plot(vel_x[int(MS[i][0]) : int(MS[i][1])], vel_y[int(MS[i][0]) : int(MS[i][1])], color='r') 
-		
-				# plt.show()
-		
+			all_MS = {"left" : None, "right" : None}
+			ms_count = {"left" : None, "right" : None}
+			ms_duration = {"left" : None, "right" : None}
+			smooth_gaze = {"left" : None, "right" : None}
+			vel = {"left" : None, "right" : None}
+
+
+			for i in ["left", "right"]:
+
+				curr_gaze = {"x" : gaze[i]["x"][fixation_indices["start"][fix_ind] : fixation_indices["end"][fix_ind] + 1],
+							"y" : gaze[i]["y"][fixation_indices["start"][fix_ind] : fixation_indices["end"][fix_ind] + 1]}
+
+				vel_x = self.position2Velocity(curr_gaze["x"], sampling_freq)
+				vel_y = self.position2Velocity(curr_gaze["y"], sampling_freq)
+				temp_vel = {"x" : vel_x, "y" : vel_y}
+				vel[i] = temp_vel
+
+				smooth_gaze_x = self.smoothGaze(self.position2Velocity(curr_gaze["x"], sampling_freq=1), curr_gaze["x"], sampling_freq)
+				smooth_gaze_y = self.smoothGaze(self.position2Velocity(curr_gaze["y"], sampling_freq=1), curr_gaze["y"], sampling_freq)
+				temp_smooth_gaze = {"x" : smooth_gaze_x, "y" : smooth_gaze_y}
+				smooth_gaze[i] = temp_smooth_gaze
+
+				all_MS[i], ms_count[i], ms_duration[i] = self.findMonocularMS(curr_gaze, vel[i], sampling_freq)
+
+			MS = self.findBinocularMS(all_MS["left"], all_MS["right"])
+			all_bin_MS.append(MS)
+			
+			# fig = plt.figure()
+			# a1 = fig.add_subplot(1, 2, 1)
+			# a2 = fig.add_subplot(1, 2, 2)
+
+			# a1.plot(smooth_gaze["left"]["x"][1:], smooth_gaze["left"]["y"][1:])
+			# a1.set_xlabel("x")
+			# a1.set_ylabel("y")
+			# a1.set_title("gaze plot")
+			# for i in range(len(MS["bin"])):
+			# 	a1.plot(smooth_gaze["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], smooth_gaze["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r')
+
+			# e = Ellipse((0, 0), 2*MS["bin"][0, 7], 2*MS["bin"][0, 8], linestyle='--', color='g', fill=False)
+			# a2.add_artist(e)
+
+			# a2.plot(vel["left"]["x"], vel["left"]["y"], alpha=0.5)
+			# a2.set_xlabel("vel-x")
+			# a2.set_ylabel("vel-y")
+			# a2.set_title("gaze velocity plot")
+			# for i in range(len(MS["bin"])):
+			# 	a2.plot(vel["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], vel["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r') 
+
+			# plt.savefig("sampleDataPlot.png")
+			# plt.show()
 		ms_count = 0
 		ms_duration = []
-		
-		ms_count = len(all_MS)
-		for ms in all_MS:
-			ms_duration.append(ms[0][1] - ms[0][0])
-		return all_MS, ms_count, ms_duration
+		for ms in all_bin_MS:
+			ms_count += ms["NB"]
+			bin_ms = ms["bin"]
+			for bms in bin_ms:
+				ms_duration.append((bms[1] - bms[0]) + (bms[10] - bms[9]) / 2.)
+
+		return all_bin_MS, ms_count, ms_duration
 
 
 	def visualize(self):
@@ -447,8 +574,8 @@ class Stimulus:
 		# Plot for eye gaze
 		# img = plt.imread(slides_path + sn + ".jpg")
 		# ax.imshow(img)
-		line, = ax.plot(self.data["Gaze"]["x"][:1], self.data["Gaze"]["y"][:1], 'r-', alpha=0.5)
-		circle, = ax.plot(self.data["Gaze"]["x"][1], self.data["Gaze"]["y"][1], 'go', markersize=15, alpha=0.4)
+		line, = ax.plot(self.data["Gaze"]["left"]["x"][:1], self.data["Gaze"]["left"]["y"][:1], 'r-', alpha=0.5)
+		circle, = ax.plot(self.data["Gaze"]["left"]["x"][1], self.data["Gaze"]["left"]["y"][1], 'go', markersize=15, alpha=0.4)
 		ax.set_title("Gaze")
 		
 		# Plot for eeg (Pz)
@@ -472,14 +599,14 @@ class Stimulus:
 		
 		def animate(i):
 			if i < 2000:
-				line.set_xdata(self.data["Gaze"]["x"][:i])
-				line.set_ydata(self.data["Gaze"]["y"][:i])
+				line.set_xdata(self.data["Gaze"]["left"]["x"][:i])
+				line.set_ydata(self.data["Gaze"]["left"]["y"][:i])
 			else:
-				line.set_xdata(self.data["Gaze"]["x"][i - 2000:i])
-				line.set_ydata(self.data["Gaze"]["y"][i - 2000:i])
+				line.set_xdata(self.data["Gaze"]["left"]["x"][i - 2000:i])
+				line.set_ydata(self.data["Gaze"]["left"]["y"][i - 2000:i])
 		
-			circle.set_xdata(self.data["Gaze"]["x"][i])
-			circle.set_ydata(self.data["Gaze"]["y"][i])
+			circle.set_xdata(self.data["Gaze"]["left"]["x"][i])
+			circle.set_ydata(self.data["Gaze"]["left"]["y"][i])
 		
 			line2.set_xdata(total_range[:i])
 			line2.set_ydata(self.data["EEG"][:i])
@@ -533,8 +660,10 @@ class Stimulus:
 	def getData(self, data):
 		# Extracting data for particular stimulus
 		event_type = np.array(data.EventSource)
-		gazex_df = np.array(data.GazeX)
-		gazey_df = np.array(data.GazeY)
+		l_gazex_df = np.array(data.GazeLeftx)
+		l_gazey_df = np.array(data.GazeLefty)
+		r_gazex_df = np.array(data.GazeRightx)
+		r_gazey_df = np.array(data.GazeRighty)
 		eeg_pz_df = np.array(data.O1Pz_Epoc)
 		pupil_size_l_df = np.array(data.PupilLeft)
 		pupil_size_r_df = np.array(data.PupilRight)
@@ -548,9 +677,13 @@ class Stimulus:
 
 		# Extracting the eye gaze data
 		et_rows = np.where(data.EventSource.str.contains("ET"))[0]
-		gaze_x = np.squeeze(np.array([gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
-		gaze_y = np.squeeze(np.array([gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
-		gaze = {"x": gaze_x, "y": gaze_y}
+		l_gaze_x = np.squeeze(np.array([l_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
+		l_gaze_y = np.squeeze(np.array([l_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
+		l_gaze = {"x": l_gaze_x, "y": l_gaze_y}
+		r_gaze_x = np.squeeze(np.array([r_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
+		r_gaze_y = np.squeeze(np.array([r_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
+		r_gaze = {"x": r_gaze_x, "y": r_gaze_y}
+		gaze = {"left" : l_gaze, "right" : r_gaze}
 		
 		# Extracting Pupil Size Data
 		pupil_size_r = np.squeeze(np.array([pupil_size_r_df[i] for i in sorted(et_rows)], dtype="float32"))
@@ -560,10 +693,6 @@ class Stimulus:
 		blinks_l, interp_pupil_size_l, new_gaze_l = self.fix_blinks(pupil_size_l, gaze)
 		blinks_r, interp_pupil_size_r, new_gaze_r = self.fix_blinks(pupil_size_r, gaze)
 		interp_pupil_size = np.mean([interp_pupil_size_r, interp_pupil_size_l], axis=0)
-		gaze_x, gaze_y = None, None
-		gaze_x = np.mean([new_gaze_r["x"], new_gaze_l["x"]], axis=0)
-		gaze_y = np.mean([new_gaze_r["y"], new_gaze_l["y"]], axis=0)
-
 
 		# Extracting and upsampling eeg data from Pz
 		eeg_rows = np.where(data.EventSource.str.contains("Raw EEG Epoc"))[0]
@@ -583,3 +712,5 @@ class Stimulus:
 							"EEG" : eeg_pz}
 
 		return extracted_data
+
+

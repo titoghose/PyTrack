@@ -244,6 +244,6 @@ class Subject:
 
 		
 
-		for s in self.stimulus:
-			for cd in self.control_data:
-				self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])
+		# for s in self.stimulus:
+		# 	for cd in self.control_data:
+		# 		self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])

@@ -156,11 +156,17 @@
          "Alpha10",
          "Alpha11"],
    "Columns_of_interest":{
-      "GazeX":{
-         "Description" : "X coordinate of the Pupil Gaze"
+      "GazeLeftx":{
+         "Description" : "X coordinate of the Left Pupil Gaze"
       },
-      "GazeY":{
-         "Description" : "Y coordinate of the Pupil Gaze"
+      "GazeLefty":{
+         "Description" : "Y coordinate of the Left Pupil Gaze"
+      },
+      "GazeRightx":{
+         "Description" : "X coordinate of the Right Pupil Gaze"
+      },
+      "GazeRighty":{
+         "Description" : "Y coordinate of the Right Pupil Gaze"
       },
       "PupilLeft":{
          "Description" : "Size of the Left Pupil"
