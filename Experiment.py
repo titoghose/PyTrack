@@ -12,6 +12,9 @@ from statsmodels.formula.api import ols
 import statsmodels.stats.multicomp
 import pandas as pd
 
+import pingouin as pg
+
+
 class Experiment:
 
 	def __init__(self, name,json_file,sensors):
@@ -143,7 +146,7 @@ class Experiment:
 				if meta == "pupil_size" or meta == "sacc_count" or meta == "sacc_duration":
 					continue
 
-				data =  pd.DataFrame(columns=[meta,"stimuli_type","individual_type"])
+				data =  pd.DataFrame(columns=[meta,"stimuli_type","individual_type","subject"])
 
 				#For each subject
 				for sub_index, sub in enumerate(self.subjects):
@@ -162,6 +165,7 @@ class Experiment:
 								row.append(value)
 								row.append(stimuli_type)
 								row.append(sub.subj_type)
+								row.append(sub.name)
 
 								#Instantiate into the pandas dataframe
 
@@ -176,6 +180,17 @@ class Experiment:
 				  
 				print(data)
 
+
+				# Compute the two-way mixed-design ANOVA
+				aov = pg.mixed_anova(dv=meta, within='stimuli_type', between='individual_type', subject = 'subject', data=data)
+				# Pretty printing of ANOVA summary
+				pg.print_table(aov)
+
+				posthocs = pg.pairwise_ttests(dv=meta, within='stimuli_type', between='individual_type', subject='subject', data=data)
+				pg.print_table(posthocs)
+
+
+				'''
 				model_statement = meta + ' ~ C(stimuli_type)+C(individual_type)' 
 
 
@@ -196,6 +211,8 @@ class Experiment:
 				print(sm.stats.anova_lm(model, typ= 2))
 				print("A parameter is significant if the corresponding p value is less than 0.05")
 
+				'''
+				
 
 print("Start")
 a = datetime.now()

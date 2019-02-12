@@ -1,0 +1,110 @@
+					RESPONSE_TIME
+
+
+DATA
+
+      response_time stimuli_type individual_type              subject
+0            3146.0        alpha        innocent  Innocent Subject 05
+1            6228.0        alpha        innocent  Innocent Subject 05
+2           10030.0        alpha        innocent  Innocent Subject 05
+3            8919.0        alpha        innocent  Innocent Subject 05
+4            2963.0        alpha        innocent  Innocent Subject 05
+5            1419.0        alpha        innocent  Innocent Subject 05
+6             847.0        alpha        innocent  Innocent Subject 05
+7           10006.0        alpha        innocent  Innocent Subject 05
+8            4568.0        alpha        innocent  Innocent Subject 05
+9            2791.0        alpha        innocent  Innocent Subject 05
+10           6032.0      general        innocent  Innocent Subject 05
+11           3437.0      general        innocent  Innocent Subject 05
+12           2028.0      general        innocent  Innocent Subject 05
+13           2582.0      general        innocent  Innocent Subject 05
+14           3096.0      general        innocent  Innocent Subject 05
+15           1966.0      general        innocent  Innocent Subject 05
+16           2085.0      general        innocent  Innocent Subject 05
+17            901.0      general        innocent  Innocent Subject 05
+18           2303.0      general        innocent  Innocent Subject 05
+19            975.0      general        innocent  Innocent Subject 05
+20           2079.0      general        innocent  Innocent Subject 05
+21           4383.0      general        innocent  Innocent Subject 05
+22           4444.0      general        innocent  Innocent Subject 05
+23           4231.0      general        innocent  Innocent Subject 05
+24           3797.0      general        innocent  Innocent Subject 05
+25           3718.0      general        innocent  Innocent Subject 05
+26           2838.0      general        innocent  Innocent Subject 05
+27           3160.0      general        innocent  Innocent Subject 05
+28           3783.0      general        innocent  Innocent Subject 05
+29           6043.0      general        innocent  Innocent Subject 05
+...             ...          ...             ...                  ...
+2058         1937.0  general_lie          guilty    Guilty Subject 20
+2059         6029.0  general_lie          guilty    Guilty Subject 20
+2060         3662.0  general_lie          guilty    Guilty Subject 20
+2061         1639.0  general_lie          guilty    Guilty Subject 20
+2062         3049.0  general_lie          guilty    Guilty Subject 20
+2063         5625.0  general_lie          guilty    Guilty Subject 20
+2064         4671.0  general_lie          guilty    Guilty Subject 20
+2065         3507.0  general_lie          guilty    Guilty Subject 20
+2066         6033.0  general_lie          guilty    Guilty Subject 20
+2067         3314.0  general_lie          guilty    Guilty Subject 20
+2068         4090.0  general_lie          guilty    Guilty Subject 20
+2069         1656.0  general_lie          guilty    Guilty Subject 20
+2070         1943.0  general_lie          guilty    Guilty Subject 20
+2071         4906.0  general_lie          guilty    Guilty Subject 20
+2072          890.0  general_lie          guilty    Guilty Subject 20
+2073         4062.0  general_lie          guilty    Guilty Subject 20
+2074         3024.0  general_lie          guilty    Guilty Subject 20
+2075         2359.0     relevant          guilty    Guilty Subject 20
+2076         1540.0     relevant          guilty    Guilty Subject 20
+2077         2629.0     relevant          guilty    Guilty Subject 20
+2078         2299.0     relevant          guilty    Guilty Subject 20
+2079         1209.0     relevant          guilty    Guilty Subject 20
+2080         4068.0     relevant          guilty    Guilty Subject 20
+2081         1620.0     relevant          guilty    Guilty Subject 20
+2082         6010.0     relevant          guilty    Guilty Subject 20
+2083         3061.0     relevant          guilty    Guilty Subject 20
+2084         1126.0     relevant          guilty    Guilty Subject 20
+2085         2603.0     relevant          guilty    Guilty Subject 20
+2086         5998.0     relevant          guilty    Guilty Subject 20
+2087         1866.0     relevant          guilty    Guilty Subject 20
+
+[2088 rows x 4 columns]
+
+=============
+ANOVA SUMMARY
+=============
+
+Source                     SS    DF1    DF2           MS       F    p-unc  p-GG-corr                np2  eps    sphericity    W-spher    p-spher
+---------------  ------------  -----  -----  -----------  ------  -------  ---------------------  -----  -----  ------------  ---------  --------------------
+individual_type    142763.186      1     28   142763.186   0.127    0.724  -                      0.005  -      -             -          -
+stimuli_type     27185003.594      3     84  9061667.865  16.445    0.000  3.627704427383634e-05  0.370  0.473  False         0.156      6.71865384547828e-10
+Interaction        872384.397      3     84   290794.799   0.528    0.664  -                      0.018  -      -             -          -
+
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+
+==============
+POST HOC TESTS
+==============
+
+Contrast                        stimuli_type    A            B            Paired         T  tail         p-unc                BF10    efsize  eftype
+------------------------------  --------------  -----------  -----------  --------  ------  ---------  -------  ------------------  --------  --------
+stimuli_type                    -               alpha        general      True       5.565  two-sided    0.000          256030.370     0.450  hedges
+stimuli_type                    -               alpha        general_lie  True       5.014  two-sided    0.000           15493.635     0.396  hedges
+stimuli_type                    -               alpha        relevant     True       8.454  two-sided    0.000  27907255816168.320     0.676  hedges
+stimuli_type                    -               general      general_lie  True      -0.821  two-sided    0.412               0.083    -0.044  hedges
+stimuli_type                    -               general      relevant     True       5.362  two-sided    0.000           86189.730     0.333  hedges
+stimuli_type                    -               general_lie  relevant     True       5.835  two-sided    0.000         1089552.588     0.365  hedges
+individual_type                 -               innocent     guilty       False     -1.841  two-sided    0.066               0.265    -0.080  hedges
+stimuli_type * individual_type  alpha           innocent     guilty       False      0.675  two-sided    0.500               0.155     0.076  hedges
+stimuli_type * individual_type  general         innocent     guilty       False     -1.948  two-sided    0.052               0.524    -0.142  hedges
+stimuli_type * individual_type  general_lie     innocent     guilty       False     -1.398  two-sided    0.163               0.225    -0.109  hedges
+stimuli_type * individual_type  relevant        innocent     guilty       False     -1.382  two-sided    0.168               0.291    -0.146  hedges

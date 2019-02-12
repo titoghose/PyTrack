@@ -41,7 +41,8 @@ class Subject:
 		with open(json_file) as json_f:
 			json_data = json.load(json_f)
 
-		name_of_database = json_data["Database_name"]
+		#name_of_database = json_data["Database_name"]
+		name_of_database = "/media/arvind/New Volume/Projects/Lie Detection (NTU)/iMotions_library/lie_detection_database.db"
 
 		extended_name = "sqlite:///" + name_of_database
 		database = create_engine(extended_name)
