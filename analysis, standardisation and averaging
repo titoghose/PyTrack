@@ -1,0 +1,164 @@
+Analysis for  blink_count
+
+=============
+ANOVA SUMMARY
+=============
+
+Source                SS    DF1    DF2      MS       F    p-unc  p-GG-corr                np2  eps    sphericity    W-spher    p-spher
+---------------  -------  -----  -----  ------  ------  -------  ---------------------  -----  -----  ------------  ---------  ----------------------
+individual_type    0.330      1     28   0.330   0.009    0.924  -                      0.000  -      -             -          -
+stimuli_type     141.399      3     84  47.133  11.135    0.000  0.0014543863071305753  0.285  0.364  False         0.008      5.6983069084442125e-27
+Interaction        0.230      3     84   0.077   0.018    0.997  -                      0.001  -      -             -          -
+
+
+==============
+POST HOC TESTS
+==============
+
+Contrast                        stimuli_type    A            B            Paired         T  tail         p-unc    BF10    efsize  eftype
+------------------------------  --------------  -----------  -----------  --------  ------  ---------  -------  ------  --------  --------
+stimuli_type                    -               alpha        general      True       3.357  two-sided    0.002  16.498     1.210  hedges
+stimuli_type                    -               alpha        general_lie  True       3.335  two-sided    0.002  15.691     1.202  hedges
+stimuli_type                    -               alpha        relevant     True       3.748  two-sided    0.001  40.854     1.351  hedges
+stimuli_type                    -               general      general_lie  True      -1.381  two-sided    0.178   0.458    -0.033  hedges
+stimuli_type                    -               general      relevant     True      -0.348  two-sided    0.730   0.206    -0.015  hedges
+stimuli_type                    -               general_lie  relevant     True       0.442  two-sided    0.661   0.213     0.020  hedges
+individual_type                 -               innocent     guilty       False     -0.163  two-sided    0.871   0.197    -0.029  hedges
+stimuli_type * individual_type  alpha           innocent     guilty       False     -1.610  two-sided    0.119   0.903    -0.568  hedges
+stimuli_type * individual_type  general         innocent     guilty       False     -0.154  two-sided    0.878   0.348    -0.054  hedges
+stimuli_type * individual_type  general_lie     innocent     guilty       False     -0.042  two-sided    0.967   0.345    -0.015  hedges
+stimuli_type * individual_type  relevant        innocent     guilty       False     -0.089  two-sided    0.929   0.346    -0.032  hedges
+
+				Analysis for  ms_count
+
+=============
+ANOVA SUMMARY
+=============
+
+Source                SS    DF1    DF2      MS       F    p-unc  p-GG-corr                np2  eps    sphericity    W-spher    p-spher
+---------------  -------  -----  -----  ------  ------  -------  ---------------------  -----  -----  ------------  ---------  --------------------
+individual_type   19.969      1     28  19.969   1.316    0.261  -                      0.045  -      -             -          -
+stimuli_type     110.174      3     84  36.725  13.532    0.000  9.034750420020406e-06  0.326  0.705  False         0.552      0.005631445065739942
+Interaction        7.373      3     84   2.458   0.906    0.442  -                      0.031  -      -             -          -
+
+
+==============
+POST HOC TESTS
+==============
+
+Contrast                        stimuli_type    A            B            Paired         T  tail         p-unc      BF10    efsize  eftype
+------------------------------  --------------  -----------  -----------  --------  ------  ---------  -------  --------  --------  --------
+stimuli_type                    -               alpha        general      True      -4.342  two-sided    0.000   172.770    -1.565  hedges
+stimuli_type                    -               alpha        general_lie  True      -4.034  two-sided    0.000    81.184    -1.454  hedges
+stimuli_type                    -               alpha        relevant     True      -1.474  two-sided    0.151     0.515    -0.531  hedges
+stimuli_type                    -               general      general_lie  True       0.360  two-sided    0.721     0.206     0.042  hedges
+stimuli_type                    -               general      relevant     True       5.242  two-sided    0.000  1664.887     0.561  hedges
+stimuli_type                    -               general_lie  relevant     True       4.603  two-sided    0.000   331.340     0.512  hedges
+individual_type                 -               innocent     guilty       False     -1.739  two-sided    0.085     0.756    -0.318  hedges
+stimuli_type * individual_type  alpha           innocent     guilty       False      0.090  two-sided    0.929     0.346     0.032  hedges
+stimuli_type * individual_type  general         innocent     guilty       False     -0.939  two-sided    0.356     0.481    -0.337  hedges
+stimuli_type * individual_type  general_lie     innocent     guilty       False     -1.283  two-sided    0.210     0.639    -0.454  hedges
+stimuli_type * individual_type  relevant        innocent     guilty       False     -0.973  two-sided    0.339     0.493    -0.348  hedges
+
+				Analysis for  ms_duration
+/home/arvind/.local/lib/python3.6/site-packages/pingouin/utils.py:103: FutureWarning: Series.nonzero() is deprecated and will be removed in a future version.Use Series.to_numpy().nonzero() instead
+  iloc_nan = pd.isnull(data).any(1).nonzero()[0]
+
+Note: 12 subject(s) removed because of missing value(s).
+
+
+=============
+ANOVA SUMMARY
+=============
+
+Source               SS    DF1    DF2     MS       F    p-unc  p-GG-corr                np2  eps    sphericity    W-spher    p-spher
+---------------  ------  -----  -----  -----  ------  -------  ---------------------  -----  -----  ------------  ---------  ----------------------
+individual_type   8.339      1     25  8.339   3.099    0.091  -                      0.110  -      -             -          -
+stimuli_type     18.353      3     75  6.118  16.148    0.000  6.512176037021578e-06  0.392  0.663  False         0.406      0.00046719900125517626
+Interaction       2.898      3     75  0.966   2.550    0.062  -                      0.093  -      -             -          -
+
+
+Note: 12 subject(s) removed because of missing value(s).
+
+
+==============
+POST HOC TESTS
+==============
+
+Contrast                        stimuli_type    A            B            Paired         T  tail         p-unc     BF10    efsize  eftype
+------------------------------  --------------  -----------  -----------  --------  ------  ---------  -------  -------  --------  --------
+stimuli_type                    -               alpha        general      True      -4.857  two-sided    0.000  504.941    -1.398  hedges
+stimuli_type                    -               alpha        general_lie  True      -4.511  two-sided    0.000  220.977    -1.349  hedges
+stimuli_type                    -               alpha        relevant     True      -4.179  two-sided    0.000  101.195    -1.217  hedges
+stimuli_type                    -               general      general_lie  True       0.727  two-sided    0.473    0.260     0.059  hedges
+stimuli_type                    -               general      relevant     True       0.873  two-sided    0.391    0.288     0.092  hedges
+stimuli_type                    -               general_lie  relevant     True       0.290  two-sided    0.774    0.212     0.036  hedges
+individual_type                 -               innocent     guilty       False     -2.726  two-sided    0.008    5.310    -0.526  hedges
+stimuli_type * individual_type  alpha           innocent     guilty       False      0.061  two-sided    0.952    0.359     0.023  hedges
+stimuli_type * individual_type  general         innocent     guilty       False     -1.540  two-sided    0.138    0.849    -0.583  hedges
+stimuli_type * individual_type  general_lie     innocent     guilty       False     -1.781  two-sided    0.087    1.125    -0.664  hedges
+stimuli_type * individual_type  relevant        innocent     guilty       False     -1.832  two-sided    0.079    1.199    -0.686  hedges
+
+				Analysis for  fixation_count
+
+=============
+ANOVA SUMMARY
+=============
+
+Source                SS    DF1    DF2      MS       F    p-unc  p-GG-corr                 np2  eps    sphericity    W-spher    p-spher
+---------------  -------  -----  -----  ------  ------  -------  ----------------------  -----  -----  ------------  ---------  ---------------------
+individual_type    5.694      1     28   5.694   0.249    0.622  -                       0.009  -      -             -          -
+stimuli_type     112.566      3     84  37.522  10.028    0.000  0.00019534987180387292  0.264  0.637  False         0.445      0.0004256030626930507
+Interaction        2.721      3     84   0.907   0.242    0.867  -                       0.009  -      -             -          -
+
+
+==============
+POST HOC TESTS
+==============
+
+Contrast                        stimuli_type    A            B            Paired         T  tail         p-unc      BF10    efsize  eftype
+------------------------------  --------------  -----------  -----------  --------  ------  ---------  -------  --------  --------  --------
+stimuli_type                    -               alpha        general      True      -3.399  two-sided    0.002    18.116    -1.225  hedges
+stimuli_type                    -               alpha        general_lie  True      -2.969  two-sided    0.006     7.021    -1.070  hedges
+stimuli_type                    -               alpha        relevant     True      -0.172  two-sided    0.865     0.197    -0.062  hedges
+stimuli_type                    -               general      general_lie  True       0.519  two-sided    0.608     0.220     0.050  hedges
+stimuli_type                    -               general      relevant     True       5.498  two-sided    0.000  3199.577     0.600  hedges
+stimuli_type                    -               general_lie  relevant     True       5.391  two-sided    0.000  2433.133     0.534  hedges
+individual_type                 -               innocent     guilty       False     -0.793  two-sided    0.429     0.259    -0.144  hedges
+stimuli_type * individual_type  alpha           innocent     guilty       False     -0.202  two-sided    0.841     0.350    -0.073  hedges
+stimuli_type * individual_type  general         innocent     guilty       False     -0.354  two-sided    0.726     0.362    -0.127  hedges
+stimuli_type * individual_type  general_lie     innocent     guilty       False     -0.664  two-sided    0.512     0.408    -0.235  hedges
+stimuli_type * individual_type  relevant        innocent     guilty       False     -0.391  two-sided    0.699     0.366    -0.138  hedges
+
+				Analysis for  response_time
+
+=============
+ANOVA SUMMARY
+=============
+
+Source                     SS    DF1    DF2           MS       F    p-unc  p-GG-corr                np2  eps    sphericity    W-spher    p-spher
+---------------  ------------  -----  -----  -----------  ------  -------  ---------------------  -----  -----  ------------  ---------  --------------------
+individual_type    142763.186      1     28   142763.186   0.127    0.724  -                      0.005  -      -             -          -
+stimuli_type     27185003.594      3     84  9061667.865  16.445    0.000  3.627704427383634e-05  0.370  0.473  False         0.156      6.71865384547828e-10
+Interaction        872384.397      3     84   290794.799   0.528    0.664  -                      0.018  -      -             -          -
+
+
+==============
+POST HOC TESTS
+==============
+
+Contrast                        stimuli_type    A            B            Paired         T  tail         p-unc      BF10    efsize  eftype
+------------------------------  --------------  -----------  -----------  --------  ------  ---------  -------  --------  --------  --------
+stimuli_type                    -               alpha        general      True       3.316  two-sided    0.002    15.020     0.874  hedges
+stimuli_type                    -               alpha        general_lie  True       3.192  two-sided    0.003    11.398     0.897  hedges
+stimuli_type                    -               alpha        relevant     True       5.696  two-sided    0.000  5294.864     1.352  hedges
+stimuli_type                    -               general      general_lie  True      -0.570  two-sided    0.573     0.226    -0.105  hedges
+stimuli_type                    -               general      relevant     True       4.174  two-sided    0.000   114.348     0.780  hedges
+stimuli_type                    -               general_lie  relevant     True       5.392  two-sided    0.000  2442.936     1.022  hedges
+individual_type                 -               innocent     guilty       False     -0.403  two-sided    0.688     0.210    -0.073  hedges
+stimuli_type * individual_type  alpha           innocent     guilty       False      0.445  two-sided    0.660     0.372     0.157  hedges
+stimuli_type * individual_type  general         innocent     guilty       False     -0.944  two-sided    0.354     0.483    -0.339  hedges
+stimuli_type * individual_type  general_lie     innocent     guilty       False     -0.956  two-sided    0.348     0.487    -0.346  hedges
+stimuli_type * individual_type  relevant        innocent     guilty       False     -0.698  two-sided    0.491     0.415    -0.252  hedges
+
+				Results after averaging and standardising

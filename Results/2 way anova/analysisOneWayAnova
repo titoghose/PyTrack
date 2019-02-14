@@ -1,0 +1,229 @@
+				********Analysis for sensor:  blink_count ********
+Overall model F( 4, 2083) =  20.446, p =  0.0000
+Overall model is valid if p value is less than 0.05
+
+
+
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:            blink_count   R-squared:                       0.038
+Model:                            OLS   Adj. R-squared:                  0.036
+Method:                 Least Squares   F-statistic:                     20.45
+Date:                Fri, 01 Feb 2019   Prob (F-statistic):           1.54e-16
+Time:                        13:18:56   Log-Likelihood:                -6154.5
+No. Observations:                2088   AIC:                         1.232e+04
+Df Residuals:                    2083   BIC:                         1.235e+04
+Df Model:                           4                                         
+Covariance Type:            nonrobust                                         
+==================================================================================================
+                                     coef    std err          t      P>|t|      [0.025      0.975]
+--------------------------------------------------------------------------------------------------
+Intercept                          0.0447      0.281      0.159      0.874      -0.507       0.597
+C(stimuli_type)[T.general]        -2.5691      0.311     -8.265      0.000      -3.179      -1.960
+C(stimuli_type)[T.general_lie]    -2.6407      0.316     -8.345      0.000      -3.261      -2.020
+C(stimuli_type)[T.relevant]       -2.1196      0.357     -5.944      0.000      -2.819      -1.420
+C(individual_type)[T.innocent]    -0.0859      0.202     -0.424      0.672      -0.483       0.311
+==============================================================================
+Omnibus:                      640.032   Durbin-Watson:                   0.837
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            13751.086
+Skew:                          -0.917   Prob(JB):                         0.00
+Kurtosis:                      15.438   Cond. No.                         6.94
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+
+
+                          sum_sq      df          F        PR(>F)
+C(stimuli_type)      1737.784033     3.0  27.170707  3.104645e-17
+C(individual_type)      3.832410     1.0   0.179762  6.716215e-01
+Residual            44408.169881  2083.0        NaN           NaN
+A parameter is significant if the corresponding p value is less than 0.05
+
+
+
+
+				********Analysis for sensor:  ms_count ********
+Overall model F( 4, 2083) =  29.926, p =  0.0000
+Overall model is valid if p value is less than 0.05
+
+
+
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:               ms_count   R-squared:                       0.054
+Model:                            OLS   Adj. R-squared:                  0.053
+Method:                 Least Squares   F-statistic:                     29.93
+Date:                Fri, 01 Feb 2019   Prob (F-statistic):           3.07e-24
+Time:                        13:19:00   Log-Likelihood:                -6976.0
+No. Observations:                2088   AIC:                         1.396e+04
+Df Residuals:                    2083   BIC:                         1.399e+04
+Df Model:                           4                                         
+Covariance Type:            nonrobust                                         
+==================================================================================================
+                                     coef    std err          t      P>|t|      [0.025      0.975]
+--------------------------------------------------------------------------------------------------
+Intercept                          1.0058      0.417      2.411      0.016       0.188       1.824
+C(stimuli_type)[T.general]         3.7977      0.461      8.244      0.000       2.894       4.701
+C(stimuli_type)[T.general_lie]     3.0438      0.469      6.490      0.000       2.124       3.964
+C(stimuli_type)[T.relevant]        1.5424      0.529      2.918      0.004       0.506       2.579
+C(individual_type)[T.innocent]    -1.9314      0.300     -6.436      0.000      -2.520      -1.343
+==============================================================================
+Omnibus:                       68.463   Durbin-Watson:                   1.459
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):               87.857
+Skew:                           0.364   Prob(JB):                     8.36e-20
+Kurtosis:                       3.692   Cond. No.                         6.94
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+
+
+                          sum_sq      df          F        PR(>F)
+C(stimuli_type)      3723.433819     3.0  26.503696  8.040702e-17
+C(individual_type)   1939.540422     1.0  41.417405  1.521362e-10
+Residual            97545.046192  2083.0        NaN           NaN
+A parameter is significant if the corresponding p value is less than 0.05
+
+
+
+
+				********Analysis for sensor:  ms_duration ********
+Overall model F( 4, 25545) =  7.267, p =  0.0000
+Overall model is valid if p value is less than 0.05
+
+
+
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:            ms_duration   R-squared:                       0.001
+Model:                            OLS   Adj. R-squared:                  0.001
+Method:                 Least Squares   F-statistic:                     7.267
+Date:                Fri, 01 Feb 2019   Prob (F-statistic):           7.63e-06
+Time:                        13:20:06   Log-Likelihood:                -67376.
+No. Observations:               25550   AIC:                         1.348e+05
+Df Residuals:                   25545   BIC:                         1.348e+05
+Df Model:                           4                                         
+Covariance Type:            nonrobust                                         
+==================================================================================================
+                                     coef    std err          t      P>|t|      [0.025      0.975]
+--------------------------------------------------------------------------------------------------
+Intercept                         -0.0126      0.065     -0.195      0.845      -0.140       0.114
+C(stimuli_type)[T.general]         0.2459      0.070      3.526      0.000       0.109       0.383
+C(stimuli_type)[T.general_lie]     0.3586      0.071      5.043      0.000       0.219       0.498
+C(stimuli_type)[T.relevant]        0.3626      0.081      4.473      0.000       0.204       0.522
+C(individual_type)[T.innocent]    -0.0089      0.042     -0.211      0.833      -0.092       0.074
+==============================================================================
+Omnibus:                    11748.648   Durbin-Watson:                   2.007
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            67443.048
+Skew:                           2.180   Prob(JB):                         0.00
+Kurtosis:                       9.658   Cond. No.                         7.63
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+
+
+                           sum_sq       df         F    PR(>F)
+C(stimuli_type)        331.167147      3.0  9.656567  0.000002
+C(individual_type)       0.507553      1.0  0.044400  0.833114
+Residual            292017.673026  25545.0       NaN       NaN
+A parameter is significant if the corresponding p value is less than 0.05
+      fixation_count stimuli_type individual_type
+
+
+
+
+				********Analysis for sensor:  fixation_count ********
+Overall model F( 4, 2083) =  14.286, p =  0.0000
+Overall model is valid if p value is less than 0.05
+
+
+
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:         fixation_count   R-squared:                       0.027
+Model:                            OLS   Adj. R-squared:                  0.025
+Method:                 Least Squares   F-statistic:                     14.29
+Date:                Fri, 01 Feb 2019   Prob (F-statistic):           1.65e-11
+Time:                        13:20:10   Log-Likelihood:                -6443.8
+No. Observations:                2088   AIC:                         1.290e+04
+Df Residuals:                    2083   BIC:                         1.293e+04
+Df Model:                           4                                         
+Covariance Type:            nonrobust                                         
+==================================================================================================
+                                     coef    std err          t      P>|t|      [0.025      0.975]
+--------------------------------------------------------------------------------------------------
+Intercept                          0.2593      0.323      0.802      0.423      -0.375       0.893
+C(stimuli_type)[T.general]         2.1393      0.357      5.992      0.000       1.439       2.839
+C(stimuli_type)[T.general_lie]     1.7706      0.363      4.871      0.000       1.058       2.483
+C(stimuli_type)[T.relevant]        0.3797      0.410      0.927      0.354      -0.424       1.183
+C(individual_type)[T.innocent]    -0.4978      0.233     -2.140      0.032      -0.954      -0.042
+==============================================================================
+Omnibus:                       16.949   Durbin-Watson:                   1.362
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):               24.737
+Skew:                          -0.050   Prob(JB):                     4.25e-06
+Kurtosis:                       3.524   Cond. No.                         6.94
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+
+
+                          sum_sq      df          F        PR(>F)
+C(stimuli_type)      1489.305478     3.0  17.649201  2.587101e-11
+C(individual_type)    128.852763     1.0   4.580957  3.244498e-02
+Residual            58590.439252  2083.0        NaN           NaN
+A parameter is significant if the corresponding p value is less than 0.05
+
+
+
+
+				********Analysis for sensor:  response_time ********
+Overall model F( 4, 2083) =  26.733, p =  0.0000
+Overall model is valid if p value is less than 0.05
+
+
+
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:          response_time   R-squared:                       0.049
+Model:                            OLS   Adj. R-squared:                  0.047
+Method:                 Least Squares   F-statistic:                     26.73
+Date:                Fri, 01 Feb 2019   Prob (F-statistic):           1.18e-21
+Time:                        13:20:14   Log-Likelihood:                -18327.
+No. Observations:                2088   AIC:                         3.666e+04
+Df Residuals:                    2083   BIC:                         3.669e+04
+Df Model:                           4                                         
+Covariance Type:            nonrobust                                         
+==================================================================================================
+                                     coef    std err          t      P>|t|      [0.025      0.975]
+--------------------------------------------------------------------------------------------------
+Intercept                       4359.7767     95.780     45.519      0.000    4171.943    4547.610
+C(stimuli_type)[T.general]      -765.6511    105.766     -7.239      0.000    -973.070    -558.232
+C(stimuli_type)[T.general_lie]  -700.4988    107.678     -6.505      0.000    -911.667    -489.331
+C(stimuli_type)[T.relevant]    -1223.1876    121.342    -10.081      0.000   -1461.151    -985.224
+C(individual_type)[T.innocent]  -129.9393     68.903     -1.886      0.059    -265.065       5.186
+==============================================================================
+Omnibus:                      124.035   Durbin-Watson:                   1.643
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              147.908
+Skew:                           0.601   Prob(JB):                     7.62e-33
+Kurtosis:                       3.504   Cond. No.                         6.94
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+
+
+                          sum_sq      df          F        PR(>F)
+C(stimuli_type)     2.552321e+08     3.0  34.466950  9.756096e-22
+C(individual_type)  8.778513e+06     1.0   3.556394  5.945550e-02
+Residual            5.141625e+09  2083.0        NaN           NaN
+A parameter is significant if the corresponding p value is less than 0.05
+End
+998

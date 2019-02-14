@@ -12,6 +12,9 @@ from statsmodels.formula.api import ols
 import statsmodels.stats.multicomp
 import pandas as pd
 
+import pingouin as pg
+
+
 class Experiment:
 
 	def __init__(self, name,json_file,sensors):
@@ -113,29 +116,19 @@ class Experiment:
 		return column_list
 
 
-	def analyse(self):
+	def analyse(self,average_flag = False,standardise_flag = False):
 		cnt = 0
 		
 		for sub_index, sub in enumerate(self.subjects):
-			sub.subjectAnalysis()
+			sub.subjectAnalysis(average_flag,standardise_flag)
 
 			self.meta_matrix_dict[0][sub_index] = sub.subj_type
-			
-			
 
 			for stim_index, stimuli_type in enumerate(sub.aggregate_meta):
 				for meta in sub.aggregate_meta[stimuli_type]:
 					self.meta_matrix_dict[1][meta][sub_index, stim_index] = sub.aggregate_meta[stimuli_type][meta]
 
 		#Lets assume the meta_matrix_dict is instantiated for non_temporal data
-
-		#1. Make a pandas dataframe containing the required columns
-
-		#Creation of the dataframe skeleton
-
-
-		#Instantiation of values into data dataframe
-
 		
 		#For each column parameter
 		for sensor_type in Sensor.meta_cols:
@@ -143,7 +136,9 @@ class Experiment:
 				if meta == "pupil_size" or meta == "sacc_count" or meta == "sacc_duration":
 					continue
 
-				data =  pd.DataFrame(columns=[meta,"stimuli_type","individual_type"])
+				print("\t\t\t\tAnalysis for ",meta)
+
+				data =  pd.DataFrame(columns=[meta,"stimuli_type","individual_type","subject"])
 
 				#For each subject
 				for sub_index, sub in enumerate(self.subjects):
@@ -162,6 +157,7 @@ class Experiment:
 								row.append(value)
 								row.append(stimuli_type)
 								row.append(sub.subj_type)
+								row.append(sub.name)
 
 								#Instantiate into the pandas dataframe
 
@@ -172,10 +168,21 @@ class Experiment:
 
 					# Fits the model with the interaction term
 					# This will also automatically include the main effects for each factor
-					
 
-				model_statement = meta + ' ~ C(stimuli_type)*C(individual_type)' 
+				# Compute the two-way mixed-design ANOVA
+				aov = pg.mixed_anova(dv=meta, within='stimuli_type', between='individual_type', subject = 'subject', data=data)
+				# Pretty printing of ANOVA summary
+				pg.print_table(aov)
 
+				posthocs = pg.pairwise_ttests(dv=meta, within='stimuli_type', between='individual_type', subject='subject', data=data)
+				pg.print_table(posthocs)
+
+
+				'''
+
+				2 way ANOVA:
+				
+				model_statement = meta + ' ~ C(stimuli_type)+C(individual_type)' 
 
 				model = ols(model_statement, data).fit()
 
@@ -194,11 +201,14 @@ class Experiment:
 				print(sm.stats.anova_lm(model, typ= 2))
 				print("A parameter is significant if the corresponding p value is less than 0.05")
 
+				'''
+				
 
 print("Start")
 a = datetime.now()
 exp = Experiment("Exp1", "trial_data.json", ["Eye Tracker"])
-exp.analyse()
+exp.analyse(average_flag = True,standardise_flag = True)
+print("\t\t\t\tResults after averaging and standardising")
 b = datetime.now()
 print("End")
 print("Total time taken: ", (b-a).seconds)
