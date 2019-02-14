@@ -22,14 +22,14 @@ class Experiment:
 		self.stimuli = self.stimuliArrayInitialisation() #dict of names of stimuli demarcated by category
 		self.subjects = self.subjectArrayInitialisation() #list of subject objects
 		self.meta_matrix_dict = (np.ndarray(len(self.subjects), dtype=str), 
-								{"sacc_count" : np.ndarray((len(self.subjects), 4), dtype=object), 
-								"sacc_duration" : np.ndarray((len(self.subjects), 4), dtype=object),
-								"blink_count" : np.ndarray((len(self.subjects), 4), dtype=object),
-								"ms_count" : np.ndarray((len(self.subjects), 4), dtype=object), 
-								"ms_duration" : np.ndarray((len(self.subjects), 4), dtype=object), 
-								"pupil_size" : np.ndarray((len(self.subjects), 4), dtype=object),
-								"fixation_count" : np.ndarray((len(self.subjects), 4), dtype=object),
-								"response_time" : np.ndarray((len(self.subjects), 4), dtype=object)})
+								{"sacc_count" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object), 
+								"sacc_duration" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object),
+								"blink_count" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object),
+								"ms_count" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object), 
+								"ms_duration" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object), 
+								"pupil_size" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object),
+								"fixation_count" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object),
+								"response_time" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object)})
 
 
 	def stimuliArrayInitialisation(self):
@@ -173,10 +173,8 @@ class Experiment:
 					# Fits the model with the interaction term
 					# This will also automatically include the main effects for each factor
 					
-				  
-				print(data)
 
-				model_statement = meta + ' ~ C(stimuli_type)+C(individual_type)' 
+				model_statement = meta + ' ~ C(stimuli_type)*C(individual_type)' 
 
 
 				model = ols(model_statement, data).fit()
@@ -203,4 +201,4 @@ exp = Experiment("Exp1", "trial_data.json", ["Eye Tracker"])
 exp.analyse()
 b = datetime.now()
 print("End")
-print((b-a).seconds)
+print("Total time taken: ", (b-a).seconds)

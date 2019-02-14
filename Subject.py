@@ -24,7 +24,7 @@ class Subject:
 		self.aggregate_meta = {}
 		# self.subjectAnalysis()
 		b = datetime.now()
-		print((b-a).seconds)
+		print("Total time for subject: ", (b-a).seconds, "\n")
 
 	def dataExtraction(self, columns,json_file):
 		'''
@@ -46,9 +46,14 @@ class Subject:
 		extended_name = "sqlite:///" + name_of_database
 		database = create_engine(extended_name)
 
+		b = datetime.now()
+		print("Creating Connection: ", (b-a).seconds)
+
 		string = 'SELECT '
 
 		index = 0
+
+		a = datetime.now()
 
 		for name in columns:
 
@@ -61,10 +66,15 @@ class Subject:
 				index = index + 1
 
 		string = string + ' FROM "' + self.name + '"'
-
 		df = pd.read_sql_query(string, database)
+
 		b = datetime.now()
-		print((b-a).seconds)
+		print("Query: ", (b-a).seconds)
+		
+		a = datetime.now()
+		database.dispose()
+		b = datetime.now()
+		print("Disposing Connection: ", (b-a).seconds)
 
 		return df
 		
@@ -175,7 +185,7 @@ class Subject:
 			with open(json_file) as json_f:
 				json_data = json.load(json_f)
 
-			control_questions = {"Alpha" : json_data["Control_Questions"]}
+			control_questions = {"Control" : json_data["Control_Questions"]}
 
 			control_q_objects = self.stimulusDictInitialisation(control_questions, columns, json_file, sensors)
 
@@ -189,7 +199,7 @@ class Subject:
 			temp = []
 
 			cnt = 0
-			for cqo in control_q_objects["Alpha"]:
+			for cqo in control_q_objects["Control"]:
 				if cqo.data != None:
 					cnt += 1
 					cqo.findEyeMetaData()
@@ -209,6 +219,8 @@ class Subject:
 
 	def subjectAnalysis(self):
 
+		print("\n\n", self.name, "\n\n")
+
 		for st in self.stimulus:
 			self.aggregate_meta.update({st : {}})
 			for mc in Sensor.meta_cols[0]:
@@ -223,9 +235,9 @@ class Subject:
 					
 					# Normalizing by subtracting control data
 					for cd in self.control_data:
-						self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd] - self.control_data[cd])))
+						# self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd] - self.control_data[cd])))
 
-						# self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd]))
+						self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd]))
 
 					temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"])
 
@@ -242,7 +254,10 @@ class Subject:
 
 			temp_pup_size = []
 
-		
+		print("\n")
+		print(self.aggregate_meta["relevant"])
+
+
 
 		# for s in self.stimulus:
 		# 	for cd in self.control_data:

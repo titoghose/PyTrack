@@ -542,13 +542,20 @@ class Stimulus:
 
 			# plt.savefig("sampleDataPlot.png")
 			# plt.show()
+
 		ms_count = 0
 		ms_duration = []
 		for ms in all_bin_MS:
-			ms_count += ms["NB"]
-			bin_ms = ms["bin"]
-			for bms in bin_ms:
-				ms_duration.append((bms[1] - bms[0]) + (bms[10] - bms[9]) / 2.)
+			ms_count += ms["NB"] + ms["NL"] + ms["NR"]
+			if(ms["NB"] != 0):
+				for bms in ms["bin"]:
+					ms_duration.append((bms[1] - bms[0]) + (bms[10] - bms[9]) / 2.)
+			if(ms["NL"] != 0):
+				for lms in ms["left"]:
+					ms_duration.append(lms[1] - lms[0])
+			if(ms["NR"] != 0):
+				for rms in ms["right"]:
+					ms_duration.append(rms[1] - rms[0])
 
 		return all_bin_MS, ms_count, ms_duration
 
@@ -648,11 +655,11 @@ class Stimulus:
 
 		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["sacc_count"] = 0
 		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["sacc_duration"] = 0
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_count"] = ms_count
+		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_count"] = ms_count #/ self.response_time
 		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_duration"] = ms_duration
 		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
 
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["blink_count"] = len(self.data["BlinksLeft"]["blink_onset"])
+		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["blink_count"] = ((len(self.data["BlinksLeft"]["blink_onset"]) + len(self.data["BlinksRight"]["blink_onset"])) / 2) #/ self.response_time
 		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["fixation_count"] = len(np.unique(self.data["FixationSeq"])) - 1
 		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["response_time"] = self.response_time
 
