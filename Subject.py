@@ -167,6 +167,12 @@ class Subject:
 
 
 	def getControlData(self, columns, json_file, sensors):
+
+		'''
+
+		This function returns the average value of control data (alpha questions) for the purpose of standardisation
+
+		'''
 		
 		if os.path.isfile('control_values/' + self.name + '.pickle') == True:
 			pickle_in = open('control_values/' + self.name + '.pickle',"rb")
@@ -208,7 +214,12 @@ class Subject:
 		return control
 
 
-	def subjectAnalysis(self):
+	def subjectAnalysis(self,average_flag,standardise_flag):
+
+		'''
+
+
+		'''
 
 		for st in self.stimulus:
 			self.aggregate_meta.update({st : {}})
@@ -224,9 +235,11 @@ class Subject:
 					
 					# Normalizing by subtracting control data
 					for cd in self.control_data:
-						self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd] - self.control_data[cd])))
 
-						# self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd]))
+						if(standardise_flag):
+							self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd] - self.control_data[cd])))
+						else:
+							self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd]))
 
 					temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"])
 
@@ -244,7 +257,7 @@ class Subject:
 			temp_pup_size = []
 
 		
-
-		# for s in self.stimulus:
-		# 	for cd in self.control_data:
-		# 		self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])
+		if(average_flag):	
+			for s in self.stimulus:
+				for cd in self.control_data:
+					self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])

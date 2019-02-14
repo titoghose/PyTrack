@@ -116,35 +116,27 @@ class Experiment:
 		return column_list
 
 
-	def analyse(self):
+	def analyse(self,average_flag = False,standardise_flag = False):
 		cnt = 0
 		
 		for sub_index, sub in enumerate(self.subjects):
-			sub.subjectAnalysis()
+			sub.subjectAnalysis(average_flag,standardise_flag)
 
 			self.meta_matrix_dict[0][sub_index] = sub.subj_type
-			
-			
 
 			for stim_index, stimuli_type in enumerate(sub.aggregate_meta):
 				for meta in sub.aggregate_meta[stimuli_type]:
 					self.meta_matrix_dict[1][meta][sub_index, stim_index] = sub.aggregate_meta[stimuli_type][meta]
 
 		#Lets assume the meta_matrix_dict is instantiated for non_temporal data
-
-		#1. Make a pandas dataframe containing the required columns
-
-		#Creation of the dataframe skeleton
-
-
-		#Instantiation of values into data dataframe
-
 		
 		#For each column parameter
 		for sensor_type in Sensor.meta_cols:
 			for meta in sensor_type:
 				if meta == "pupil_size" or meta == "sacc_count" or meta == "sacc_duration":
 					continue
+
+				print("\t\t\t\tAnalysis for ",meta)
 
 				data =  pd.DataFrame(columns=[meta,"stimuli_type","individual_type","subject"])
 
@@ -176,10 +168,6 @@ class Experiment:
 
 					# Fits the model with the interaction term
 					# This will also automatically include the main effects for each factor
-					
-				  
-				print(data)
-
 
 				# Compute the two-way mixed-design ANOVA
 				aov = pg.mixed_anova(dv=meta, within='stimuli_type', between='individual_type', subject = 'subject', data=data)
@@ -191,6 +179,9 @@ class Experiment:
 
 
 				'''
+
+				2 way ANOVA:
+				
 				model_statement = meta + ' ~ C(stimuli_type)+C(individual_type)' 
 
 
@@ -217,7 +208,8 @@ class Experiment:
 print("Start")
 a = datetime.now()
 exp = Experiment("Exp1", "trial_data.json", ["Eye Tracker"])
-exp.analyse()
+exp.analyse(average_flag = True,standardise_flag = True)
+print("\t\t\t\tResults after averaging and standardising")
 b = datetime.now()
 print("End")
 print((b-a).seconds)
