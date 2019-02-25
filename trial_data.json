@@ -8,12 +8,9 @@
    },
    "Subjects":{
       "innocent":[
-         "Innocent_Subject_05",
-         "Innocent_Subject_06"
       ],
       "guilty":[
-         "Guilty_Subject_06",
-         "Guilty_Subject_07"
+         "Guilty_Subject_06"
       ]
    },
    "Stimuli":{
@@ -138,20 +135,7 @@
          "Irrelevant_Secretary2-1-8",
          "Irrelevant_Secretary2-1-9",
          "Irrelevant_Secretary2-1-10",
-         "Irrelevant_Secretary2-1-11",
-         "Melvin_Secretary3-1-1",
-         "Melvin_Secretary3-1-2",
-         "Melvin_Secretary3-1-3",
-         "Melvin_Secretary3-1-4",
-         "Melvin_Secretary3-1-5",
-         "Melvin_Secretary3-1-6",
-         "Melvin_Secretary3-1-7",
-         "Melvin_Secretary3-1-8",
-         "Melvin_Secretary3-1-9",
-         "Melvin_Secretary3-1-10",
-         "Melvin_Secretary3-1-11",
-         "Melvin_Secretary3-1-1-1",
-         "Melvin_Secretary3-1-2-1"
+         "Irrelevant_Secretary2-1-11"
          ],
       "pictures_crime_scene":[
          "Cup-1-1",
@@ -238,11 +222,22 @@
       "FixationSeq":{
          "Description" : "Numbered instance of a fixation for a Sequence, for ex: 1 means 1st instance fixation"
       },
-      "O1Pz_Epoc":{
-         "Description" : "The EEG signal for the Occipital region of the brain"
-      },
+      "O1Pz_Epoc":{},   
+      "Af3_Epoc":{},
+      "F7_Epoc":{},
+      "F3_Epoc":{},
+      "FC5_Epoc":{},
+      "T7_Epoc":{},
+      "P7_Epoc":{},
+      "O2_Epoc":{},
+      "P8_Epoc":{},
+      "T8_Epoc":{},
+      "FC6_Epoc":{},
+      "F4_Epoc":{},
+      "F8_Epoc":{},
+      "AF4_Epoc":{},
       "EventSource":{
          "Description" : "The EEG signal for the Occipital region of the brain"
-      }
+      }   
    }
 }

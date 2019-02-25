@@ -2,38 +2,28 @@
 
 from Sensor import Sensor
 from Subject import Subject
-
 import numpy as np
 from datetime import datetime
 from scipy import stats
 import json
-import statsmodels.api as sm
-from statsmodels.formula.api import ols
-import statsmodels.stats.multicomp
 import pandas as pd
-
+from sqlalchemy import create_engine
 import pingouin as pg
+import matplotlib.pyplot as plt
+from matplotlib.widgets import RadioButtons
 
 
 class Experiment:
 
-	def __init__(self, name,json_file,sensors):
+
+	def __init__(self, name, json_file, sensors):
 		self.name = name #string
 		self.json_file = json_file #string
 		self.sensors = sensors
 		self.columns = self.columnsArrayInitialisation()
 		self.stimuli = self.stimuliArrayInitialisation() #dict of names of stimuli demarcated by category
 		self.subjects = self.subjectArrayInitialisation() #list of subject objects
-		self.meta_matrix_dict = (np.ndarray(len(self.subjects), dtype=str), 
-								{"sacc_count" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object), 
-								"sacc_duration" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object),
-								"blink_count" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object),
-								"ms_count" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object), 
-								"ms_duration" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object), 
-								"pupil_size" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object),
-								"fixation_count" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object),
-								"response_time" : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object)})
-
+		self.meta_matrix_dict = (np.ndarray(len(self.subjects), dtype=str), dict())
 
 	def stimuliArrayInitialisation(self):
 
@@ -80,13 +70,19 @@ class Experiment:
 
 		subject_data = json_data["Subjects"]
 
+		name_of_database = json_data["Database_name"]
+		extended_name = "sqlite:///" + name_of_database
+		database = create_engine(extended_name)
+
 		for k in subject_data:
 
 			for subject_name in subject_data[k]:
 
-				subject_object = Subject(subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors)
+				subject_object = Subject(subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database)
 
 				subject_list.append(subject_object)
+
+		database.dispose()
 
 		return subject_list
 
@@ -116,9 +112,25 @@ class Experiment:
 		return column_list
 
 
+	def visualizeData(self):
+		subject_names = [s.name for s in self.subjects]
+		rax = plt.axes([0, 0, 1.00, 1.00])
+		radio = RadioButtons(rax, subject_names)
+		
+		def subjFunction(label):
+			subj_dict = {s.name:s for s in self.subjects}
+			subj_dict[label].subjectVisualize()
+
+		radio.on_clicked(subjFunction)
+		plt.show()
+
+
 	def analyse(self,average_flag = False,standardise_flag = False):
 		cnt = 0
 		
+		for meta_col in Sensor.meta_cols[Sensor.sensor_names.index("Eye Tracker")]:
+			self.meta_matrix_dict[1].update({meta_col : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object)})
+
 		for sub_index, sub in enumerate(self.subjects):
 			sub.subjectAnalysis(average_flag,standardise_flag)
 
@@ -203,12 +215,3 @@ class Experiment:
 
 				'''
 				
-
-print("Start")
-a = datetime.now()
-exp = Experiment("Exp1", "trial_data.json", ["Eye Tracker"])
-exp.analyse(average_flag = True,standardise_flag = True)
-print("\t\t\t\tResults after averaging and standardising")
-b = datetime.now()
-print("End")
-print("Total time taken: ", (b-a).seconds)

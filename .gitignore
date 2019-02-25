@@ -8,8 +8,10 @@
 *.sql
 *.sqlite
 *.pyc
+*.ods
+*.xls
 .DS_Store
 .DS_Store?
 .Trashes
 test.py
-
+/Results
