@@ -105,9 +105,9 @@ class Experiment:
 
 		column_list = []
 
-		for name in json_data["Columns_of_interest"]:
-
-			column_list.append(name)
+		for col_class in json_data["Columns_of_interest"]:
+			for name in json_data["Columns_of_interest"][col_class]:
+				column_list.append(name)
 
 		return column_list
 

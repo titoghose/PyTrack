@@ -19,7 +19,6 @@ class Subject:
 	def __init__(self, name, subj_type, stimuli_names, columns, json_file, sensors, database):
 		print(name)
 		a = datetime.now()
-
 		self.stimuli_names = stimuli_names
 		self.name = name
 		self.subj_type = subj_type
@@ -146,7 +145,7 @@ class Subject:
 				# print(stimulus_name)
 				# print(stimuli_data)
 
-				stimulus_object = Stimulus(stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time)
+				stimulus_object = Stimulus(stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file)
 
 				stimulus_object_list.append(stimulus_object)
 

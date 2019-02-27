@@ -14,4 +14,8 @@
 .DS_Store?
 .Trashes
 test.py
-/Results
+Results/
+Stimuli/
+control_values/
+question_indices/
+__pycache__/
