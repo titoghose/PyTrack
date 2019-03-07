@@ -12,4 +12,9 @@
 .DS_Store?
 .Trashes
 test.py
+Details about the PostgreSQL database
+Lit Review/
+data/
+random_data.csv
+random_db.py
 
