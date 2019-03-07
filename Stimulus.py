@@ -356,10 +356,10 @@ class Stimulus:
 			if numr == 0:
 				bin_ms = None
 				monor = None
-				monol = sacl
+				monol = msl
 			if numl == 0:
 				bin_ms = None
-				monor = sacr
+				monor = msr
 				monol = None
 
 		ms = {"NB" : NB, "NR" : NR, "NL" : NL, "bin" : bin_ms, "left" : monol, "right" : monor}
@@ -741,20 +741,20 @@ class Stimulus:
 
 			num_chars = len(data[self.name])
 
-		# Finding response time based on number of eye tracker samples 
+		# Finding response time based on number of  samples 
 		self.response_time = len(self.data["ETRows"])
 
 		# Find microsaccades
 		all_MS, ms_count, ms_duration = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
 
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["sacc_count"] = 0
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["sacc_duration"] = 0
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_count"] = ms_count / self.response_time
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_duration"] = ms_duration
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["blink_count"] = ((len(self.data["BlinksLeft"]["blink_onset"]) + len(self.data["BlinksRight"]["blink_onset"])) / 2) / self.response_time
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["fixation_count"] = (len(np.unique(self.data["FixationSeq"])) - 1) / num_chars
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["response_time"] = self.response_time / num_chars
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = 0
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_duration"] = 0
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_count"] = ms_count / self.response_time
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = ms_duration
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_count"] = ((len(self.data["BlinksLeft"]["blink_onset"]) + len(self.data["BlinksRight"]["blink_onset"])) / 2) / self.response_time
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["fixation_count"] = (len(np.unique(self.data["FixationSeq"])) - 1) / num_chars
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_chars
 
 		temp = np.empty(1, dtype='float32')
 		for ms in all_MS:
@@ -765,7 +765,7 @@ class Stimulus:
 			if ms["NR"] != 0:
 				temp = np.hstack((temp, ms["right"][:, 2]))
 		if len(temp) != 0:
-			self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_vel"] = temp[1:]
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_vel"] = temp[1:]
 		
 		temp = np.empty(1, dtype='float32')
 		for ms in all_MS:
@@ -777,10 +777,10 @@ class Stimulus:
 				temp = np.hstack((temp, np.sqrt(ms["right"][:, 5]**2 + ms["right"][:, 6]**2)))
 		
 		if len(temp) != 0:
-			self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_amplitude"] = temp[1:]
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_amplitude"] = temp[1:]
 
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["peak_pupil"] = max(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["time_to_peak_pupil"] = np.argmax(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_pupil"] = max(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["time_to_peak_pupil"] = np.argmax(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
 
 
 	def getData(self, data, sensor_names):

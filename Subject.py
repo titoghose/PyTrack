@@ -197,7 +197,7 @@ class Subject:
 					cnt += 1
 					cqo.findEyeMetaData()
 					for c in control:
-						control[c] += np.mean(cqo.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[c])
+						control[c] += np.mean(cqo.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[c])
 
 			for c in control:
 				control[c] /= cnt
@@ -251,11 +251,11 @@ class Subject:
 					# Normalizing by subtracting control data
 					for cd in self.control_data:
 						if(standardise_flag):
-							self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd] - self.control_data[cd])))
+							self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[cd] - self.control_data[cd])))
 						else:
-							self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd]))
+							self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[cd]))
 
-					temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"])
+					temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])
 
 			max_len = max([len(x) for x in temp_pup_size])
 			
