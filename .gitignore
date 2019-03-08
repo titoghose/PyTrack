@@ -8,13 +8,15 @@
 *.sql
 *.sqlite
 *.pyc
+*.ods
 .DS_Store
 .DS_Store?
 .Trashes
 test.py
-Details about the PostgreSQL database
-Lit Review/
-data/
+Results/
 random_data.csv
 random_db.py
+control_values/
+question_indices/
+analysis, standardisation and averaging.txt
 
