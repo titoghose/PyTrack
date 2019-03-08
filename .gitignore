@@ -9,14 +9,13 @@
 *.sqlite
 *.pyc
 *.ods
+*.xls
 .DS_Store
 .DS_Store?
 .Trashes
 test.py
 Results/
-random_data.csv
-random_db.py
+Stimuli/
 control_values/
 question_indices/
-analysis, standardisation and averaging.txt
-
+__pycache__/

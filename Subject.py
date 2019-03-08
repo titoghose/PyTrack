@@ -8,25 +8,28 @@ from Sensor import Sensor
 from sqlalchemy import create_engine
 import os
 import pickle
-
 from datetime import datetime
+from matplotlib.widgets import TextBox
+import matplotlib.pyplot as plt
+
 
 class Subject:
 
 
-	def __init__(self, name,subj_type,stimuli_names,columns,json_file,sensors):
+	def __init__(self, name, subj_type, stimuli_names, columns, json_file, sensors, database):
 		print(name)
 		a = datetime.now()
+		self.stimuli_names = stimuli_names
 		self.name = name
 		self.subj_type = subj_type
-		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns,json_file,sensors) #dictionary of objects of class stimulus demarcated by categories
-		self.control_data = self.getControlData(columns, json_file, sensors)
+		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns,json_file,sensors, database) #dictionary of objects of class stimulus demarcated by categories
+		self.control_data = self.getControlData(columns, json_file, sensors, database)
 		self.aggregate_meta = {}
-		# self.subjectAnalysis()
 		b = datetime.now()
 		print("Total time for subject: ", (b-a).seconds, "\n")
 
-	def dataExtraction(self, columns,json_file):
+
+	def dataExtraction(self, columns,json_file, database):
 		'''
 		Extracts the required columns from the data base and returns a pandas datastructure
 
@@ -37,19 +40,6 @@ class Subject:
 		Output:
 		1.	df: [pandas datastructure] contains the data of columns of our interest
 		'''
-		a = datetime.now()
-		with open(json_file) as json_f:
-			json_data = json.load(json_f)
-
-		#name_of_database = json_data["Database_name"]
-		name_of_database = "/media/arvind/New Volume/Projects/Lie Detection (NTU)/iMotions_library/lie_detection_database.db"
-
-		extended_name = "sqlite:///" + name_of_database
-		database = create_engine(extended_name)
-
-		b = datetime.now()
-		print("Creating Connection: ", (b-a).seconds)
-
 		string = 'SELECT '
 
 		index = 0
@@ -72,11 +62,6 @@ class Subject:
 		b = datetime.now()
 		print("Query: ", (b-a).seconds)
 		
-		a = datetime.now()
-		database.dispose()
-		b = datetime.now()
-		print("Disposing Connection: ", (b-a).seconds)
-
 		return df
 		
 
@@ -112,7 +97,7 @@ class Subject:
 		return start,end,roi
 
 	
-	def stimulusDictInitialisation(self, stimuli_names,columns,json_file,sensors):
+	def stimulusDictInitialisation(self, stimuli_names,columns,json_file,sensors, database):
 
 		'''
 		Creates  a list of objects of class Stimuli
@@ -126,7 +111,6 @@ class Subject:
 		'''	
 
 		if os.path.isfile('question_indices/' + self.name + '.pickle') == True:
-
 			flag = 1
 
 			pickle_in = open('question_indices/' + self.name + '.pickle',"rb")
@@ -136,10 +120,10 @@ class Subject:
 			flag = 0
 
 			question_indices_dict = {}
-			stimulus_column = self.dataExtraction(["StimulusName"],json_file)
+			stimulus_column = self.dataExtraction(["StimulusName"],json_file, database)
 
 
-		data = self.dataExtraction(columns,json_file)
+		data = self.dataExtraction(columns,json_file, database)
 
 		stimulus_object_dict = {}
 
@@ -148,7 +132,6 @@ class Subject:
 			stimulus_object_list = []
 
 			for stimulus_name in stimuli_names[category]: 
-				
 				if flag == 1:
 					[start_time, end_time, roi_time] = question_indices_dict[stimulus_name]  
 				else:
@@ -162,7 +145,7 @@ class Subject:
 				# print(stimulus_name)
 				# print(stimuli_data)
 
-				stimulus_object = Stimulus(stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time)
+				stimulus_object = Stimulus(stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file)
 
 				stimulus_object_list.append(stimulus_object)
 
@@ -176,8 +159,7 @@ class Subject:
 		return stimulus_object_dict
 
 
-	def getControlData(self, columns, json_file, sensors):
-
+	def getControlData(self, columns, json_file, sensors, database):
 		'''
 
 		This function returns the average value of control data (alpha questions) for the purpose of standardisation
@@ -194,14 +176,18 @@ class Subject:
 
 			control_questions = {"Control" : json_data["Control_Questions"]}
 
-			control_q_objects = self.stimulusDictInitialisation(control_questions, columns, json_file, sensors)
+			control_q_objects = self.stimulusDictInitialisation(control_questions, columns, json_file, sensors, database)
 
 			control = {"sacc_count" : 0, 
 						"sacc_duration" : 0,
 						"blink_count" : 0,
 						"ms_count" : 0,
 						"ms_duration" : 0,
-						"fixation_count" : 0}
+						"fixation_count" : 0,
+						"ms_vel" : 0,
+						"ms_amplitude" : 0,
+						"peak_pupil" : 0,
+						"time_to_peak_pupil" : 0}
 
 			temp = []
 
@@ -211,7 +197,7 @@ class Subject:
 					cnt += 1
 					cqo.findEyeMetaData()
 					for c in control:
-						control[c] += np.mean(cqo.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[c])
+						control[c] += np.mean(cqo.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[c])
 
 			for c in control:
 				control[c] /= cnt
@@ -224,15 +210,32 @@ class Subject:
 		return control
 
 
+	def subjectVisualize(self):
+		fig = plt.figure()
+		
+		def stimFunction(text):
+			stim_t = text.split(",")[0].strip(" ")
+			stim_n = text.split(",")[1].strip(" ")
+			stim = self.stimulus[stim_t][self.stimuli_names[stim_t].index(stim_n)]
+			stim.visualize()
+
+		tax1 = plt.axes([0.25, 0.25, 0.50, 0.50])
+		tb1 = TextBox(tax1, "Stimulus [type,name]", initial="alpha,Alpha1")
+		
+		try:
+			tb1.on_submit(stimFunction)
+		except:
+			print("ERROR: STIMULUS NOT FOUND")
+
+		plt.show()
+
+
 	def subjectAnalysis(self,average_flag,standardise_flag):
 
 		'''
 
 
 		'''
-
-		print("\n\n", self.name, "\n\n")
-
 		for st in self.stimulus:
 			self.aggregate_meta.update({st : {}})
 			for mc in Sensor.meta_cols[0]:
@@ -248,12 +251,11 @@ class Subject:
 					# Normalizing by subtracting control data
 					for cd in self.control_data:
 						if(standardise_flag):
-							self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd] - self.control_data[cd])))
+							self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[cd] - self.control_data[cd])))
 						else:
-							self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata[cd]))
+							self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[cd]))
 
-
-					temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"])
+					temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])
 
 			max_len = max([len(x) for x in temp_pup_size])
 			

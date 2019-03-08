@@ -1,28 +1,30 @@
+import json
 import numpy as np
 import pandas as pd
-from scipy import signal
+from scipy import signal, io
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
+from matplotlib.widgets import Slider, CheckButtons
 import matplotlib.animation as animation
 from Sensor import Sensor
 
 class Stimulus:
 
-	def __init__(self, name, stim_type, sensor_names, data, start_time, end_time, roi_time):
+	def __init__(self, name, stim_type, sensor_names, data, start_time, end_time, roi_time, json_file):
 		self.name = name
 		self.stim_type = stim_type
 		self.start_time = start_time
 		self.end_time = end_time
 		self.response_time = self.end_time - self.start_time
 		self.roi_time = roi_time
+		self.json_file = json_file
 		self.sensors = []
-		for sn in sensor_names:
-			self.sensors.append(Sensor(sn))
 
 		if(self.start_time == -1):
 			self.data = None
 		else:
-			self.data = self.getData(data)
+			self.data = self.getData(data, sensor_names)
+
 
 	def diff(self, series):
 		"""
@@ -31,54 +33,29 @@ class Stimulus:
 		return series[1:] - series[:-1]
 
 
-	def smooth(self, x, window_len=10, window='flat'):
-		
-
-
-
-		"""
-		SOURCE: https://scipy-cookbook.readthedocs.io/index.html
-		
-		smooth the data using a window with requested size.
-		
-		This method is based on the convolution of a scaled window with the signal.
-		The signal is prepared by introducing reflected copies of the signal 
-		(with the window size) in both ends so that transient parts are minimized
-		in the begining and end part of the output signal.
-		
-		input:
-			x: the input signal 
-			window_len: the dimension of the smoothing window; should be an odd integer
-			window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
-				flat window will produce a moving average smoothing.
-		
-		output:
-			the smoothed signal
-			
-		see also: 
-		
-		numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
-		scipy.signal.lfilter
-		
-		TODO: the window parameter could be the window itself if an array instead of a string
-		NOTE: length(output) != length(input), to correct this: return y[(window_len/2-1):-(window_len/2)] instead of just y.
-		"""
-		
+	def smooth(self, x, window_len):
+		# Running average smoothing
 		if window_len < 3:
 			return x
+
+		# Window length must be odd
+		if window_len%2 == 0:
+			window_len += 1
 		
-		s = np.r_[x[window_len - 1: 0: -1], x, x[-2: -window_len - 1: -1]]
-		# print(len(s))
-		if window == 'flat':  # moving average
-			w = np.ones(window_len, 'd')
-		else:
-			w = eval('numpy.' + window + '(window_len)')
-		
-		y = np.convolve(w / w.sum(), s, mode='valid')
-		return y[(window_len // 2 - 1):-(window_len // 2)]
+		w = np.ones(window_len)
+		y = np.convolve(w, x, mode='valid') / len(w)
+		y = np.hstack((x[:window_len//2], y, x[len(x)-window_len//2:]))
+
+		for i in range(0, window_len//2):
+			y[i] = np.sum(y[0 : i+i]) / ((2*i) + 1)
+
+		for i in range(len(x)-window_len//2, len(x)):
+			y[i] = np.sum(y[i - (len(x) - i - 1) : i + (len(x) - i - 1)]) / ((2*(len(x) - i - 1)) + 1)
+
+		return y
 
 
-	def fix_blinks(self, pupil_size, gaze, sampling_freq=1000, concat=False, concat_gap_interval = 100):
+	def fix_blinks(self, pupil_size, gaze=None, sampling_freq=1000, concat=False, concat_gap_interval=100, interpolate=False):
 		"""
 		Function to find blinks and return blink onset, offset indices and interpolated pupil size data
 		Adapted from: R. Hershman, A. Henik, and N. Cohen, “A novel blink detection method based on pupillometry noise,” Behav. Res. Methods, vol. 50, no. 1, pp. 107–114, 2018.
@@ -125,73 +102,91 @@ class Stimulus:
 
 		ms_4_smoothing = 10
 		samples2smooth = ms_4_smoothing // sampling_interval
-		smooth_pupil_size = self.smooth(pupil_size, 10, "flat")
+		smooth_pupil_size = np.array(self.smooth(pupil_size, samples2smooth), dtype='float32')
 		
-		smooth_pupil_size[np.where(pupil_size == -1)[0]] = float('nan')
+		smooth_pupil_size[np.where(smooth_pupil_size == -1)[0]] = float('nan')
 		smooth_pupil_size_diff = self.diff(smooth_pupil_size)
 		
 		monotonically_dec = smooth_pupil_size_diff <= 0
 		monotonically_inc = smooth_pupil_size_diff >= 0
 		
 		for i in range(len(blink_onset)):
-			j = blink_onset[i] - 1
-			while j > 0 and monotonically_dec[j] == True:
-				j -= 1
-			blink_onset[i] = j
-		
-			j = blink_offset[i]
-			while j < len(monotonically_inc) and monotonically_inc[j] == True:
-				j += 1
-			blink_offset[i] = j
-		
+			# Edge Case 2: If data starts with blink we do not update it and let starting blink index be 0
+			if blink_onset[i] != 0:
+				j = blink_onset[i] - 1
+				while j > 0 and monotonically_dec[j] == True:
+					j -= 1
+				blink_onset[i] = j + 1
+				
+			# Edge Case 3: If data ends with blink we do not update it and let ending blink index be the last index of the data
+			if blink_offset[i] != len(pupil_size) - 1:
+				j = blink_offset[i]
+				while j < len(monotonically_inc) and monotonically_inc[j] == True:
+					j += 1
+				blink_offset[i] = j
+
 		if concat:
-			for i in range(len(blink_onset) - 1):
-				if blink_onset[i + 1] - blink_offset[i] <= concat_gap_interval:
-					blink_onset[i + 1] = blink_onset[i]
-					blink_offset[i] = blink_offset[i + 1]
-		
-			blink_onset = np.unique(blink_onset)
-			blink_offset = np.unique(blink_offset)
+			c = np.empty((len(blink_onset) + len(blink_offset),))
+			c[0::2] = blink_onset
+			c[1::2] = blink_offset
+			c = list(c)
+
+			i = 1
+			while i<len(c)-1:
+				if c[i+1] - c[i] <= concat_gap_interval:
+					c[i:i+2] = []
+				else:
+					i += 2
+
+			temp = np.reshape(c, (-1, 2), order='C')
+			blink_onset = np.array(temp[:, 0], dtype=int)
+			blink_offset = np.array(temp[:, 1], dtype=int)
 		
 		blinks["blink_onset"] = blink_onset
 		blinks["blink_offset"] = blink_offset
 
-		pupil_size_no_blinks = []
-		pupil_size_no_blinks_indices = []
-		
-		prev = 0
-		
-		for i in range(len(blink_onset)):
-			if i == 0:
-				pupil_size_no_blinks_indices = np.arange(prev, blink_onset[i])
-				pupil_size_no_blinks = pupil_size[range(prev, blink_onset[i])]
-			else:
-				prev = blink_offset[i - 1]
-				pupil_size_no_blinks_indices = np.hstack((pupil_size_no_blinks_indices, np.arange(prev, blink_onset[i])))
-				pupil_size_no_blinks = np.hstack((pupil_size_no_blinks, pupil_size[range(prev, blink_onset[i])]))
-		
-		pupil_size_no_blinks_indices = np.hstack(
-			(pupil_size_no_blinks_indices, np.arange(blink_offset[i], len(pupil_size))))
-		pupil_size_no_blinks = np.hstack((pupil_size_no_blinks, pupil_size[range(blink_offset[i], len(pupil_size))]))
-		
-		
-		
-		interp_pupil_size = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices),
-									  pupil_size_no_blinks)
-		
-		new_gaze = {"left" : None, "right" : None}
-		for eye in ["left", "right"]:
-			gaze_x = gaze[eye]["x"]
-			gaze_y = gaze[eye]["y"]
+		if interpolate:
+
+			pupil_size_no_blinks = []
+			pupil_size_no_blinks_indices = []
 			
-			gaze_x_no_blinks = gaze_x[pupil_size_no_blinks_indices]
-			gaze_y_no_blinks = gaze_y[pupil_size_no_blinks_indices]
+			prev = 0
 			
-			interp_gaze_x = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices), gaze_x_no_blinks)
-			interp_gaze_y = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices), gaze_y_no_blinks)
+			for i in range(len(blink_onset)):
+				if i == 0:
+					pupil_size_no_blinks_indices = np.arange(prev, blink_onset[i])
+					pupil_size_no_blinks = pupil_size[range(prev, blink_onset[i])]
+				else:
+					prev = blink_offset[i - 1]
+					pupil_size_no_blinks_indices = np.hstack((pupil_size_no_blinks_indices, np.arange(prev, blink_onset[i])))
+					pupil_size_no_blinks = np.hstack((pupil_size_no_blinks, pupil_size[range(prev, blink_onset[i])]))
 			
-			new_gaze[eye] = {"x": interp_gaze_x, "y": interp_gaze_y}
-		
+			pupil_size_no_blinks_indices = np.hstack(
+				(pupil_size_no_blinks_indices, np.arange(blink_offset[i], len(pupil_size))))
+			pupil_size_no_blinks = np.hstack((pupil_size_no_blinks, pupil_size[range(blink_offset[i], len(pupil_size))]))
+			
+			
+			interp_pupil_size = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices),
+										  pupil_size_no_blinks)
+			
+			if gaze != None:
+				new_gaze = {"left" : None, "right" : None}
+				for eye in ["left", "right"]:
+					gaze_x = gaze[eye]["x"]
+					gaze_y = gaze[eye]["y"]
+					
+					gaze_x_no_blinks = gaze_x[pupil_size_no_blinks_indices]
+					gaze_y_no_blinks = gaze_y[pupil_size_no_blinks_indices]
+					
+					interp_gaze_x = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices), gaze_x_no_blinks)
+					interp_gaze_y = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices), gaze_y_no_blinks)
+					
+					new_gaze[eye] = {"x": interp_gaze_x, "y": interp_gaze_y}
+
+		else:
+			interp_pupil_size = pupil_size
+			new_gaze = gaze
+
 		return blinks, interp_pupil_size, new_gaze
 
 
@@ -361,10 +356,10 @@ class Stimulus:
 			if numr == 0:
 				bin_ms = None
 				monor = None
-				monol = sacl
+				monol = msl
 			if numl == 0:
 				bin_ms = None
-				monor = sacr
+				monor = msr
 				monol = None
 
 		ms = {"NB" : NB, "NR" : NR, "NL" : NL, "bin" : bin_ms, "left" : monol, "right" : monor}
@@ -570,71 +565,163 @@ class Stimulus:
 			NA
 		"""
 		
-		total_range = range(len(self.data["ETRows"]))
-		
+		if len(self.sensors) == 0:
+			return
+
+		total_range = None
+		viz_eeg = None
+		eeg_lines = None
+		eeg_channels = None
 		# Initialising Plots
 		fig = plt.figure()
+		fig.canvas.set_window_title(self.name)
 		ax = fig.add_subplot(3, 1, 1)
 		ax2 = fig.add_subplot(3, 1, 2)
 		ax3 = fig.add_subplot(3, 1, 3)
 		
-		# Plot for eye gaze
-		# img = plt.imread(slides_path + sn + ".jpg")
-		# ax.imshow(img)
-		line, = ax.plot(self.data["Gaze"]["left"]["x"][:1], self.data["Gaze"]["left"]["y"][:1], 'r-', alpha=0.5)
-		circle, = ax.plot(self.data["Gaze"]["left"]["x"][1], self.data["Gaze"]["left"]["y"][1], 'go', markersize=15, alpha=0.4)
-		ax.set_title("Gaze")
+		img = plt.imread("Stimuli/" + self.name + ".jpg")
+		ax.imshow(img)
+
+		if self.data["InterpGaze"] != None:
+			total_range = range(len(self.data["ETRows"]))
+			# Plot for eye gaze
+			line, = ax.plot(self.data["InterpGaze"]["left"]["x"][:1], self.data["InterpGaze"]["left"]["y"][:1], 'r-', alpha=1)
+			circle, = ax.plot(self.data["InterpGaze"]["left"]["x"][1], self.data["InterpGaze"]["left"]["y"][1], 'go', markersize=10, alpha=0.7)
+			ax.set_title("Gaze")
 		
-		# Plot for eeg (Pz)
-		line2, = ax2.plot(total_range[:1], self.data["EEG"][:1])
-		ax2.set_xlim([0, len(total_range)])
-		ax2.set_title("Usampled EEG (Pz) : [256Hz to 1000Hz] vs. Time")
-		ax2.set_xlabel("Time (ms)")
-		ax2.set_ylabel("EEG")
-		
-		# Plot for pupil size
-		line3, = ax3.plot(total_range[:1], self.data["InterpPupilSize"][:1])
-		ax3.set_xlim([0, len(total_range)])
-		ax3.set_ylim([-2, 11])
-		ax3.set_title("Pupil Size vs. Time")
-		ax3.set_xlabel("Time (ms)")
-		ax3.set_ylabel("Pupil Size")
-		
-		def gen_ind():
-			for i in total_range:
-				yield i
-		
-		def animate(i):
-			if i < 2000:
-				line.set_xdata(self.data["Gaze"]["left"]["x"][:i])
-				line.set_ydata(self.data["Gaze"]["left"]["y"][:i])
+			# Plot for pupil size
+			line3, = ax3.plot(total_range[:1], self.data["InterpPupilSize"][:1])
+			ax3.set_xlim([0, len(total_range)])
+			ax3.set_ylim([-2, 11])
+			ax3.set_title("Pupil Size vs. Time")
+			ax3.set_xlabel("Time (ms)")
+			ax3.set_ylabel("Pupil Size")
+
+			for i in range(len(self.data["BlinksLeft"]["blink_onset"])):
+				plt.axvline(x=self.data["BlinksLeft"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
+				plt.axvline(x=self.data["BlinksLeft"]["blink_offset"][i], linestyle="--", color="g", alpha=0.6)
+			
+				plt.axvline(x=self.data["BlinksLeft"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
+				plt.axvline(x=self.data["BlinksLeft"]["blink_offset"][i], linestyle="--", color="g", alpha=0.6)
+
+		if self.data["EEG"] != None:
+			# Plot for eeg (Pz)
+			viz_eeg = self.data["EEG"].copy()
+			eeg_channels = [i for i in viz_eeg]
+
+			if total_range != None:
+				for channel in viz_eeg:
+					(viz_eeg[channel], eeg_time) = signal.resample(viz_eeg[channel], len(total_range), t=sorted(self.data["EEGRows"]))
 			else:
-				line.set_xdata(self.data["Gaze"]["left"]["x"][i - 2000:i])
-				line.set_ydata(self.data["Gaze"]["left"]["y"][i - 2000:i])
+				total_range = range(len(self.data["EEGRows"]))
+			
+			eeg_lines = []
+			for ind, channel in enumerate(viz_eeg):
+				eeg_lines_temp, = ax2.plot(total_range[:1], viz_eeg[channel][:1], alpha=0.7)
+				eeg_lines.append(eeg_lines_temp)
+				eeg_lines[ind].set_visible(False)
+			eeg_lines[0].set_visible(True)
+			
+			ax2.set_xlim([0, len(total_range)])
+			ax2.set_title("Usampled EEG : [256Hz to 1000Hz] vs. Time")
+			ax2.set_xlabel("Time (ms)")
+			ax2.set_ylabel("EEG")
+
+		axamp = plt.axes([0.25, .03, 0.50, 0.02])
+		samp = Slider(axamp, 'Time', 1, total_range[-1], valinit=0, valstep=1)
+
+		rax = plt.axes([0.05, 0.7, 0.2, 0.25])
+		eeg_visible = np.zeros(len(eeg_channels), dtype=bool)
+		eeg_visible[0] = True
+		check = CheckButtons(rax, eeg_channels, eeg_visible)
+
+		is_manual = False
+		interval = 0
+
+		def eeg_check(label):
+			eeg_lines[eeg_channels.index(label)].set_visible(not eeg_lines[eeg_channels.index(label)].get_visible())
+
+		def update_slider(val):
+			nonlocal is_manual
+			is_manual = True
+			val = int(val)
+			update(val)
+
+		def update(i):
+			i = int(i + 1)
+			
+			if self.data["InterpGaze"] != None:
+				line.set_xdata(self.data["InterpGaze"]["left"]["x"][:i])
+				line.set_ydata(self.data["InterpGaze"]["left"]["y"][:i])
+			
+				circle.set_xdata(self.data["InterpGaze"]["left"]["x"][i])
+				circle.set_ydata(self.data["InterpGaze"]["left"]["y"][i])
+				
+				line3.set_xdata(total_range[:i])
+				line3.set_ydata(self.data["InterpPupilSize"][:i])
+				ax3.set_ylim([min(self.data["InterpPupilSize"][:i]) - 5, max(self.data["InterpPupilSize"][:i]) + 5])      
+
+			if self.data["EEG"] != None:
+				for ind, channel in enumerate(viz_eeg):
+					eeg_lines[ind].set_xdata(total_range[:i])
+					eeg_lines[ind].set_ydata(viz_eeg[channel][:i])
+					ax2.set_ylim([min(viz_eeg[channel][:i]) - 10, max(viz_eeg[channel][:i]) + 10])
 		
-			circle.set_xdata(self.data["Gaze"]["left"]["x"][i])
-			circle.set_ydata(self.data["Gaze"]["left"]["y"][i])
-		
-			line2.set_xdata(total_range[:i])
-			line2.set_ydata(self.data["EEG"][:i])
-			ax2.set_ylim([min(self.data["EEG"][:i]) - 10, max(self.data["EEG"][:i]) + 10])
-		
-			line3.set_xdata(total_range[:i])
-			line3.set_ydata(self.data["InterpPupilSize"][:i])
-			ax3.set_ylim([min(self.data["InterpPupilSize"][:i]) - 5, max(self.data["InterpPupilSize"][:i]) + 5])
-		
-			return line, circle, line2, line3,
-		
-		ani = animation.FuncAnimation(fig, animate, frames=gen_ind, interval=0, blit=True)
-		# ani.save('GazePlot.mp4')
-		
-		for i in range(len(self.data["BlinksLeft"]["blink_onset"])):
-			plt.axvline(x=self.data["BinksLeft"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
-			plt.axvline(x=self.data["BinksLeft"]["blink_offset"][i], linestyle="--", color="g", alpha=0.6)
-		
-			plt.axvline(x=self.data["BinksLeft"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
-			plt.axvline(x=self.data["BinksLeft"]["blink_offset"][i], linestyle="--", color="g", alpha=0.6)
-		
+			fig.canvas.draw_idle()
+
+		def update_plot(i):
+			nonlocal is_manual
+			if is_manual:
+				if self.data["EEG"] != None and self.data["InterpGaze"] != None:
+					plots = [i for i in eeg_lines]
+					plots.append(line)
+					plots.append(line3)
+					plots.append(circle)
+					return plots
+				elif self.data["EEG"] == None and self.data["InterpGaze"] != None:
+					return [line, circle, line3]
+				elif self.data["EEG"] != None and self.data["InterpGaze"] == None:
+					return eeg_lines
+				else:
+					return
+
+			i = int(samp.val + 1) % total_range[-1]
+			samp.set_val(i)
+			is_manual = False # the above line called update_slider, so we need to reset this
+			fig.canvas.draw_idle()
+			if self.data["EEG"] != None and self.data["InterpGaze"] != None:
+				plots = [i for i in eeg_lines]
+				plots.append(line)
+				plots.append(line3)
+				plots.append(circle)
+				return plots
+			elif self.data["EEG"] == None and self.data["InterpGaze"] != None:
+				return [line, circle, line3]
+			elif self.data["EEG"] != None and self.data["InterpGaze"] == None:
+				return eeg_lines
+			else:
+				return
+
+		def on_click(event):
+			nonlocal is_manual
+			# Check where the click happened
+			(xm,ym),(xM,yM) = samp.label.clipbox.get_points()
+			(xm2,ym2),(xM2, yM2) = check.label.clipbox.get_points()
+			if (xm < event.x < xM and ym < event.y < yM) or (xm2 < event.x < xM2 and ym2 < event.y < yM2):
+				# Event happened within the slider or checkbox, ignore since it is handled in update_slider
+				return
+			else:
+				# user clicked somewhere else on canvas = unpause
+				is_manual=False
+
+		# call update function on slider value change
+		samp.on_changed(update_slider)
+		check.on_clicked(eeg_check)
+
+		fig.canvas.mpl_connect('button_press_event', on_click)
+
+		ani = animation.FuncAnimation(fig, update_plot, interval=1)
+
 		plt.show()
 
 
@@ -647,77 +734,134 @@ class Stimulus:
 			NA
 		"""
 
-		# Finding response time based on number of eye tracker samples 
-		self.response_time = len(self.data["ETRows"]) * (1000 / sampling_freq)
+		num_chars = 1
+		if self.stim_type in ["alpha", "relevant", "general", "general_lie"]:
+			with open("questions.json") as q_file:
+				data = json.load(q_file)
+
+			num_chars = len(data[self.name])
+
+		# Finding response time based on number of  samples 
+		self.response_time = len(self.data["ETRows"])
 
 		# Find microsaccades
 		all_MS, ms_count, ms_duration = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
 
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["sacc_count"] = 0
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["sacc_duration"] = 0
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_count"] = ms_count #/ self.response_time
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["ms_duration"] = ms_duration
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = 0
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_duration"] = 0
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_count"] = ms_count / self.response_time
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = ms_duration
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_count"] = ((len(self.data["BlinksLeft"]["blink_onset"]) + len(self.data["BlinksRight"]["blink_onset"])) / 2) / self.response_time
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["fixation_count"] = (len(np.unique(self.data["FixationSeq"])) - 1) / num_chars
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_chars
 
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["blink_count"] = ((len(self.data["BlinksLeft"]["blink_onset"]) + len(self.data["BlinksRight"]["blink_onset"])) / 2) #/ self.response_time
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["fixation_count"] = len(np.unique(self.data["FixationSeq"])) - 1
-		self.sensors[Sensor.sensor_names.index("Eye Tracker")].metadata["response_time"] = self.response_time
+		temp = np.empty(1, dtype='float32')
+		for ms in all_MS:
+			if ms["NB"] != 0:
+				temp = np.hstack((temp, ms["bin"][:, 2]))
+			if ms["NL"] != 0:
+				temp = np.hstack((temp, ms["left"][:, 2]))
+			if ms["NR"] != 0:
+				temp = np.hstack((temp, ms["right"][:, 2]))
+		if len(temp) != 0:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_vel"] = temp[1:]
+		
+		temp = np.empty(1, dtype='float32')
+		for ms in all_MS:
+			if ms["NB"] != 0:
+				temp = np.hstack((temp, np.sqrt(ms["bin"][:, 5]**2 + ms["bin"][:, 6]**2)))
+			if ms["NL"] != 0:
+				temp = np.hstack((temp, np.sqrt(ms["left"][:, 5]**2 + ms["left"][:, 6]**2)))
+			if ms["NR"] != 0:
+				temp = np.hstack((temp, np.sqrt(ms["right"][:, 5]**2 + ms["right"][:, 6]**2)))
+		
+		if len(temp) != 0:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_amplitude"] = temp[1:]
+
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_pupil"] = max(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["time_to_peak_pupil"] = np.argmax(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
 
 
-	def getData(self, data):
+	def getData(self, data, sensor_names):
 		# Extracting data for particular stimulus
-		event_type = np.array(data.EventSource)
-		l_gazex_df = np.array(data.GazeLeftx)
-		l_gazey_df = np.array(data.GazeLefty)
-		r_gazex_df = np.array(data.GazeRightx)
-		r_gazey_df = np.array(data.GazeRighty)
-		eeg_pz_df = np.array(data.O1Pz_Epoc)
-		pupil_size_l_df = np.array(data.PupilLeft)
-		pupil_size_r_df = np.array(data.PupilRight)
+		
+		with open(self.json_file) as jf:
+			contents = json.load(jf)
 
-		# Extracting fixation sequences
-		et_rows = np.where(data.EventSource.str.contains("ET"))[0]
-		fixation_seq_df = np.array(data.FixationSeq.fillna(-1), dtype='float32')
-		fixation_seq = np.squeeze(np.array([fixation_seq_df[i] for i in sorted(et_rows)], dtype="float32"))
-		
-		total_range = range(len(et_rows))
+		extracted_data = {	"ETRows" : None,
+							"FixationSeq" : None,
+							"Gaze" : None,
+							"InterpPupilSize" : None,
+							"InterpGaze" : None,
+							"BlinksLeft" : None,
+							"BlinksRight" : None,
+							"EEG" : None,
+							"EEGRows" : None}
 
-		# Extracting the eye gaze data
-		et_rows = np.where(data.EventSource.str.contains("ET"))[0]
-		l_gaze_x = np.squeeze(np.array([l_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
-		l_gaze_y = np.squeeze(np.array([l_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
-		l_gaze = {"x": l_gaze_x, "y": l_gaze_y}
-		r_gaze_x = np.squeeze(np.array([r_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
-		r_gaze_y = np.squeeze(np.array([r_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
-		r_gaze = {"x": r_gaze_x, "y": r_gaze_y}
-		gaze = {"left" : l_gaze, "right" : r_gaze}
-		
-		# Extracting Pupil Size Data
-		pupil_size_r = np.squeeze(np.array([pupil_size_r_df[i] for i in sorted(et_rows)], dtype="float32"))
-		pupil_size_l = np.squeeze(np.array([pupil_size_l_df[i] for i in sorted(et_rows)], dtype="float32"))
-		
-		# Fixing Blinks and interpolating pupil size and gaze data
-		blinks_l, interp_pupil_size_l, new_gaze_l = self.fix_blinks(pupil_size_l, gaze)
-		blinks_r, interp_pupil_size_r, new_gaze_r = self.fix_blinks(pupil_size_r, gaze)
-		interp_pupil_size = np.mean([interp_pupil_size_r, interp_pupil_size_l], axis=0)
+		for col_class in sensor_names:
+			if col_class in Sensor.sensor_names:
+				self.sensors.append(Sensor(col_class))
 
-		# Extracting and upsampling eeg data from Pz
-		eeg_rows = np.where(data.EventSource.str.contains("Raw EEG Epoc"))[0]
-		
-		if len(eeg_rows) != 0:
-			eeg_unique = np.squeeze(np.array([eeg_pz_df[i] for i in sorted(eeg_rows)], dtype="float32"))
-			(eeg_pz, eeg_time) = signal.resample(eeg_unique, len(total_range), t=sorted(eeg_rows))
-		else:
-			eeg_pz = []
-		
-		extracted_data = {"ETRows" : et_rows,
-							"FixationSeq" : fixation_seq,
-							"Gaze" : gaze,
-							"InterpPupilSize" : interp_pupil_size,
-							"BlinksLeft" : blinks_l,
-							"BlinksRight" : blinks_r,
-							"EEG" : eeg_pz}
+			if col_class == "EyeTracker":
+				event_type = np.array(data.EventSource)
+				l_gazex_df = np.array(data.GazeLeftx)
+				l_gazey_df = np.array(data.GazeLefty)
+				r_gazex_df = np.array(data.GazeRightx)
+				r_gazey_df = np.array(data.GazeRighty)
+				pupil_size_l_df = np.array(data.PupilLeft)
+				pupil_size_r_df = np.array(data.PupilRight)
+
+				# Extracting fixation sequences
+				et_rows = np.where(data.EventSource.str.contains("ET"))[0]
+				fixation_seq_df = np.array(data.FixationSeq.fillna(-1), dtype='float32')
+				fixation_seq = np.squeeze(np.array([fixation_seq_df[i] for i in sorted(et_rows)], dtype="float32"))
+				
+				total_range = range(len(et_rows))
+
+				# Extracting the eye gaze data
+				et_rows = np.where(data.EventSource.str.contains("ET"))[0]
+				l_gaze_x = np.squeeze(np.array([l_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
+				l_gaze_y = np.squeeze(np.array([l_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
+				l_gaze = {"x": l_gaze_x, "y": l_gaze_y}
+				r_gaze_x = np.squeeze(np.array([r_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
+				r_gaze_y = np.squeeze(np.array([r_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
+				r_gaze = {"x": r_gaze_x, "y": r_gaze_y}
+				gaze = {"left" : l_gaze, "right" : r_gaze}
+				
+				# Extracting Pupil Size Data
+				pupil_size_r = np.squeeze(np.array([pupil_size_r_df[i] for i in sorted(et_rows)], dtype="float32"))
+				pupil_size_l = np.squeeze(np.array([pupil_size_l_df[i] for i in sorted(et_rows)], dtype="float32"))
+				
+				# Fixing Blinks and interpolating pupil size and gaze data
+				blinks_l, interp_pupil_size_l, new_gaze_l = self.fix_blinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
+				blinks_r, interp_pupil_size_r, new_gaze_r = self.fix_blinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
+				interp_pupil_size = np.mean([interp_pupil_size_r, interp_pupil_size_l], axis=0)
+
+				extracted_data["ETRows"] = et_rows
+				extracted_data["FixationSeq"] = fixation_seq
+				extracted_data["Gaze"] = gaze
+				extracted_data["InterpPupilSize"] = interp_pupil_size
+				extracted_data["InterpGaze"] = new_gaze_l
+				extracted_data["BlinksLeft"] = blinks_l
+				extracted_data["BlinksRight"] = blinks_r
+
+			if col_class == "EEG":
+				eeg_dict = {}
+				for channel in contents["Columns_of_interest"][col_class]:
+					eeg_df = np.array(data[channel])
+					eeg_rows = np.where(data.EventSource.str.contains("Raw EEG Epoc"))[0]
+					
+					if len(eeg_rows) != 0:
+						eeg = np.squeeze(np.array([eeg_df[i] for i in sorted(eeg_rows)], dtype="float32"))
+						# (eeg_pz, eeg_time) = signal.resample(eeg_unique, len(total_range), t=sorted(eeg_rows))
+					else:
+						eeg = []
+
+					channel_name = [i for i in Sensor.eeg_montage if i.upper() in channel.upper()][0]
+					eeg_dict.update({channel_name:eeg})
+
+				extracted_data["EEG"] = eeg_dict
+				extracted_data["EEGRows"] = eeg_rows
 
 		return extracted_data
-
-

@@ -1,0 +1,646 @@
+				Analysis for  blink_count
+/usr/local/lib/python3.6/dist-packages/pingouin/parametric.py:1299: RuntimeWarning: divide by zero encountered in double_scalars
+  npsq_inter = ssinter / (ssinter + sswg)
+
+=============
+ANOVA SUMMARY
+=============
+
+Source              SS    DF1    DF2     MS        F    p-unc  p-GG-corr                   np2  eps    sphericity    W-spher    p-spher
+---------------  -----  -----  -----  -----  -------  -------  ----------------------  -------  -----  ------------  ---------  ----------------------
+individual_type  0.000      1     28  0.000    0.000    1.000  -                         0.000  -      -             -          -
+stimuli_type     0.000      6    168  0.000    0.000    1.000  0.00036978619964736595    0.000  0.371  False         0.01       1.1383035714951923e-16
+Interaction      0.000      6    168  0.000  -28.000    1.000  -                       inf      -      -             -          -
+
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+
+==============
+POST HOC TESTS
+==============
+
+Contrast                        stimuli_type          A                     B                     Paired         T  tail         p-unc            BF10    efsize  eftype
+------------------------------  --------------------  --------------------  --------------------  --------  ------  ---------  -------  --------------  --------  --------
+stimuli_type                    -                     alpha                 general               True       6.965  two-sided    0.000  1077054364.690     0.514  hedges
+stimuli_type                    -                     alpha                 general_lie           True       6.674  two-sided    0.000   160444732.151     0.514  hedges
+stimuli_type                    -                     alpha                 relevant              True       5.515  two-sided    0.000      188511.676     0.435  hedges
+stimuli_type                    -                     alpha                 pictures_irrelevant   True       2.212  two-sided    0.027           0.813     0.138  hedges
+stimuli_type                    -                     alpha                 pictures_crime_scene  True       1.346  two-sided    0.179           0.190     0.089  hedges
+stimuli_type                    -                     alpha                 pictures_crime        True       0.936  two-sided    0.350           0.121     0.060  hedges
+stimuli_type                    -                     general               general_lie           True      -0.555  two-sided    0.579           0.070    -0.029  hedges
+stimuli_type                    -                     general               relevant              True      -1.324  two-sided    0.186           0.170    -0.083  hedges
+stimuli_type                    -                     general               pictures_irrelevant   True      -6.202  two-sided    0.000     8552966.300    -0.298  hedges
+stimuli_type                    -                     general               pictures_crime_scene  True      -5.850  two-sided    0.000     1133754.673    -0.339  hedges
+stimuli_type                    -                     general               pictures_crime        True      -5.521  two-sided    0.000      186513.260    -0.331  hedges
+stimuli_type                    -                     general_lie           relevant              True      -0.878  two-sided    0.380           0.107    -0.058  hedges
+stimuli_type                    -                     general_lie           pictures_irrelevant   True      -5.825  two-sided    0.000      961836.636    -0.280  hedges
+stimuli_type                    -                     general_lie           pictures_crime_scene  True      -5.527  two-sided    0.000      192626.008    -0.323  hedges
+stimuli_type                    -                     general_lie           pictures_crime        True      -5.228  two-sided    0.000       40899.403    -0.313  hedges
+stimuli_type                    -                     relevant              pictures_irrelevant   True      -4.247  two-sided    0.000         478.459    -0.223  hedges
+stimuli_type                    -                     relevant              pictures_crime_scene  True      -4.338  two-sided    0.000         724.254    -0.260  hedges
+stimuli_type                    -                     relevant              pictures_crime        True      -4.240  two-sided    0.000         483.267    -0.251  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime_scene  True      -0.761  two-sided    0.447           0.079    -0.041  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime        True      -1.038  two-sided    0.300           0.103    -0.059  hedges
+stimuli_type                    -                     pictures_crime_scene  pictures_crime        True      -0.322  two-sided    0.747           0.070    -0.019  hedges
+individual_type                 -                     innocent              guilty                False      5.079  two-sided    0.000       12866.810     0.154  hedges
+stimuli_type * individual_type  alpha                 innocent              guilty                False     -0.192  two-sided    0.848           0.127    -0.021  hedges
+stimuli_type * individual_type  general               innocent              guilty                False      1.942  two-sided    0.053           0.518     0.137  hedges
+stimuli_type * individual_type  general_lie           innocent              guilty                False      1.691  two-sided    0.091           0.350     0.126  hedges
+stimuli_type * individual_type  relevant              innocent              guilty                False      1.296  two-sided    0.196           0.261     0.134  hedges
+stimuli_type * individual_type  pictures_irrelevant   innocent              guilty                False      3.508  two-sided    0.000          30.738     0.228  hedges
+stimuli_type * individual_type  pictures_crime_scene  innocent              guilty                False      1.744  two-sided    0.082           0.406     0.140  hedges
+stimuli_type * individual_type  pictures_crime        innocent              guilty                False      2.609  two-sided    0.009           2.550     0.212  hedges
+
+				Analysis for  ms_count
+
+=============
+ANOVA SUMMARY
+=============
+
+Source              SS    DF1    DF2     MS        F    p-unc  p-GG-corr                   np2  eps    sphericity    W-spher    p-spher
+---------------  -----  -----  -----  -----  -------  -------  ----------------------  -------  -----  ------------  ---------  ----------------------
+individual_type  0.000      1     28  0.000    0.000    1.000  -                         0.000  -      -             -          -
+stimuli_type     0.000      6    168  0.000    0.000    1.000  2.6328236357613067e-18    0.000  0.331  False         0.014      3.1995357337720385e-15
+Interaction      0.000      6    168  0.000  -28.000    1.000  -                       inf      -      -             -          -
+
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+
+==============
+POST HOC TESTS
+==============
+
+Contrast                        stimuli_type          A                     B                     Paired          T  tail         p-unc                                                                                               BF10    efsize  eftype
+------------------------------  --------------------  --------------------  --------------------  --------  -------  ---------  -------  -------------------------------------------------------------------------------------------------  --------  --------
+stimuli_type                    -                     alpha                 general               True      -12.836  two-sided    0.000                                                               59296726366793068494397305257984.000    -0.796  hedges
+stimuli_type                    -                     alpha                 general_lie           True      -11.213  two-sided    0.000                                                                      1825392143094250127491072.000    -0.723  hedges
+stimuli_type                    -                     alpha                 relevant              True       -9.244  two-sided    0.000                                                                              13496640206752216.000    -0.701  hedges
+stimuli_type                    -                     alpha                 pictures_irrelevant   True        5.248  two-sided    0.000                                                                                          49438.103     0.334  hedges
+stimuli_type                    -                     alpha                 pictures_crime_scene  True        3.437  two-sided    0.001                                                                                             25.081     0.231  hedges
+stimuli_type                    -                     alpha                 pictures_crime        True        5.612  two-sided    0.000                                                                                         323226.866     0.389  hedges
+stimuli_type                    -                     general               general_lie           True        1.708  two-sided    0.088                                                                                              0.253     0.091  hedges
+stimuli_type                    -                     general               relevant              True        1.408  two-sided    0.160                                                                                              0.190     0.092  hedges
+stimuli_type                    -                     general               pictures_irrelevant   True       22.333  two-sided    0.000  732824618885025531254873439529919551229098974593633422522810598310439275801981176266105028608.000     1.119  hedges
+stimuli_type                    -                     general               pictures_crime_scene  True       18.122  two-sided    0.000                                127961775821473617762753801562287921458659687111857867384160256.000     0.991  hedges
+stimuli_type                    -                     general               pictures_crime        True       21.100  two-sided    0.000             3359033451660276959111706056560361187804536589020294630096216547627184044116017152.000     1.151  hedges
+stimuli_type                    -                     general_lie           relevant              True        0.053  two-sided    0.958                                                                                              0.073     0.004  hedges
+stimuli_type                    -                     general_lie           pictures_irrelevant   True       20.115  two-sided    0.000                  28335615309246630322809969259860655765390918700487118549931447493154815606784.000     1.044  hedges
+stimuli_type                    -                     general_lie           pictures_crime_scene  True       16.251  two-sided    0.000                                            276969700860094567186802228047315702695624114700288.000     0.918  hedges
+stimuli_type                    -                     general_lie           pictures_crime        True       19.125  two-sided    0.000                           74437159926504417945457487421256681731771368821088941221151772770304.000     1.083  hedges
+stimuli_type                    -                     relevant              pictures_irrelevant   True       15.290  two-sided    0.000                                                 1000155930621774959275024508373693655846748160.000     1.027  hedges
+stimuli_type                    -                     relevant              pictures_crime_scene  True       12.968  two-sided    0.000                                                              133388644322753170162492802859008.000     0.890  hedges
+stimuli_type                    -                     relevant              pictures_crime        True       15.095  two-sided    0.000                                                    4703926993075477412488739220477908170571776.000     1.059  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime_scene  True       -1.646  two-sided    0.100                                                                                              0.227    -0.089  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime        True        0.928  two-sided    0.354                                                                                              0.092     0.050  hedges
+stimuli_type                    -                     pictures_crime_scene  pictures_crime        True        2.316  two-sided    0.021                                                                                              0.928     0.136  hedges
+individual_type                 -                     innocent              guilty                False       0.465  two-sided    0.642                                                                                              0.039     0.014  hedges
+stimuli_type * individual_type  alpha                 innocent              guilty                False       1.891  two-sided    0.060                                                                                              0.686     0.212  hedges
+stimuli_type * individual_type  general               innocent              guilty                False      -1.262  two-sided    0.207                                                                                              0.179    -0.092  hedges
+stimuli_type * individual_type  general_lie           innocent              guilty                False      -1.282  two-sided    0.200                                                                                              0.194    -0.099  hedges
+stimuli_type * individual_type  relevant              innocent              guilty                False      -0.578  two-sided    0.564                                                                                              0.137    -0.060  hedges
+stimuli_type * individual_type  pictures_irrelevant   innocent              guilty                False       0.813  two-sided    0.417                                                                                              0.103     0.054  hedges
+stimuli_type * individual_type  pictures_crime_scene  innocent              guilty                False       2.183  two-sided    0.029                                                                                              0.935     0.179  hedges
+stimuli_type * individual_type  pictures_crime        innocent              guilty                False       0.682  two-sided    0.495                                                                                              0.118     0.057  hedges
+
+				Analysis for  ms_duration
+
+=============
+ANOVA SUMMARY
+=============
+
+Source              SS    DF1    DF2     MS      F    p-unc  p-GG-corr                 np2  eps    sphericity    W-spher    p-spher
+---------------  -----  -----  -----  -----  -----  -------  ----------------------  -----  -----  ------------  ---------  ---------------------
+individual_type  4.801      1     28  4.801  0.530    0.473  -                       0.019  -      -             -          -
+stimuli_type     8.261      6    168  1.377  7.248    0.000  5.4376976119419786e-05  0.206  0.663  False         0.069      2.898205979185697e-07
+Interaction      2.875      6    168  0.479  2.523    0.023  -                       0.083  -      -             -          -
+
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+
+==============
+POST HOC TESTS
+==============
+
+Contrast                        stimuli_type          A                     B                     Paired         T  tail         p-unc        BF10    efsize  eftype
+------------------------------  --------------------  --------------------  --------------------  --------  ------  ---------  -------  ----------  --------  --------
+stimuli_type                    -                     alpha                 general               True      -5.273  two-sided    0.000   20134.794    -0.085  hedges
+stimuli_type                    -                     alpha                 general_lie           True      -5.062  two-sided    0.000    6879.362    -0.084  hedges
+stimuli_type                    -                     alpha                 relevant              True      -5.676  two-sided    0.000  209039.293    -0.110  hedges
+stimuli_type                    -                     alpha                 pictures_irrelevant   True      -2.627  two-sided    0.009       0.832    -0.063  hedges
+stimuli_type                    -                     alpha                 pictures_crime_scene  True      -4.308  two-sided    0.000     310.751    -0.122  hedges
+stimuli_type                    -                     alpha                 pictures_crime        True      -5.523  two-sided    0.000  121801.870    -0.167  hedges
+stimuli_type                    -                     general               general_lie           True       0.145  two-sided    0.885       0.014     0.002  hedges
+stimuli_type                    -                     general               relevant              True      -1.535  two-sided    0.125       0.057    -0.024  hedges
+stimuli_type                    -                     general               pictures_irrelevant   True       1.158  two-sided    0.247       0.045     0.024  hedges
+stimuli_type                    -                     general               pictures_crime_scene  True      -1.371  two-sided    0.171       0.069    -0.035  hedges
+stimuli_type                    -                     general               pictures_crime        True      -2.897  two-sided    0.004       1.870    -0.080  hedges
+stimuli_type                    -                     general_lie           relevant              True      -1.616  two-sided    0.106       0.066    -0.026  hedges
+stimuli_type                    -                     general_lie           pictures_irrelevant   True       1.057  two-sided    0.290       0.041     0.022  hedges
+stimuli_type                    -                     general_lie           pictures_crime_scene  True      -1.430  two-sided    0.153       0.076    -0.036  hedges
+stimuli_type                    -                     general_lie           pictures_crime        True      -2.942  two-sided    0.003       2.150    -0.081  hedges
+stimuli_type                    -                     relevant              pictures_irrelevant   True       2.093  two-sided    0.036       0.229     0.047  hedges
+stimuli_type                    -                     relevant              pictures_crime_scene  True      -0.381  two-sided    0.703       0.032    -0.010  hedges
+stimuli_type                    -                     relevant              pictures_crime        True      -1.891  two-sided    0.059       0.182    -0.054  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime_scene  True      -1.927  two-sided    0.054       0.209    -0.057  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime        True      -3.220  two-sided    0.001       5.939    -0.100  hedges
+stimuli_type                    -                     pictures_crime_scene  pictures_crime        True      -1.279  two-sided    0.201       0.083    -0.042  hedges
+individual_type                 -                     innocent              guilty                False     -0.121  two-sided    0.904       0.011    -0.001  hedges
+stimuli_type * individual_type  alpha                 innocent              guilty                False      0.891  two-sided    0.373       0.049     0.026  hedges
+stimuli_type * individual_type  general               innocent              guilty                False      0.362  two-sided    0.717       0.020     0.006  hedges
+stimuli_type * individual_type  general_lie           innocent              guilty                False     -0.414  two-sided    0.679       0.022    -0.007  hedges
+stimuli_type * individual_type  relevant              innocent              guilty                False      0.578  two-sided    0.563       0.035     0.015  hedges
+stimuli_type * individual_type  pictures_irrelevant   innocent              guilty                False     -0.998  two-sided    0.319       0.069    -0.037  hedges
+stimuli_type * individual_type  pictures_crime_scene  innocent              guilty                False     -0.042  two-sided    0.967       0.051    -0.002  hedges
+stimuli_type * individual_type  pictures_crime        innocent              guilty                False     -1.196  two-sided    0.232       0.109    -0.057  hedges
+
+				Analysis for  ms_vel
+
+=============
+ANOVA SUMMARY
+=============
+
+Source                      SS    DF1    DF2             MS      F    p-unc  p-GG-corr              np2  eps    sphericity    W-spher    p-spher
+---------------  -------------  -----  -----  -------------  -----  -------  -------------------  -----  -----  ------------  ---------  ---------------------
+individual_type  591856964.337      1     28  591856964.337  0.912    0.348  -                    0.032  -      -             -          -
+stimuli_type     171199034.035      6    168   28533172.339  2.905    0.010  0.05151789236354585  0.094  0.465  False         0.014      1.423422875798054e-14
+Interaction      150656949.567      6    168   25109491.595  2.556    0.021  -                    0.084  -      -             -          -
+
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+
+==============
+POST HOC TESTS
+==============
+
+Contrast                        stimuli_type          A                     B                     Paired         T  tail         p-unc       BF10    efsize  eftype
+------------------------------  --------------------  --------------------  --------------------  --------  ------  ---------  -------  ---------  --------  --------
+stimuli_type                    -                     alpha                 general               True       4.581  two-sided    0.000    670.340     0.097  hedges
+stimuli_type                    -                     alpha                 general_lie           True       5.351  two-sided    0.000  30885.033     0.119  hedges
+stimuli_type                    -                     alpha                 relevant              True       4.509  two-sided    0.000    559.641     0.091  hedges
+stimuli_type                    -                     alpha                 pictures_irrelevant   True       2.799  two-sided    0.005      1.325     0.061  hedges
+stimuli_type                    -                     alpha                 pictures_crime_scene  True       1.035  two-sided    0.301      0.051     0.028  hedges
+stimuli_type                    -                     alpha                 pictures_crime        True       0.250  two-sided    0.803      0.032     0.007  hedges
+stimuli_type                    -                     general               general_lie           True       1.579  two-sided    0.114      0.048     0.019  hedges
+stimuli_type                    -                     general               relevant              True       0.765  two-sided    0.444      0.024     0.013  hedges
+stimuli_type                    -                     general               pictures_irrelevant   True      -0.993  two-sided    0.321      0.038    -0.023  hedges
+stimuli_type                    -                     general               pictures_crime_scene  True      -1.786  two-sided    0.074      0.133    -0.062  hedges
+stimuli_type                    -                     general               pictures_crime        True      -2.685  two-sided    0.007      1.037    -0.096  hedges
+stimuli_type                    -                     general_lie           relevant              True      -0.228  two-sided    0.820      0.018    -0.004  hedges
+stimuli_type                    -                     general_lie           pictures_irrelevant   True      -1.762  two-sided    0.078      0.110    -0.045  hedges
+stimuli_type                    -                     general_lie           pictures_crime_scene  True      -2.260  two-sided    0.024      0.349    -0.087  hedges
+stimuli_type                    -                     general_lie           pictures_crime        True      -3.162  two-sided    0.002      4.197    -0.126  hedges
+stimuli_type                    -                     relevant              pictures_irrelevant   True      -1.366  two-sided    0.172      0.065    -0.031  hedges
+stimuli_type                    -                     relevant              pictures_crime_scene  True      -2.023  two-sided    0.043      0.226    -0.061  hedges
+stimuli_type                    -                     relevant              pictures_crime        True      -2.870  two-sided    0.004      1.858    -0.089  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime_scene  True      -1.030  two-sided    0.303      0.056    -0.032  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime        True      -1.824  two-sided    0.068      0.179    -0.059  hedges
+stimuli_type                    -                     pictures_crime_scene  pictures_crime        True      -0.654  two-sided    0.513      0.046    -0.021  hedges
+individual_type                 -                     innocent              guilty                False      4.390  two-sided    0.000    164.714     0.041  hedges
+stimuli_type * individual_type  alpha                 innocent              guilty                False     -1.362  two-sided    0.173      0.083    -0.040  hedges
+stimuli_type * individual_type  general               innocent              guilty                False      4.474  two-sided    0.000    415.987     0.075  hedges
+stimuli_type * individual_type  general_lie           innocent              guilty                False      0.266  two-sided    0.790      0.021     0.005  hedges
+stimuli_type * individual_type  relevant              innocent              guilty                False      2.816  two-sided    0.005      1.541     0.074  hedges
+stimuli_type * individual_type  pictures_irrelevant   innocent              guilty                False      2.575  two-sided    0.010      1.137     0.091  hedges
+stimuli_type * individual_type  pictures_crime_scene  innocent              guilty                False      2.714  two-sided    0.007      1.957     0.109  hedges
+stimuli_type * individual_type  pictures_crime        innocent              guilty                False      0.021  two-sided    0.983      0.054     0.001  hedges
+
+				Analysis for  ms_amplitude
+
+=============
+ANOVA SUMMARY
+=============
+
+Source                 SS    DF1    DF2        MS      F    p-unc  p-GG-corr              np2  eps    sphericity    W-spher    p-spher
+---------------  --------  -----  -----  --------  -----  -------  -------------------  -----  -----  ------------  ---------  ---------------------
+individual_type  4520.488      1     28  4520.488  0.749    0.394  -                    0.026  -      -             -          -
+stimuli_type     1743.031      6    168   290.505  2.673    0.017  0.06607589352629555  0.087  0.467  False         0.012      3.541995565183036e-15
+Interaction      1638.036      6    168   273.006  2.512    0.024  -                    0.082  -      -             -          -
+
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+
+==============
+POST HOC TESTS
+==============
+
+Contrast                        stimuli_type          A                     B                     Paired         T  tail         p-unc     BF10    efsize  eftype
+------------------------------  --------------------  --------------------  --------------------  --------  ------  ---------  -------  -------  --------  --------
+stimuli_type                    -                     alpha                 general               True       4.214  two-sided    0.000  133.832     0.093  hedges
+stimuli_type                    -                     alpha                 general_lie           True       4.418  two-sided    0.000  328.524     0.097  hedges
+stimuli_type                    -                     alpha                 relevant              True       3.954  two-sided    0.000   53.963     0.080  hedges
+stimuli_type                    -                     alpha                 pictures_irrelevant   True       2.838  two-sided    0.005    1.479     0.061  hedges
+stimuli_type                    -                     alpha                 pictures_crime_scene  True       0.184  two-sided    0.854    0.031     0.005  hedges
+stimuli_type                    -                     alpha                 pictures_crime        True      -0.455  two-sided    0.649    0.035    -0.013  hedges
+stimuli_type                    -                     general               general_lie           True       0.514  two-sided    0.607    0.016     0.006  hedges
+stimuli_type                    -                     general               relevant              True       0.457  two-sided    0.648    0.020     0.008  hedges
+stimuli_type                    -                     general               pictures_irrelevant   True      -0.773  two-sided    0.440    0.031    -0.018  hedges
+stimuli_type                    -                     general               pictures_crime_scene  True      -2.182  two-sided    0.029    0.291    -0.090  hedges
+stimuli_type                    -                     general               pictures_crime        True      -3.221  two-sided    0.001    5.028    -0.127  hedges
+stimuli_type                    -                     general_lie           relevant              True       0.140  two-sided    0.889    0.018     0.003  hedges
+stimuli_type                    -                     general_lie           pictures_irrelevant   True      -1.025  two-sided    0.305    0.039    -0.024  hedges
+stimuli_type                    -                     general_lie           pictures_crime_scene  True      -2.305  two-sided    0.021    0.387    -0.094  hedges
+stimuli_type                    -                     general_lie           pictures_crime        True      -3.358  two-sided    0.001    7.929    -0.133  hedges
+stimuli_type                    -                     relevant              pictures_irrelevant   True      -0.960  two-sided    0.337    0.041    -0.021  hedges
+stimuli_type                    -                     relevant              pictures_crime_scene  True      -2.253  two-sided    0.024    0.369    -0.073  hedges
+stimuli_type                    -                     relevant              pictures_crime        True      -3.225  two-sided    0.001    5.460    -0.102  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime_scene  True      -1.661  two-sided    0.097    0.130    -0.053  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime        True      -2.520  two-sided    0.012    0.806    -0.084  hedges
+stimuli_type                    -                     pictures_crime_scene  pictures_crime        True      -0.512  two-sided    0.609    0.042    -0.017  hedges
+individual_type                 -                     innocent              guilty                False      2.406  two-sided    0.016    0.196     0.023  hedges
+stimuli_type * individual_type  alpha                 innocent              guilty                False     -1.040  two-sided    0.298    0.056    -0.030  hedges
+stimuli_type * individual_type  general               innocent              guilty                False      2.368  two-sided    0.018    0.313     0.040  hedges
+stimuli_type * individual_type  general_lie           innocent              guilty                False     -0.825  two-sided    0.409    0.029    -0.015  hedges
+stimuli_type * individual_type  relevant              innocent              guilty                False      2.326  two-sided    0.020    0.439     0.061  hedges
+stimuli_type * individual_type  pictures_irrelevant   innocent              guilty                False      1.636  two-sided    0.102    0.159     0.058  hedges
+stimuli_type * individual_type  pictures_crime_scene  innocent              guilty                False      2.426  two-sided    0.015    0.942     0.097  hedges
+stimuli_type * individual_type  pictures_crime        innocent              guilty                False     -0.340  two-sided    0.734    0.057    -0.016  hedges
+
+				Analysis for  fixation_count
+
+=============
+ANOVA SUMMARY
+=============
+
+Source                SS    DF1    DF2      MS        F    p-unc  p-GG-corr                np2  eps    sphericity    W-spher    p-spher
+---------------  -------  -----  -----  ------  -------  -------  ---------------------  -----  -----  ------------  ---------  ---------------------
+individual_type    0.003      1     28   0.003    0.005    0.942  -                      0.000  -      -             -          -
+stimuli_type     320.948      6    168  53.491  504.325    0.000  2.978086226499308e-27  0.947  0.234  False         0.0        4.684666392838951e-68
+Interaction        0.011      6    168   0.002    0.018    1.000  -                      0.001  -      -             -          -
+
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+/usr/local/lib/python3.6/dist-packages/pingouin/bayesian.py:111: RuntimeWarning: divide by zero encountered in double_scalars
+  return np.round(1 / bf01, 3)
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+/usr/local/lib/python3.6/dist-packages/pingouin/bayesian.py:111: RuntimeWarning: overflow encountered in double_scalars
+  return np.round(1 / bf01, 3)
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+
+==============
+POST HOC TESTS
+==============
+
+Contrast                        stimuli_type          A                     B                     Paired          T  tail         p-unc                                                                                                                                                                                                                                                                                                                  BF10    efsize  eftype
+------------------------------  --------------------  --------------------  --------------------  --------  -------  ---------  -------  --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------  --------  --------
+stimuli_type                    -                     alpha                 general               True       22.009  two-sided    0.000                                                                                                                                                                                                                             7072733797675909582941338468895960756652529084731464683785678944345625449879127982080.000     2.160  hedges
+stimuli_type                    -                     alpha                 general_lie           True       22.609  two-sided    0.000                                                                                                                                                                                                                          3129462659747300125726576027522385272714733981316426337218617766686169196958904603377664.000     2.150  hedges
+stimuli_type                    -                     alpha                 relevant              True       22.095  two-sided    0.000                                                                                                                                                                                                                                    817085170460695528423877606094715585189072911945452970506485807773053303652352.000     1.815  hedges
+stimuli_type                    -                     alpha                 pictures_irrelevant   True      -59.931  two-sided    0.000                                                                                                                                                                                                                                                                                                               inf        -2.497  hedges
+stimuli_type                    -                     alpha                 pictures_crime_scene  True      -47.603  two-sided    0.000                                                              1883496759577477792040242734120497842094071351525447210558256050944157423004128926231618646842163562197633125063811233065927616057891222172071645075559957689571425985573752097891331278563469891084010242463195432821954432401249937699288800821248.000    -2.518  hedges
+stimuli_type                    -                     alpha                 pictures_crime        True      -49.504  two-sided    0.000                                                      548354917979591030530392884994558218977164750866038991221974147580032710987745511561104138187209110153786790692035908501677686368095757650781696595854973062899665009191404154595403056757334956352325791260559520942632482680323536296443385957598634180608.000    -2.692  hedges
+stimuli_type                    -                     general               general_lie           True        2.699  two-sided    0.007                                                                                                                                                                                                                                                                                                                 2.178     0.144  hedges
+stimuli_type                    -                     general               relevant              True        1.433  two-sided    0.152                                                                                                                                                                                                                                                                                                                 0.197     0.092  hedges
+stimuli_type                    -                     general               pictures_irrelevant   True      -74.675  two-sided    0.000                                                                                                                                                                                                                                                                                                               inf        -3.372  hedges
+stimuli_type                    -                     general               pictures_crime_scene  True      -57.017  two-sided    0.000                                                                                                                                                                                                                                                                                                               inf        -3.549  hedges
+stimuli_type                    -                     general               pictures_crime        True      -60.023  two-sided    0.000                                                                                                                                                                                                                                                                                                               inf        -3.838  hedges
+stimuli_type                    -                     general_lie           relevant              True       -0.780  two-sided    0.436                                                                                                                                                                                                                                                                                                                 0.099    -0.051  hedges
+stimuli_type                    -                     general_lie           pictures_irrelevant   True      -74.929  two-sided    0.000                                                                                                                                                                                                                                                                                                               inf        -3.300  hedges
+stimuli_type                    -                     general_lie           pictures_crime_scene  True      -57.213  two-sided    0.000                                                                                                                                                                                                                                                                                                               inf        -3.451  hedges
+stimuli_type                    -                     general_lie           pictures_crime        True      -60.234  two-sided    0.000                                                                                                                                                                                                                                                                                                               inf        -3.731  hedges
+stimuli_type                    -                     relevant              pictures_irrelevant   True      -74.645  two-sided    0.000                                                                                                                                                                                                                                                                                                               inf        -2.958  hedges
+stimuli_type                    -                     relevant              pictures_crime_scene  True      -57.062  two-sided    0.000  7363541471599270992594007901466936077496052967574757869309641843100731599669170457567571631119649779288278323766696664753634094499200079002554494853310503815612796651303048506877145637750378399711883259236393941879375175628578575499670940560080288326504409796035719681968837667846865335149337408536838144.000    -2.999  hedges
+stimuli_type                    -                     relevant              pictures_crime        True      -60.058  two-sided    0.000                                                                                                                                                                                                                                                                                                               inf        -3.234  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime_scene  True       -1.276  two-sided    0.202                                                                                                                                                                                                                                                                                                                 0.133    -0.069  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime        True        0.078  two-sided    0.938                                                                                                                                                                                                                                                                                                                 0.060     0.004  hedges
+stimuli_type                    -                     pictures_crime_scene  pictures_crime        True        1.236  two-sided    0.217                                                                                                                                                                                                                                                                                                                 0.140     0.073  hedges
+individual_type                 -                     innocent              guilty                False       0.252  two-sided    0.801                                                                                                                                                                                                                                                                                                                 0.036     0.008  hedges
+stimuli_type * individual_type  alpha                 innocent              guilty                False       0.996  two-sided    0.320                                                                                                                                                                                                                                                                                                                 0.200     0.112  hedges
+stimuli_type * individual_type  general               innocent              guilty                False       0.776  two-sided    0.438                                                                                                                                                                                                                                                                                                                 0.110     0.056  hedges
+stimuli_type * individual_type  general_lie           innocent              guilty                False      -0.729  two-sided    0.466                                                                                                                                                                                                                                                                                                                 0.112    -0.057  hedges
+stimuli_type * individual_type  relevant              innocent              guilty                False      -0.347  two-sided    0.728                                                                                                                                                                                                                                                                                                                 0.123    -0.037  hedges
+stimuli_type * individual_type  pictures_irrelevant   innocent              guilty                False      -0.212  two-sided    0.832                                                                                                                                                                                                                                                                                                                 0.076    -0.014  hedges
+stimuli_type * individual_type  pictures_crime_scene  innocent              guilty                False       0.343  two-sided    0.732                                                                                                                                                                                                                                                                                                                 0.098     0.028  hedges
+stimuli_type * individual_type  pictures_crime        innocent              guilty                False       0.077  two-sided    0.938                                                                                                                                                                                                                                                                                                                 0.094     0.006  hedges
+
+				Analysis for  response_time
+
+=============
+ANOVA SUMMARY
+=============
+
+Source                     SS    DF1    DF2           MS          F    p-unc  p-GG-corr                 np2  eps    sphericity    W-spher    p-spher
+---------------  ------------  -----  -----  -----------  ---------  -------  ----------------------  -----  -----  ------------  ---------  ----------------------
+individual_type       217.918      1     28      217.918      0.216    0.646  -                       0.008  -      -             -          -
+stimuli_type     45091364.197      6    168  7515227.366  11221.772    0.000  2.0290910592034895e-48  0.998  0.208  False         0.0        1.4211915754421863e-49
+Interaction          1063.409      6    168      177.235      0.265    0.953  -                       0.009  -      -             -          -
+
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+x and y have unequal sizes. Switching to paired == False.
+
+==============
+POST HOC TESTS
+==============
+
+Contrast                        stimuli_type          A                     B                     Paired           T  tail         p-unc                                                                                                                    BF10    efsize  eftype
+------------------------------  --------------------  --------------------  --------------------  --------  --------  ---------  -------  ----------------------------------------------------------------------------------------------------------------------  --------  --------
+stimuli_type                    -                     alpha                 general               True        26.282  two-sided    0.000  400775533902856131918650473401895596790950444979317548870349528861238804207542977255374847392662212551393991983104.000     2.662  hedges
+stimuli_type                    -                     alpha                 general_lie           True        26.538  two-sided    0.000  191870390755799835130614456105477770356084914806273811006319476226880499646287656684108739893523203764393149988864.000     2.594  hedges
+stimuli_type                    -                     alpha                 relevant              True        26.163  two-sided    0.000               42494710803350013084444279769207911779716629642068466993071574720857254732099079897925286866284707840.000     2.159  hedges
+stimuli_type                    -                     alpha                 pictures_irrelevant   True      -129.379  two-sided    0.000                                                                                                                 inf       -11.741  hedges
+stimuli_type                    -                     alpha                 pictures_crime_scene  True      -128.518  two-sided    0.000                                                                                                                 inf       -11.212  hedges
+stimuli_type                    -                     alpha                 pictures_crime        True      -128.764  two-sided    0.000                                                                                                                 inf       -11.133  hedges
+stimuli_type                    -                     general               general_lie           True         1.714  two-sided    0.087                                                                                                                   0.256     0.091  hedges
+stimuli_type                    -                     general               relevant              True         0.312  two-sided    0.755                                                                                                                   0.075     0.020  hedges
+stimuli_type                    -                     general               pictures_irrelevant   True      -546.548  two-sided    0.000                                                                                                                 inf       -25.203  hedges
+stimuli_type                    -                     general               pictures_crime_scene  True      -505.738  two-sided    0.000                                                                                                                 inf       -30.393  hedges
+stimuli_type                    -                     general               pictures_crime        True      -490.637  two-sided    0.000                                                                                                                 inf       -30.186  hedges
+stimuli_type                    -                     general_lie           relevant              True        -1.065  two-sided    0.287                                                                                                                   0.128    -0.070  hedges
+stimuli_type                    -                     general_lie           pictures_irrelevant   True      -544.239  two-sided    0.000                                                                                                                 inf       -24.781  hedges
+stimuli_type                    -                     general_lie           pictures_crime_scene  True      -504.028  two-sided    0.000                                                                                                                 inf       -29.867  hedges
+stimuli_type                    -                     general_lie           pictures_crime        True      -489.140  two-sided    0.000                                                                                                                 inf       -29.646  hedges
+stimuli_type                    -                     relevant              pictures_irrelevant   True      -507.291  two-sided    0.000                                                                                                                 inf       -22.613  hedges
+stimuli_type                    -                     relevant              pictures_crime_scene  True      -474.180  two-sided    0.000                                                                                                                 inf       -26.827  hedges
+stimuli_type                    -                     relevant              pictures_crime        True      -461.906  two-sided    0.000                                                                                                                 inf       -26.551  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime_scene  True        -0.006  two-sided    0.995                                                                                                                   0.060    -0.000  hedges
+stimuli_type                    -                     pictures_irrelevant   pictures_crime        True        -1.709  two-sided    0.088                                                                                                                   0.255    -0.090  hedges
+stimuli_type                    -                     pictures_crime_scene  pictures_crime        True        -1.635  two-sided    0.102                                                                                                                   0.247    -0.096  hedges
+individual_type                 -                     innocent              guilty                False        0.254  two-sided    0.799                                                                                                                   0.036     0.008  hedges
+stimuli_type * individual_type  alpha                 innocent              guilty                False        0.680  two-sided    0.497                                                                                                                   0.156     0.076  hedges
+stimuli_type * individual_type  general               innocent              guilty                False       -1.815  two-sided    0.070                                                                                                                   0.410    -0.133  hedges
+stimuli_type * individual_type  general_lie           innocent              guilty                False       -1.475  two-sided    0.141                                                                                                                   0.251    -0.115  hedges
+stimuli_type * individual_type  relevant              innocent              guilty                False       -1.585  two-sided    0.114                                                                                                                   0.389    -0.167  hedges
+stimuli_type * individual_type  pictures_irrelevant   innocent              guilty                False        0.758  two-sided    0.448                                                                                                                   0.099     0.051  hedges
+stimuli_type * individual_type  pictures_crime_scene  innocent              guilty                False        1.101  two-sided    0.271                                                                                                                   0.167     0.092  hedges
+stimuli_type * individual_type  pictures_crime        innocent              guilty                False        0.906  two-sided    0.365                                                                                                                   0.140     0.076  hedges
+
+				Results after averaging and standardising
+End
+Total time taken:  1393
