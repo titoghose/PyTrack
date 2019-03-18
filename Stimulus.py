@@ -706,8 +706,7 @@ class Stimulus:
 			nonlocal is_manual
 			# Check where the click happened
 			(xm,ym),(xM,yM) = samp.label.clipbox.get_points()
-			(xm2,ym2),(xM2, yM2) = check.label.clipbox.get_points()
-			if (xm < event.x < xM and ym < event.y < yM) or (xm2 < event.x < xM2 and ym2 < event.y < yM2):
+			if (xm < event.x < xM and ym < event.y < yM):
 				# Event happened within the slider or checkbox, ignore since it is handled in update_slider
 				return
 			else:
@@ -804,7 +803,6 @@ class Stimulus:
 				self.sensors.append(Sensor(col_class))
 
 			if col_class == "EyeTracker":
-				event_type = np.array(data.EventSource)
 				l_gazex_df = np.array(data.GazeLeftx)
 				l_gazey_df = np.array(data.GazeLefty)
 				r_gazex_df = np.array(data.GazeRightx)
