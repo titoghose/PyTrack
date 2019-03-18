@@ -741,17 +741,15 @@ class Stimulus:
 
 		# Finding response time based on number of  samples 
 		self.response_time = len(self.data["ETRows"])
-
-		# Find microsaccades
-		all_MS, ms_count, ms_duration = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
-
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = 0
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_duration"] = 0
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_count"] = ms_count / self.response_time
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = ms_duration
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_rate"] = len(self.data["BlinksLeft"]["blink_onset"]) / self.response_time
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_chars
 		
+		# Pupil Features
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_pupil"] = max(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["time_to_peak_pupil"] = np.argmax(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
+		
+		# Blink Features
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_rate"] = len(self.data["BlinksLeft"]["blink_onset"]) / self.response_time
 		if self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_rate"] != 0:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_blink_duration"] = np.max((np.array(self.data["BlinksLeft"]["blink_offset"]) - np.array(self.data["BlinksLeft"]["blink_onset"])))
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_blink_duration"] = np.mean((np.array(self.data["BlinksLeft"]["blink_offset"]) - np.array(self.data["BlinksLeft"]["blink_onset"])))
@@ -759,9 +757,24 @@ class Stimulus:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_blink_duration"] = 0
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_blink_duration"] = 0
 		
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["fixation_count"] = (len(np.unique(self.data["FixationSeq"])) - 1) / num_chars
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_chars
+		# Fixation Features
+		fix_num, fix_cnt = np.unique(self.data["FixationSeq"], return_counts=True)
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["fixation_count"] = (len(fix_num) - 1) / num_chars
+		if self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["fixation_count"] != 0:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["max_fixation_duration"] = np.max(fix_cnt[1:])
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_fixation_duration"] = np.mean(fix_cnt[1:])
+		else:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["max_fixation_duration"] = 0
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_fixation_duration"] = 0
 
+		# Saccade Features
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = 0
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_duration"] = 0
+
+		# Microsaccade Features
+		all_MS, ms_count, ms_duration = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_count"] = ms_count / self.response_time
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = ms_duration
 		temp = np.empty(1, dtype='float32')
 		for ms in all_MS:
 			if ms["NB"] != 0:
@@ -784,9 +797,6 @@ class Stimulus:
 		
 		if len(temp) != 0:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_amplitude"] = temp[1:]
-
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_pupil"] = max(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["time_to_peak_pupil"] = np.argmax(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
 
 
 	def getData(self, data, sensor_names):
