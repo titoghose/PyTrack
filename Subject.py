@@ -19,6 +19,7 @@ class Subject:
 	def __init__(self, name, subj_type, stimuli_names, columns, json_file, sensors, database):
 		print(name)
 		a = datetime.now()
+		self.sensors = sensors
 		self.stimuli_names = stimuli_names
 		self.name = name
 		self.subj_type = subj_type
@@ -141,10 +142,6 @@ class Subject:
 
 				stimuli_data = data[start_time : end_time+1]
 
-				# print(self.name)
-				# print(stimulus_name)
-				# print(stimuli_data)
-
 				stimulus_object = Stimulus(stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file)
 
 				stimulus_object_list.append(stimulus_object)
@@ -165,16 +162,11 @@ class Subject:
 		This function returns the average value of control data (alpha questions) for the purpose of standardisation
 
 		'''
-		control = {"sacc_count" : 0, 
-					"sacc_duration" : 0,
-					"blink_count" : 0,
-					"ms_count" : 0,
-					"ms_duration" : 0,
-					"fixation_count" : 0,
-					"ms_vel" : 0,
-					"ms_amplitude" : 0,
-					"peak_pupil" : 0,
-					"time_to_peak_pupil" : 0}
+		control = dict()
+		for sen in self.sensors:
+			control.update({sen:dict()})
+			for meta in Sensor.meta_cols[Sensor.sensor_names.index(sen)]:
+				control[sen].update({meta: 0})
 
 		with open(json_file) as json_f:
 			json_data = json.load(json_f)
@@ -193,17 +185,19 @@ class Subject:
 					if cqo.data != None:
 						cnt += 1
 						cqo.findEyeMetaData()
-						for c in control:
-							control[c] += np.mean(cqo.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[c])
-
-				for c in control:
-					control[c] /= cnt
+						for sen in self.sensors:
+							for c in control[sen]:
+								control[sen][c] += np.mean(cqo.sensors[Sensor.sensor_names.index(sen)].metadata[c])
+				
+				for sen in self.sensors:
+					for c in control[sen]:
+						control[sen][c] /= cnt
 
 				control.update({"response_time" : 0})
 				pickle_out = open('control_values/' + self.name + '.pickle',"wb")
 				pickle.dump(control, pickle_out)
 				pickle_out.close()
-
+		
 		return control
 
 
@@ -236,8 +230,9 @@ class Subject:
 		'''
 		for st in self.stimulus:
 			self.aggregate_meta.update({st : {}})
-			for mc in Sensor.meta_cols[0]:
-				self.aggregate_meta[st].update({mc : []})
+			for sen in self.sensors:
+				for mc in Sensor.meta_cols[Sensor.sensor_names.index(sen)]:
+					self.aggregate_meta[st].update({mc : []})
 
 		cnt = 0
 		temp_pup_size = []
@@ -245,15 +240,15 @@ class Subject:
 			for stim in self.stimulus[s]:
 				if stim.data != None:
 					stim.findEyeMetaData()
-					
-					# Normalizing by subtracting control data
-					for cd in self.control_data:
-						if(standardise_flag):
-							self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[cd] - self.control_data[cd])))
-						else:
-							self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[cd]))
+					for sen in self.sensors:
+						# Normalizing by subtracting control data
+						for cd in self.control_data[sen]:
+							if(standardise_flag):
+								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[cd] - self.control_data[sen][cd])))
+							else:
+								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[cd]))
 
-					temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])
+						temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])
 
 			max_len = max([len(x) for x in temp_pup_size])
 			
@@ -270,5 +265,6 @@ class Subject:
 
 		if(average_flag):	
 			for s in self.stimulus:
-				for cd in self.control_data:
-					self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])
+				for sen in self.sensors:
+					for cd in self.control_data[sen]:
+						self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])

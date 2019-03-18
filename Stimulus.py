@@ -92,13 +92,13 @@ class Stimulus:
 		if (length_blinks == 0):
 			return blinks, pupil_size, gaze
 
-		# starts with a blink
-		if len(blink_onset) < len(blink_offset):
-			blink_onset.insert(0, 0)
+		# Edge Case 2: the data starts with a blink. In this case, blink onset will be defined as the first missing value.
+		if ((len(blink_onset) > 0 and blink_onset[0] > 0) or (len(blink_onset) < len(blink_offset))) and pupil_size[0] == -1: 
+			blink_onset = np.hstack((0, blink_onset))
 		
-		# ends on blink
-		if len(blink_onset) > len(blink_offset):
-			blink_offset.append(len(difference))
+		# Edge Case 3: the data ends with a blink. In this case, blink offset will be defined as the last missing sample
+		if (len(blink_offset) < len(blink_onset)) and pupil_size[-1] == -1:
+			blink_offset = np.hstack((blink_offset, len(pupil_size) - 1))
 
 		ms_4_smoothing = 10
 		samples2smooth = ms_4_smoothing // sampling_interval
@@ -201,7 +201,6 @@ class Stimulus:
 	
 		fixation_ind = np.where(fixation_seq != -1)[0]
 		fixation_ind_diff = self.diff(fixation_ind)
-		indices = np.where(fixation_ind_diff != 1)
 	
 		fixation_onset = []
 		fixation_offset = []
@@ -751,7 +750,15 @@ class Stimulus:
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_count"] = ms_count / self.response_time
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = ms_duration
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_count"] = ((len(self.data["BlinksLeft"]["blink_onset"]) + len(self.data["BlinksRight"]["blink_onset"])) / 2) / self.response_time
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_rate"] = len(self.data["BlinksLeft"]["blink_onset"]) / self.response_time
+		
+		if self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_rate"] != 0:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_blink_duration"] = np.max((np.array(self.data["BlinksLeft"]["blink_offset"]) - np.array(self.data["BlinksLeft"]["blink_onset"])))
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_blink_duration"] = np.mean((np.array(self.data["BlinksLeft"]["blink_offset"]) - np.array(self.data["BlinksLeft"]["blink_onset"])))
+		else:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_blink_duration"] = 0
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_blink_duration"] = 0
+		
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["fixation_count"] = (len(np.unique(self.data["FixationSeq"])) - 1) / num_chars
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_chars
 
