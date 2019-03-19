@@ -8,9 +8,38 @@
    },
    "Subjects":{
       "innocent":[
+         "Innocent_Subject_05",
+         "Innocent_Subject_06",
+         "Innocent_Subject_07",
+         "Innocent_Subject_08",
+         "Innocent_Subject_09",
+         "Innocent_Subject_10",
+         "Innocent_Subject_11",
+         "Innocent_Subject_12",
+         "Innocent_Subject_13",
+         "Innocent_Subject_14",
+         "Innocent_Subject_15",
+         "Innocent_Subject_16",
+         "Innocent_Subject_17",
+         "Innocent_Subject_18",
+         "Innocent_Subject_19",
+         "Innocent_Subject_20"
       ],
       "guilty":[
-         "Guilty_Subject_06"
+         "Guilty_Subject_06",
+         "Guilty_Subject_07",
+         "Guilty_Subject_08",
+         "Guilty_Subject_09",
+         "Guilty_Subject_10",
+         "Guilty_Subject_11",
+         "Guilty_Subject_12",
+         "Guilty_Subject_14",
+         "Guilty_Subject_15",
+         "Guilty_Subject_16",
+         "Guilty_Subject_17",
+         "Guilty_Subject_18",
+         "Guilty_Subject_19",
+         "Guilty_Subject_20"
       ]
    },
    "Stimuli":{
