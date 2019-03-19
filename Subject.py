@@ -165,54 +165,52 @@ class Subject:
 		This function returns the average value of control data (alpha questions) for the purpose of standardisation
 
 		'''
-		
-		if os.path.isfile('control_values/' + self.name + '.pickle') == True:
-			pickle_in = open('control_values/' + self.name + '.pickle',"rb")
-			control = pickle.load(pickle_in)
+		control = {"sacc_count" : 0, 
+					"sacc_duration" : 0,
+					"blink_count" : 0,
+					"ms_count" : 0,
+					"ms_duration" : 0,
+					"fixation_count" : 0,
+					"ms_vel" : 0,
+					"ms_amplitude" : 0,
+					"peak_pupil" : 0,
+					"time_to_peak_pupil" : 0}
 
-		else:
-			with open(json_file) as json_f:
-				json_data = json.load(json_f)
+		with open(json_file) as json_f:
+			json_data = json.load(json_f)
 
-			control_questions = {"Control" : json_data["Control_Questions"]}
+		if "Control_Questions" in json_data:
+			if os.path.isfile('control_values/' + self.name + '.pickle') == True:
+				pickle_in = open('control_values/' + self.name + '.pickle',"rb")
+				control = pickle.load(pickle_in)
 
-			control_q_objects = self.stimulusDictInitialisation(control_questions, columns, json_file, sensors, database)
+			else:
+				control_questions = {"Control" : json_data["Control_Questions"]}
+				control_q_objects = self.stimulusDictInitialisation(control_questions, columns, json_file, sensors, database)
 
-			control = {"sacc_count" : 0, 
-						"sacc_duration" : 0,
-						"blink_count" : 0,
-						"ms_count" : 0,
-						"ms_duration" : 0,
-						"fixation_count" : 0,
-						"ms_vel" : 0,
-						"ms_amplitude" : 0,
-						"peak_pupil" : 0,
-						"time_to_peak_pupil" : 0}
+				cnt = 0
+				for cqo in control_q_objects["Control"]:
+					if cqo.data != None:
+						cnt += 1
+						cqo.findEyeMetaData()
+						for c in control:
+							control[c] += np.mean(cqo.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[c])
 
-			temp = []
+				for c in control:
+					control[c] /= cnt
 
-			cnt = 0
-			for cqo in control_q_objects["Control"]:
-				if cqo.data != None:
-					cnt += 1
-					cqo.findEyeMetaData()
-					for c in control:
-						control[c] += np.mean(cqo.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[c])
-
-			for c in control:
-				control[c] /= cnt
-
-			control.update({"response_time" : 0})
-			pickle_out = open('control_values/' + self.name + '.pickle',"wb")
-			pickle.dump(control, pickle_out)
-			pickle_out.close()
+				control.update({"response_time" : 0})
+				pickle_out = open('control_values/' + self.name + '.pickle',"wb")
+				pickle.dump(control, pickle_out)
+				pickle_out.close()
 
 		return control
 
 
 	def subjectVisualize(self):
-		fig = plt.figure()
 		
+		plt.figure()
+
 		def stimFunction(text):
 			stim_t = text.split(",")[0].strip(" ")
 			stim_n = text.split(",")[1].strip(" ")
