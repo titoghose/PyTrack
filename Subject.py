@@ -1,5 +1,4 @@
-#Subject class
-
+import mne
 import json
 import pandas as pd
 import numpy as np
@@ -16,13 +15,14 @@ import matplotlib.pyplot as plt
 class Subject:
 
 
-	def __init__(self, name, subj_type, stimuli_names, columns, json_file, sensors, database):
+	def __init__(self, name, subj_type, stimuli_names, columns, json_file, sensors, database, manual_eeg):
 		print(name)
 		a = datetime.now()
 		self.sensors = sensors
 		self.stimuli_names = stimuli_names
 		self.name = name
 		self.subj_type = subj_type
+		self.manual_eeg = manual_eeg
 		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns,json_file,sensors, database) #dictionary of objects of class stimulus demarcated by categories
 		self.control_data = self.getControlData(columns, json_file, sensors, database)
 		self.aggregate_meta = {}
@@ -59,6 +59,8 @@ class Subject:
 
 		string = string + ' FROM "' + self.name + '"'
 		df = pd.read_sql_query(string, database)
+		df = df.replace(to_replace=r'Unnamed:*', value=float('nan'), regex=True)
+		df = df.dropna(how='any')
 
 		b = datetime.now()
 		print("Query: ", (b-a).seconds)
@@ -125,6 +127,9 @@ class Subject:
 
 
 		data = self.dataExtraction(columns,json_file, database)
+
+		if self.manual_eeg:
+			data = self.manualEEGArtefactRemovalSubject(data, json_file)
 
 		stimulus_object_dict = {}
 
@@ -268,3 +273,67 @@ class Subject:
 				for sen in self.sensors:
 					for cd in self.control_data[sen]:
 						self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])
+
+
+	def manualEEGArtefactRemovalSubject(self, data, json_file):
+
+		if os.path.isfile(".icaRejectionLog.p"):
+			with open(".icaRejectionLog.p", "rb") as f:
+				ica_rejection_dict = pickle.load(f)
+		else:
+			ica_rejection_dict = dict()
+
+		eeg_rows = np.where(data.EventSource.str.contains("Raw EEG Epoc"))[0]
+
+		with open(json_file) as f:
+			json_data = json.load(f)
+		
+		# Getting eeg preprocessing parameters from experiment json file
+		low = json_data["Analysis_Params"]["EEG"]["Low_Freq"]
+		high = json_data["Analysis_Params"]["EEG"]["High_Freq"]
+		sampling_freq = json_data["Analysis_Params"]["EEG"]["Sampling_Freq"]
+		montage = json_data["Analysis_Params"]["EEG"]["Montage"]
+		
+		eeg_cols = [*json_data["Columns_of_interest"]["EEG"]]
+		ch_names = []
+		for channel in eeg_cols:
+			ch_names.append([i for i in Sensor.eeg_montage[montage] if i.upper() in channel.upper()][0])
+
+		del(json_data)
+
+		eeg_df = data[eeg_cols]
+		eeg_data = np.transpose(eeg_df.values)
+		info = mne.create_info(ch_types=["eeg"]*len(ch_names), ch_names=ch_names, sfreq=sampling_freq, verbose=False, montage=montage)
+		raw = mne.io.RawArray(data=eeg_data[:, eeg_rows], info=info, verbose=False)
+
+		# Apply bandpass filter to eeg data
+		raw = raw.filter(l_freq=low, h_freq=high)
+
+		ica = mne.preprocessing.ICA(method='fastica', random_state=1, verbose=False)
+		ica.fit(raw, verbose=False)
+		
+		if self.name in ica_rejection_dict:
+			flag = input("Use previously rejected components? (Y/N)")
+			if flag == 'Y' or flag == 'y':
+				ica.exclude = ica_rejection_dict[self.name]
+			else:
+				ica.plot_components(inst=raw)
+		else:
+			ica.plot_components(inst=raw)
+		
+		ica_rejection_dict.update({self.name: ica.exclude})
+		with open(".icaRejectionLog.p", "wb") as f:
+			pickle.dump(ica_rejection_dict, f)
+
+		raw_temp = raw.copy()
+		ica.apply(raw)
+
+		raw_temp.plot(n_channels=len(eeg_cols), duration=8, scalings='auto', show=True, title="Before ICA")
+		raw.plot(n_channels=len(eeg_cols), duration=8, scalings='auto', show=True, title="After ICA")
+		plt.show()
+
+		eeg_data[:, eeg_rows] = raw.get_data()
+		data[eeg_cols] = np.transpose(eeg_data)
+
+		return data
+		

@@ -635,7 +635,6 @@ class Stimulus:
 		check = CheckButtons(rax, eeg_channels, eeg_visible)
 
 		is_manual = False
-		interval = 0
 
 		def eeg_check(label):
 			eeg_lines[eeg_channels.index(label)].set_visible(not eeg_lines[eeg_channels.index(label)].get_visible())
@@ -816,10 +815,15 @@ class Stimulus:
 							"EEGRows" : None}
 
 		for col_class in sensor_names:
-			if col_class in Sensor.sensor_names:
-				self.sensors.append(Sensor(col_class))
-
 			if col_class == "EyeTracker":
+				with open(self.json_file) as json_f:
+					json_data = json.load(json_f)
+
+				et_sfreq = json_data["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
+				del(json_data)
+
+				self.sensors.append(Sensor(col_class, et_sfreq))
+
 				l_gazex_df = np.array(data.GazeLeftx)
 				l_gazey_df = np.array(data.GazeLefty)
 				r_gazex_df = np.array(data.GazeRightx)
@@ -832,8 +836,6 @@ class Stimulus:
 				fixation_seq_df = np.array(data.FixationSeq.fillna(-1), dtype='float32')
 				fixation_seq = np.squeeze(np.array([fixation_seq_df[i] for i in sorted(et_rows)], dtype="float32"))
 				
-				total_range = range(len(et_rows))
-
 				# Extracting the eye gaze data
 				et_rows = np.where(data.EventSource.str.contains("ET"))[0]
 				l_gaze_x = np.squeeze(np.array([l_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
@@ -863,17 +865,24 @@ class Stimulus:
 
 			if col_class == "EEG":
 				eeg_dict = {}
+				with open(self.json_file) as json_f:
+					json_data = json.load(json_f)
+
+				montage = json_data["Analysis_Params"]["EEG"]["Montage"]
+				eeg_sfreq = json_data["Analysis_Params"]["EEG"]["Sampling_Freq"]
+
+				self.sensors.append(Sensor(col_class, eeg_sfreq))
+
 				for channel in contents["Columns_of_interest"][col_class]:
 					eeg_df = np.array(data[channel])
 					eeg_rows = np.where(data.EventSource.str.contains("Raw EEG Epoc"))[0]
 					
 					if len(eeg_rows) != 0:
 						eeg = np.squeeze(np.array([eeg_df[i] for i in sorted(eeg_rows)], dtype="float32"))
-						# (eeg_pz, eeg_time) = signal.resample(eeg_unique, len(total_range), t=sorted(eeg_rows))
 					else:
 						eeg = []
 
-					channel_name = [i for i in Sensor.eeg_montage if i.upper() in channel.upper()][0]
+					channel_name = [i for i in Sensor.eeg_montage[montage] if i.upper() in channel.upper()][0]
 					eeg_dict.update({channel_name:eeg})
 
 				extracted_data["EEG"] = eeg_dict
