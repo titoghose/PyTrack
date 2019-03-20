@@ -199,9 +199,6 @@ class Stimulus:
 			fixation_indices : [dictionary] {"start", "end"} of numpy arrays containing the indices of start and end of fixations
 		"""	
 	
-		fixation_ind = np.where(fixation_seq != -1)[0]
-		fixation_ind_diff = self.diff(fixation_ind)
-	
 		fixation_onset = []
 		fixation_offset = []
 	
@@ -554,6 +551,30 @@ class Stimulus:
 		return all_bin_MS, ms_count, ms_duration
 
 
+	def findSaccadeParams(self, sampling_freq=1000):
+		saccade_onset = []
+		saccade_offset = []
+	
+		i = 0
+	
+		while i < len(self.data["FixationSeq"]):
+			if self.data["FixationSeq"][i] == -1:
+				saccade_onset.append(i)
+				while i < len(self.data["FixationSeq"]) and self.data["FixationSeq"][i] == -1:
+					i += 1
+				saccade_offset.append(i-1)
+			else:
+				i += 1
+
+		saccade_duration = np.array(saccade_offset) - np.array(saccade_onset)
+		
+		saccade_peak_vel = []
+		saccade_amplitude = []
+
+		for start, end in zip(saccade_onset, saccade_offset):
+			saccade_vel = self.position2Velocity(self.data["Gaze"]["left"], sampling_freq)
+
+
 	def visualize(self):
 		"""
 		Function to create dynamic plot of subject data (gaze, pupil size, eeg(Pz))
@@ -767,8 +788,9 @@ class Stimulus:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_fixation_duration"] = 0
 
 		# Saccade Features
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = 0
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = len(fix_num) - 1
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_duration"] = 0
+		self.findSaccadeParams(sampling_freq)
 
 		# Microsaccade Features
 		all_MS, ms_count, ms_duration = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])

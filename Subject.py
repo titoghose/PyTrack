@@ -239,7 +239,6 @@ class Subject:
 				for mc in Sensor.meta_cols[Sensor.sensor_names.index(sen)]:
 					self.aggregate_meta[st].update({mc : []})
 
-		cnt = 0
 		temp_pup_size = []
 		for s in self.stimulus:
 			for stim in self.stimulus[s]:
