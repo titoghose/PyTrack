@@ -16,14 +16,16 @@ from matplotlib.widgets import RadioButtons
 class Experiment:
 
 
-	def __init__(self, name, json_file, sensors):
+	def __init__(self, name, json_file, sensors, manual_eeg):
 		self.name = name #string
 		self.json_file = json_file #string
 		self.sensors = sensors
+		self.manual_eeg = manual_eeg
 		self.columns = self.columnsArrayInitialisation()
 		self.stimuli = self.stimuliArrayInitialisation() #dict of names of stimuli demarcated by category
 		self.subjects = self.subjectArrayInitialisation() #list of subject objects
 		self.meta_matrix_dict = (np.ndarray(len(self.subjects), dtype=str), dict())
+		
 
 	def stimuliArrayInitialisation(self):
 
@@ -78,7 +80,7 @@ class Experiment:
 
 			for subject_name in subject_data[k]:
 
-				subject_object = Subject(subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database)
+				subject_object = Subject(subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database, self.manual_eeg)
 
 				subject_list.append(subject_object)
 
@@ -187,3 +189,4 @@ class Experiment:
 
 					posthocs = pg.pairwise_ttests(dv=meta, within='stimuli_type', between='individual_type', subject='subject', data=data)
 					pg.print_table(posthocs)
+

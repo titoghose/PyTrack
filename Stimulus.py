@@ -92,13 +92,13 @@ class Stimulus:
 		if (length_blinks == 0):
 			return blinks, pupil_size, gaze
 
-		# starts with a blink
-		if len(blink_onset) < len(blink_offset):
-			blink_onset.insert(0, 0)
+		# Edge Case 2: the data starts with a blink. In this case, blink onset will be defined as the first missing value.
+		if ((len(blink_onset) > 0 and blink_onset[0] > 0) or (len(blink_onset) < len(blink_offset))) and pupil_size[0] == -1: 
+			blink_onset = np.hstack((0, blink_onset))
 		
-		# ends on blink
-		if len(blink_onset) > len(blink_offset):
-			blink_offset.append(len(difference))
+		# Edge Case 3: the data ends with a blink. In this case, blink offset will be defined as the last missing sample
+		if (len(blink_offset) < len(blink_onset)) and pupil_size[-1] == -1:
+			blink_offset = np.hstack((blink_offset, len(pupil_size) - 1))
 
 		ms_4_smoothing = 10
 		samples2smooth = ms_4_smoothing // sampling_interval
@@ -198,10 +198,6 @@ class Stimulus:
 		Ouput:
 			fixation_indices : [dictionary] {"start", "end"} of numpy arrays containing the indices of start and end of fixations
 		"""	
-	
-		fixation_ind = np.where(fixation_seq != -1)[0]
-		fixation_ind_diff = self.diff(fixation_ind)
-		indices = np.where(fixation_ind_diff != 1)
 	
 		fixation_onset = []
 		fixation_offset = []
@@ -555,6 +551,30 @@ class Stimulus:
 		return all_bin_MS, ms_count, ms_duration
 
 
+	def findSaccadeParams(self, sampling_freq=1000):
+		saccade_onset = []
+		saccade_offset = []
+	
+		i = 0
+	
+		while i < len(self.data["FixationSeq"]):
+			if self.data["FixationSeq"][i] == -1:
+				saccade_onset.append(i)
+				while i < len(self.data["FixationSeq"]) and self.data["FixationSeq"][i] == -1:
+					i += 1
+				saccade_offset.append(i-1)
+			else:
+				i += 1
+
+		saccade_duration = np.array(saccade_offset) - np.array(saccade_onset)
+		
+		saccade_peak_vel = []
+		saccade_amplitude = []
+
+		for start, end in zip(saccade_onset, saccade_offset):
+			saccade_vel = self.position2Velocity(self.data["Gaze"]["left"], sampling_freq)
+
+
 	def visualize(self):
 		"""
 		Function to create dynamic plot of subject data (gaze, pupil size, eeg(Pz))
@@ -636,7 +656,6 @@ class Stimulus:
 		check = CheckButtons(rax, eeg_channels, eeg_visible)
 
 		is_manual = False
-		interval = 0
 
 		def eeg_check(label):
 			eeg_lines[eeg_channels.index(label)].set_visible(not eeg_lines[eeg_channels.index(label)].get_visible())
@@ -742,19 +761,41 @@ class Stimulus:
 
 		# Finding response time based on number of  samples 
 		self.response_time = len(self.data["ETRows"])
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_chars
+		
+		# Pupil Features
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_pupil"] = max(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["time_to_peak_pupil"] = np.argmax(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
+		
+		# Blink Features
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_rate"] = len(self.data["BlinksLeft"]["blink_onset"]) / self.response_time
+		if self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_rate"] != 0:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_blink_duration"] = np.max((np.array(self.data["BlinksLeft"]["blink_offset"]) - np.array(self.data["BlinksLeft"]["blink_onset"])))
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_blink_duration"] = np.mean((np.array(self.data["BlinksLeft"]["blink_offset"]) - np.array(self.data["BlinksLeft"]["blink_onset"])))
+		else:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_blink_duration"] = 0
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_blink_duration"] = 0
+		
+		# Fixation Features
+		fix_num, fix_cnt = np.unique(self.data["FixationSeq"], return_counts=True)
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["fixation_count"] = (len(fix_num) - 1) / num_chars
+		if self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["fixation_count"] != 0:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["max_fixation_duration"] = np.max(fix_cnt[1:])
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_fixation_duration"] = np.mean(fix_cnt[1:])
+		else:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["max_fixation_duration"] = 0
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_fixation_duration"] = 0
 
-		# Find microsaccades
-		all_MS, ms_count, ms_duration = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
-
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = 0
+		# Saccade Features
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = len(fix_num) - 1
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_duration"] = 0
+		self.findSaccadeParams(sampling_freq)
+
+		# Microsaccade Features
+		all_MS, ms_count, ms_duration = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_count"] = ms_count / self.response_time
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = ms_duration
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_count"] = ((len(self.data["BlinksLeft"]["blink_onset"]) + len(self.data["BlinksRight"]["blink_onset"])) / 2) / self.response_time
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["fixation_count"] = (len(np.unique(self.data["FixationSeq"])) - 1) / num_chars
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_chars
-
 		temp = np.empty(1, dtype='float32')
 		for ms in all_MS:
 			if ms["NB"] != 0:
@@ -778,9 +819,6 @@ class Stimulus:
 		if len(temp) != 0:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_amplitude"] = temp[1:]
 
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_pupil"] = max(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["time_to_peak_pupil"] = np.argmax(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
-
 
 	def getData(self, data, sensor_names):
 		# Extracting data for particular stimulus
@@ -799,10 +837,15 @@ class Stimulus:
 							"EEGRows" : None}
 
 		for col_class in sensor_names:
-			if col_class in Sensor.sensor_names:
-				self.sensors.append(Sensor(col_class))
-
 			if col_class == "EyeTracker":
+				with open(self.json_file) as json_f:
+					json_data = json.load(json_f)
+
+				et_sfreq = json_data["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
+				del(json_data)
+
+				self.sensors.append(Sensor(col_class, et_sfreq))
+
 				l_gazex_df = np.array(data.GazeLeftx)
 				l_gazey_df = np.array(data.GazeLefty)
 				r_gazex_df = np.array(data.GazeRightx)
@@ -815,8 +858,6 @@ class Stimulus:
 				fixation_seq_df = np.array(data.FixationSeq.fillna(-1), dtype='float32')
 				fixation_seq = np.squeeze(np.array([fixation_seq_df[i] for i in sorted(et_rows)], dtype="float32"))
 				
-				total_range = range(len(et_rows))
-
 				# Extracting the eye gaze data
 				et_rows = np.where(data.EventSource.str.contains("ET"))[0]
 				l_gaze_x = np.squeeze(np.array([l_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
@@ -846,17 +887,24 @@ class Stimulus:
 
 			if col_class == "EEG":
 				eeg_dict = {}
+				with open(self.json_file) as json_f:
+					json_data = json.load(json_f)
+
+				montage = json_data["Analysis_Params"]["EEG"]["Montage"]
+				eeg_sfreq = json_data["Analysis_Params"]["EEG"]["Sampling_Freq"]
+
+				self.sensors.append(Sensor(col_class, eeg_sfreq))
+
 				for channel in contents["Columns_of_interest"][col_class]:
 					eeg_df = np.array(data[channel])
 					eeg_rows = np.where(data.EventSource.str.contains("Raw EEG Epoc"))[0]
 					
 					if len(eeg_rows) != 0:
 						eeg = np.squeeze(np.array([eeg_df[i] for i in sorted(eeg_rows)], dtype="float32"))
-						# (eeg_pz, eeg_time) = signal.resample(eeg_unique, len(total_range), t=sorted(eeg_rows))
 					else:
 						eeg = []
 
-					channel_name = [i for i in Sensor.eeg_montage if i.upper() in channel.upper()][0]
+					channel_name = [i for i in Sensor.eeg_montage[montage] if i.upper() in channel.upper()][0]
 					eeg_dict.update({channel_name:eeg})
 
 				extracted_data["EEG"] = eeg_dict

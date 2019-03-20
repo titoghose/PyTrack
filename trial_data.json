@@ -274,5 +274,16 @@
             "Description" : "The EEG signal for the Occipital region of the brain"
          }
       }
+   },
+   "Analysis_Params":{
+      "EyeTracker":{
+         "Sampling_Freq": 1000  
+      },
+      "EEG":{
+         "Sampling_Freq": 256,
+         "Low_Freq": 0.1,
+         "High_Freq": 30,
+         "Montage": "standard_1020"
+      }
    }
 }
