@@ -268,6 +268,8 @@ class Subject:
 
 			temp_pup_size = []
 
+		print(self.aggregate_meta["alpha"])
+
 		if(average_flag):	
 			for s in self.stimulus:
 				for cd in self.control_data:
