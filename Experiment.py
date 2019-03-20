@@ -146,7 +146,7 @@ class Experiment:
 			#For each column parameter
 			for sensor_type in Sensor.meta_cols:
 				for meta in sensor_type:
-					if meta == "pupil_size" or meta == "sacc_count" or meta == "sacc_duration":
+					if meta == "pupil_size" or meta == "sacc_count" or meta == "sacc_duration" or meta == "pupil_mean_list":
 						continue
 
 					print("\t\t\t\tAnalysis for ",meta)
@@ -183,6 +183,8 @@ class Experiment:
 						# This will also automatically include the main effects for each factor
 
 					# Compute the two-way mixed-design ANOVA
+					print(data[meta][:20])
+					
 					aov = pg.mixed_anova(dv=meta, within='stimuli_type', between='individual_type', subject = 'subject', data=data)
 					# Pretty printing of ANOVA summary
 					pg.print_table(aov)

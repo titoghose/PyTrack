@@ -1,7 +1,7 @@
 import json
 import numpy as np
 import pandas as pd
-from scipy import signal, io
+from scipy import signal, io, stats
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 from matplotlib.widgets import Slider, CheckButtons
@@ -819,6 +819,55 @@ class Stimulus:
 		if len(temp) != 0:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_amplitude"] = temp[1:]
 
+		#Arvind
+
+		index = np.argmin(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])
+
+		length = len(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])
+
+		pupil_area = 0.0
+
+		while(index < length):
+
+			if(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"][index] < 0):
+				
+				try:
+					pupil_area += abs(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"][index])
+					index += 1
+
+				except:
+					print(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"][index])
+					index += 1
+			
+			else:
+				break
+
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_area_curve"] = pupil_area		
+
+		x = np.array([i for i in range(1500)])
+		y = self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"][0:1500]
+
+		slope, intercept, r_value, p_value, std_err = stats.linregress(x[:len(y)],y)
+
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_slope"] = slope
+
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_mean"] = np.mean(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])		
+
+
+		frequency = 60
+		downsample_stride = int(1000/frequency)
+
+		index = 0
+		downsample_list = []
+
+		while(index < length):
+
+			downsample_list.append(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"][index])	
+			index += downsample_stride	
+
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size_downsample"] = downsample_list
+		
+		#Arvind
 
 	def getData(self, data, sensor_names):
 		# Extracting data for particular stimulus
