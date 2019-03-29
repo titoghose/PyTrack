@@ -789,8 +789,11 @@ class Stimulus:
 
 		# Finding response time based on number of  samples 
 		self.response_time = len(self.data["ETRows"])
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_words
 
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_words
+		#self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time
+		#self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_chars
+	
 		# Pupil Features
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_pupil"] = max(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
@@ -816,6 +819,7 @@ class Stimulus:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_fixation_duration"] = 0
 
 		# Saccade Features
+
 		saccade_params = self.findSaccadeParams(sampling_freq)
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = saccade_params[0]
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_duration"] = saccade_params[1]

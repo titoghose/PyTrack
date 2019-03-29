@@ -254,8 +254,6 @@ class Subject:
 
 						# temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])
 
-		# print(str(self.aggregate_meta))
-
 		if(average_flag):	
 			for s in self.stimulus:
 				for sen in self.sensors:

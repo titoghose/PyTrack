@@ -17,8 +17,8 @@ from matplotlib.widgets import RadioButtons
 
 class Experiment:
 
+	def __init__(self, name, json_file, sensors, manual_eeg = False):
 
-	def __init__(self, name, json_file, sensors, manual_eeg=False):
 		self.name = name #string
 		self.json_file = json_file #string
 		self.sensors = sensors
@@ -149,6 +149,9 @@ class Experiment:
 
 		if stat_test:
 			#For each column parameter
+			p_value_table = pd.DataFrame()
+			flag = 1
+
 			for sen in self.sensors:
 				for i in range(10):
 
@@ -195,25 +198,73 @@ class Experiment:
 								except:
 									print("Value array for ", stimuli_type, " is empty")
 							
-							#2.Run the anlaysis
+						#print(data,"\n\n")
 
-							# Fits the model with the interaction term
-							# This will also automatically include the main effects for each factor
+						column_values = []
 
-						# Compute the two-way mixed-design ANOVA
-						
 						aov = pg.mixed_anova(dv=meta, within='stimuli_type', between='individual_type', subject = 'subject', data=data)
-						# pg.print_table(aov)
+						posthocs = pg.pairwise_ttests(dv=meta, within='stimuli_type', between='individual_type', subject='subject', data=data)
 
-						head_row.append(meta)
-						csv_row.append(str(aov["p-unc"][0]))
+						if(flag == 1):
+							
+							flag = 0
+							column_values.append(aov['Source'][0] + ' - ANOVA')
+							column_values.append(aov['Source'][2] + ' - ANOVA')
+
+							contrast = posthocs['Contrast'][6:11]
+							stimuli = posthocs['stimuli_type'][6:11]
+
+							for i in range(6,11):
+								column_values.append(posthocs["Contrast"][i] + ' ' + posthocs["stimuli_type"][i])
+
+							column_values.append("innocent_genlie_relevant")
+							column_values.append("guilty_genlie_relevant")
+								
+							p_value_table['Row_names'] = column_values
+
+
+						column_values = []
 						
-					with open("analysis10sample.csv", "a") as f:
-						writer = csv.writer(f)
-						if i == 0:
-							writer.writerow(head_row)	
-						writer.writerow(csv_row)
+						# Pretty printing of ANOVA summary
+						#pg.print_table(aov)
 
-						# posthocs = pg.pairwise_ttests(dv=meta, within='stimuli_type', between='individual_type', subject='subject', data=data)
-						# pg.print_table(posthocs)
+						column_values.append(aov['p-unc'][0])
+						column_values.append(aov['p-unc'][2])
 
+						#pg.print_table(posthocs)
+
+						p_values_ttest = posthocs['p-unc'][6:11]
+						for value in p_values_ttest:
+							column_values.append(value)
+
+						'''
+						if meta == "response_time":
+
+							scipy.stats.ttest_ind(a, b)
+							scipy.stats.ttest_ind(a, b, equal_var=False)
+						'''
+						#t-test comparison of general lie and relevant for innocent and guilty participants
+
+						innocent_data = data.loc[(data['individual_type'] == 'innocent') & ((data['stimuli_type'] == 'relevant') | (data['stimuli_type'] == 'general_lie'))]
+
+						aov = pg.rm_anova(dv=meta, within='stimuli_type', subject = 'subject', data=innocent_data)
+						posthocs = pg.pairwise_ttests(dv=meta, within='stimuli_type', subject='subject', data=innocent_data)
+
+						#print(pg.print_table(aov))
+						#print(pg.print_table(posthocs))
+
+						column_values.append(posthocs['p-unc'][0])
+
+						guilty_data = data.loc[(data['individual_type'] == 'guilty') & ((data['stimuli_type'] == 'relevant') | (data['stimuli_type'] == 'general_lie'))]
+
+						aov = pg.rm_anova(dv=meta, within='stimuli_type', subject = 'subject', data=guilty_data)
+						posthocs = pg.pairwise_ttests(dv=meta, within='stimuli_type', subject='subject', data=guilty_data)
+
+						#print(pg.print_table(aov))
+						#print(pg.print_table(posthocs))
+
+						column_values.append(posthocs['p-unc'][0])
+
+						p_value_table[meta] = column_values
+
+					p_value_table.to_csv("p_values"+ str(i) + ".csv" , index = False)
