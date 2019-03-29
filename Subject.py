@@ -59,8 +59,7 @@ class Subject:
 
 		string = string + ' FROM "' + self.name + '"'
 		df = pd.read_sql_query(string, database)
-		df = df.replace(to_replace=r'Unnamed:*', value=float('nan'), regex=True)
-		df = df.dropna(how='any')
+		df = df.replace(to_replace=r'Unnamed:*', value=float(-1), regex=True)
 
 		b = datetime.now()
 		print("Query: ", (b-a).seconds)
@@ -266,8 +265,6 @@ class Subject:
 			self.aggregate_meta[s]["pupil_size"] = temp_agg_pup_size.data
 
 			temp_pup_size = []
-
-		print(self.aggregate_meta["alpha"])
 
 		if(average_flag):	
 			for s in self.stimulus:

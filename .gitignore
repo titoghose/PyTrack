@@ -2,6 +2,8 @@
 # File types to ignore #
 *.db
 *.pickle
+*.p
+.*.p
 *.h5
 *.hdf5
 *.h5py
@@ -10,6 +12,7 @@
 *.pyc
 *.ods
 *.xls
+*.csv
 .DS_Store
 .DS_Store?
 .Trashes
