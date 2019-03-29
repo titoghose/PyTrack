@@ -3,9 +3,11 @@
 from Sensor import Sensor
 from Subject import Subject
 import numpy as np
+import csv
 from datetime import datetime
 from scipy import stats
 import json
+import random
 import pandas as pd
 from sqlalchemy import create_engine
 import pingouin as pg
@@ -16,7 +18,7 @@ from matplotlib.widgets import RadioButtons
 class Experiment:
 
 
-	def __init__(self, name, json_file, sensors, manual_eeg):
+	def __init__(self, name, json_file, sensors, manual_eeg=False):
 		self.name = name #string
 		self.json_file = json_file #string
 		self.sensors = sensors
@@ -107,7 +109,10 @@ class Experiment:
 
 		column_list = []
 
-		for col_class in json_data["Columns_of_interest"]:
+		column_classes = [sen for sen in self.sensors]
+		column_classes.append("Extra")
+
+		for col_class in column_classes:
 			for name in json_data["Columns_of_interest"][col_class]:
 				column_list.append(name)
 
@@ -144,51 +149,71 @@ class Experiment:
 
 		if stat_test:
 			#For each column parameter
-			for sensor_type in Sensor.meta_cols:
-				for meta in sensor_type:
-					if meta == "pupil_size" or meta == "sacc_count" or meta == "sacc_duration" or meta == "pupil_mean_list":
-						continue
+			for sen in self.sensors:
+				for i in range(10):
 
-					print("\t\t\t\tAnalysis for ",meta)
+					sub_indices = np.hstack((random.sample(range(0, 16), 7), random.sample(range(16, 30), 7)))
+					print(sub_indices)
 
-					data =  pd.DataFrame(columns=[meta,"stimuli_type","individual_type","subject"])
+					# sub_indices = np.hstack((random.sample(range(0, 2), 2), random.sample(range(2, 4), 2)))
+					# print(sub_indices)
 
-					#For each subject
-					for sub_index, sub in enumerate(self.subjects):
+					head_row = ["Indices"]
+					csv_row = [str(sub_indices)]
 
-						#For each Question Type
-						for stimuli_index, stimuli_type in enumerate(sub.aggregate_meta):
+					for meta in Sensor.meta_cols[Sensor.sensor_names.index(sen)]:
+						if meta == "pupil_size" or meta == "pupil_size_downsample":
+							continue
 
-							#Value is an array	
-							value_array = self.meta_matrix_dict[1][meta][sub_index,stimuli_index]
+						print("\n\n")
+						print("\t\t\t\tAnalysis for ",meta)	
+						data =  pd.DataFrame(columns=[meta,"stimuli_type","individual_type","subject"])
 
-							try:					
-								for value in value_array:
+						#For each subject
+						for sub_index in sub_indices:
+							
+							sub = self.subjects[sub_index]
+							#For each Question Type
+							for stimuli_index, stimuli_type in enumerate(sub.aggregate_meta):
+								if stimuli_type not in ['alpha', 'general', 'general_lie', 'relevant']:
+									continue
+								#Value is an array	
+								value_array = self.meta_matrix_dict[1][meta][sub_index,stimuli_index]
+								try:					
+									for value in value_array:
 
-									row = []
+										row = []
 
-									row.append(value)
-									row.append(stimuli_type)
-									row.append(sub.subj_type)
-									row.append(sub.name)
+										row.append(value)
+										row.append(stimuli_type)
+										row.append(sub.subj_type)
+										row.append(sub.name)
 
-									#Instantiate into the pandas dataframe
+										#Instantiate into the pandas dataframe
 
-									data.loc[len(data)] = row
-							except:
-								print(stimuli_type)
-						#2.Run the anlaysis
+										data.loc[len(data)] = row
+								except:
+									print("Value array for ", stimuli_type, " is empty")
+							
+							#2.Run the anlaysis
 
-						# Fits the model with the interaction term
-						# This will also automatically include the main effects for each factor
+							# Fits the model with the interaction term
+							# This will also automatically include the main effects for each factor
 
-					# Compute the two-way mixed-design ANOVA
-					print(data[meta][:20])
-					
-					aov = pg.mixed_anova(dv=meta, within='stimuli_type', between='individual_type', subject = 'subject', data=data)
-					# Pretty printing of ANOVA summary
-					pg.print_table(aov)
+						# Compute the two-way mixed-design ANOVA
+						
+						aov = pg.mixed_anova(dv=meta, within='stimuli_type', between='individual_type', subject = 'subject', data=data)
+						# pg.print_table(aov)
 
-					posthocs = pg.pairwise_ttests(dv=meta, within='stimuli_type', between='individual_type', subject='subject', data=data)
-					pg.print_table(posthocs)
+						head_row.append(meta)
+						csv_row.append(str(aov["p-unc"][0]))
+						
+					with open("analysis10sample.csv", "a") as f:
+						writer = csv.writer(f)
+						if i == 0:
+							writer.writerow(head_row)	
+						writer.writerow(csv_row)
+
+						# posthocs = pg.pairwise_ttests(dv=meta, within='stimuli_type', between='individual_type', subject='subject', data=data)
+						# pg.print_table(posthocs)
 

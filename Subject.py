@@ -59,8 +59,7 @@ class Subject:
 
 		string = string + ' FROM "' + self.name + '"'
 		df = pd.read_sql_query(string, database)
-		df = df.replace(to_replace=r'Unnamed:*', value=float('nan'), regex=True)
-		df = df.dropna(how='any')
+		df = df.replace(to_replace=r'Unnamed:*', value=float(-1), regex=True)
 
 		b = datetime.now()
 		print("Query: ", (b-a).seconds)
@@ -68,7 +67,7 @@ class Subject:
 		return df
 		
 
-	def timeIndexInitialisation(self, stimulus_column_name,stimulus_name, df):
+	def timeIndexInitialisation(self, stimulus_column_name, stimulus_name, df):
 
 		'''
 		This function that will retireve the index of the start, end and roi of a question
@@ -128,13 +127,13 @@ class Subject:
 
 		data = self.dataExtraction(columns,json_file, database)
 
-		if self.manual_eeg:
+		if "EEG" in self.sensors and self.manual_eeg:
 			data = self.manualEEGArtefactRemovalSubject(data, json_file)
 
 		stimulus_object_dict = {}
 
 		for category in stimuli_names:
-			
+			columns
 			stimulus_object_list = []
 
 			for stimulus_name in stimuli_names[category]: 
@@ -192,11 +191,11 @@ class Subject:
 						cqo.findEyeMetaData()
 						for sen in self.sensors:
 							for c in control[sen]:
-								control[sen][c] += np.mean(cqo.sensors[Sensor.sensor_names.index(sen)].metadata[c])
+								control[sen][c] = np.hstack((control[sen][c], cqo.sensors[Sensor.sensor_names.index(sen)].metadata[c]))
 				
 				for sen in self.sensors:
 					for c in control[sen]:
-						control[sen][c] /= cnt
+						control[sen][c] = np.mean(control[sen][c])
 
 				control.update({"response_time" : 0})
 				pickle_out = open('control_values/' + self.name + '.pickle',"wb")
@@ -233,13 +232,14 @@ class Subject:
 
 
 		'''
+		print(self.control_data)
+		
 		for st in self.stimulus:
 			self.aggregate_meta.update({st : {}})
 			for sen in self.sensors:
 				for mc in Sensor.meta_cols[Sensor.sensor_names.index(sen)]:
 					self.aggregate_meta[st].update({mc : []})
 
-		temp_pup_size = []
 		for s in self.stimulus:
 			for stim in self.stimulus[s]:
 				if stim.data != None:
@@ -252,29 +252,15 @@ class Subject:
 							else:
 								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[cd]))
 
-						temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])
+						# temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])
 
-			max_len = max([len(x) for x in temp_pup_size])
-			
-			temp_agg_pup_size = np.ma.empty((max_len, len(temp_pup_size)))
-			temp_agg_pup_size.mask = True
-			
-			for ind, tps in enumerate(temp_pup_size):
-				temp_agg_pup_size[:len(tps), ind] = tps
-
-			temp_agg_pup_size = temp_agg_pup_size.mean(axis=1)
-			self.aggregate_meta[s]["pupil_size"] = temp_agg_pup_size.data
-
-			temp_pup_size = []
-
-		print(self.aggregate_meta["alpha"])
+		# print(str(self.aggregate_meta))
 
 		if(average_flag):	
 			for s in self.stimulus:
 				for sen in self.sensors:
 					for cd in self.control_data[sen]:
 						self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])
-
 
 	def manualEEGArtefactRemovalSubject(self, data, json_file):
 

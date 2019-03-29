@@ -215,7 +215,7 @@ class Stimulus:
 				i += 1
 	
 		fixation_indices = {"start": fixation_onset, "end": fixation_offset}
-	
+
 		return fixation_indices
 
 
@@ -566,13 +566,39 @@ class Stimulus:
 			else:
 				i += 1
 
+		saccade_count = 0
 		saccade_duration = np.array(saccade_offset) - np.array(saccade_onset)
 		
 		saccade_peak_vel = []
 		saccade_amplitude = []
 
 		for start, end in zip(saccade_onset, saccade_offset):
-			saccade_vel = self.position2Velocity(self.data["Gaze"]["left"], sampling_freq)
+			if (end-start) < 6:
+				continue
+
+			saccade_count += 1
+
+			vel_x = self.position2Velocity(self.data["Gaze"]["left"]["x"][start:end], sampling_freq)
+			vel_y = self.position2Velocity(self.data["Gaze"]["left"]["y"][start:end], sampling_freq)
+
+			# Saccade peak velocity (vpeak)
+			vpeak = max(np.sqrt(vel_x**2 + vel_y**2))
+			saccade_peak_vel.append(vpeak)
+
+			# Saccade amplitude (dX,dY)
+			minx = min(self.data["Gaze"]["left"]["x"][start:end])
+			maxx = max(self.data["Gaze"]["left"]["x"][start:end])
+			miny = min(self.data["Gaze"]["left"]["y"][start:end])
+			maxy = max(self.data["Gaze"]["left"]["y"][start:end])
+			ix1 = np.argmin(self.data["Gaze"]["left"]["x"][start:end])
+			ix2 = np.argmax(self.data["Gaze"]["left"]["x"][start:end])
+			iy1 = np.argmin(self.data["Gaze"]["left"]["y"][start:end])
+			iy2 = np.argmax(self.data["Gaze"]["left"]["y"][start:end])
+			dX = np.sign(ix2 - ix1) * (maxx - minx)
+			dY = np.sign(iy2 - iy1) * (maxy - miny)
+			saccade_amplitude.append(np.sqrt(dX**2 + dY**2))
+		
+		return (saccade_count, saccade_duration, saccade_peak_vel, saccade_amplitude)
 
 
 	def visualize(self):
@@ -753,16 +779,18 @@ class Stimulus:
 		"""
 
 		num_chars = 1
+		num_words = 1
 		if self.stim_type in ["alpha", "relevant", "general", "general_lie"]:
 			with open("questions.json") as q_file:
 				data = json.load(q_file)
 
 			num_chars = len(data[self.name])
+			num_words = len(data[self.name].split())
 
 		# Finding response time based on number of  samples 
 		self.response_time = len(self.data["ETRows"])
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_chars
-		
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_words
+
 		# Pupil Features
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_pupil"] = max(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
@@ -788,15 +816,23 @@ class Stimulus:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_fixation_duration"] = 0
 
 		# Saccade Features
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = len(fix_num) - 1
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_duration"] = 0
-		self.findSaccadeParams(sampling_freq)
+		saccade_params = self.findSaccadeParams(sampling_freq)
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = saccade_params[0]
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_duration"] = saccade_params[1]
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_vel"] = saccade_params[2]
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_amplitude"] = saccade_params[3]
 
 		# Microsaccade Features
 		all_MS, ms_count, ms_duration = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_count"] = ms_count / self.response_time
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = ms_duration
-		temp = np.empty(1, dtype='float32')
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_count"] = ms_count
+		print("MS_Count", ms_count)
+		if ms_count == 0:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = [0]
+		else:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = ms_duration
+		print("MS_Duration", self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"])
+
+		temp = np.zeros(1, dtype='float32')
 		for ms in all_MS:
 			if ms["NB"] != 0:
 				temp = np.hstack((temp, ms["bin"][:, 2]))
@@ -804,10 +840,13 @@ class Stimulus:
 				temp = np.hstack((temp, ms["left"][:, 2]))
 			if ms["NR"] != 0:
 				temp = np.hstack((temp, ms["right"][:, 2]))
-		if len(temp) != 0:
+		if ms_count == 0:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_vel"] = [0]
+		else:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_vel"] = temp[1:]
-		
-		temp = np.empty(1, dtype='float32')
+		print("MS_Vel", temp)
+
+		temp = np.zeros(1, dtype='float32')
 		for ms in all_MS:
 			if ms["NB"] != 0:
 				temp = np.hstack((temp, np.sqrt(ms["bin"][:, 5]**2 + ms["bin"][:, 6]**2)))
@@ -815,10 +854,11 @@ class Stimulus:
 				temp = np.hstack((temp, np.sqrt(ms["left"][:, 5]**2 + ms["left"][:, 6]**2)))
 			if ms["NR"] != 0:
 				temp = np.hstack((temp, np.sqrt(ms["right"][:, 5]**2 + ms["right"][:, 6]**2)))
-		
-		if len(temp) != 0:
+		if ms_count == 0:
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_amplitude"] = [0]
+		else:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_amplitude"] = temp[1:]
-
+		print("MS_amp", temp)
 		#Arvind
 
 		index = np.argmin(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])
@@ -869,6 +909,7 @@ class Stimulus:
 		
 		#Arvind
 
+
 	def getData(self, data, sensor_names):
 		# Extracting data for particular stimulus
 		
@@ -887,11 +928,7 @@ class Stimulus:
 
 		for col_class in sensor_names:
 			if col_class == "EyeTracker":
-				with open(self.json_file) as json_f:
-					json_data = json.load(json_f)
-
-				et_sfreq = json_data["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
-				del(json_data)
+				et_sfreq = contents["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
 
 				self.sensors.append(Sensor(col_class, et_sfreq))
 
@@ -903,6 +940,7 @@ class Stimulus:
 				pupil_size_r_df = np.array(data.PupilRight)
 
 				# Extracting fixation sequences
+				
 				et_rows = np.where(data.EventSource.str.contains("ET"))[0]
 				fixation_seq_df = np.array(data.FixationSeq.fillna(-1), dtype='float32')
 				fixation_seq = np.squeeze(np.array([fixation_seq_df[i] for i in sorted(et_rows)], dtype="float32"))
@@ -936,11 +974,8 @@ class Stimulus:
 
 			if col_class == "EEG":
 				eeg_dict = {}
-				with open(self.json_file) as json_f:
-					json_data = json.load(json_f)
-
-				montage = json_data["Analysis_Params"]["EEG"]["Montage"]
-				eeg_sfreq = json_data["Analysis_Params"]["EEG"]["Sampling_Freq"]
+				montage = contents["Analysis_Params"]["EEG"]["Montage"]
+				eeg_sfreq = contents["Analysis_Params"]["EEG"]["Sampling_Freq"]
 
 				self.sensors.append(Sensor(col_class, eeg_sfreq))
 

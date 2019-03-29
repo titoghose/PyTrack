@@ -6,7 +6,7 @@
       "Date":"21/01/2018",
       "Location":"NTU, Singapore"
    },
-   "Subjects":{
+   "cSubjects":{
       "innocent":[
          "Innocent_Subject_05",
          "Innocent_Subject_06",
@@ -40,6 +40,15 @@
          "Guilty_Subject_18",
          "Guilty_Subject_19",
          "Guilty_Subject_20"
+      ]
+   },
+   "Subjects":{
+      "innocent":[
+         "Innocent_Subject_11",
+         "Innocent_Subject_20"
+      ],
+      "guilty":[
+         "Guilty_Subject_18"
       ]
    },
    "Stimuli":{
