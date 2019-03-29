@@ -260,6 +260,7 @@ class Subject:
 					for cd in self.control_data[sen]:
 						self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])
 
+
 	def manualEEGArtefactRemovalSubject(self, data, json_file):
 
 		if os.path.isfile(".icaRejectionLog.p"):

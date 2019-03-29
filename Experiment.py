@@ -152,10 +152,16 @@ class Experiment:
 			p_value_table = pd.DataFrame()
 			flag = 1
 
+			with open(self.json_file, "r") as json_f:
+				json_data = json.read(json_f)
+				num_inn = len(json_data["Subjects"]["innocent"])
+				num_guil = len(json_data["Subjects"]["guilty"])
+			num_samples = 7
+
 			for sen in self.sensors:
 				for i in range(10):
 
-					sub_indices = np.hstack((random.sample(range(0, 16), 7), random.sample(range(16, 30), 7)))
+					sub_indices = np.hstack((random.sample(range(0, num_inn), num_samples), random.sample(range(num_inn, num_inn + num_guil), num_samples)))
 					print(sub_indices)
 
 					# sub_indices = np.hstack((random.sample(range(0, 2), 2), random.sample(range(2, 4), 2)))
