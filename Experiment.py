@@ -153,7 +153,7 @@ class Experiment:
 			flag = 1
 
 			with open(self.json_file, "r") as json_f:
-				json_data = json.read(json_f)
+				json_data = json.load(json_f)
 				num_inn = len(json_data["Subjects"]["innocent"])
 				num_guil = len(json_data["Subjects"]["guilty"])
 			num_samples = 7
@@ -166,9 +166,6 @@ class Experiment:
 
 					# sub_indices = np.hstack((random.sample(range(0, 2), 2), random.sample(range(2, 4), 2)))
 					# print(sub_indices)
-
-					head_row = ["Indices"]
-					csv_row = [str(sub_indices)]
 
 					for meta in Sensor.meta_cols[Sensor.sensor_names.index(sen)]:
 						if meta == "pupil_size" or meta == "pupil_size_downsample":

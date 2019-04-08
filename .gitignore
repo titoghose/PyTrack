@@ -1,9 +1,9 @@
 
 # File types to ignore #
+*.pyc
 *.db
 *.pickle
 *.p
-.*.p
 *.h5
 *.hdf5
 *.h5py
@@ -17,6 +17,7 @@
 .DS_Store?
 .Trashes
 test.py
+.icaRejectionLog.p
 Results/
 Stimuli/
 control_values/

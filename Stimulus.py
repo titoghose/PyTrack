@@ -790,6 +790,8 @@ class Stimulus:
 		# Finding response time based on number of  samples 
 		self.response_time = len(self.data["ETRows"])
 
+		print(self.name, ": ", float(self.response_time/1000))
+
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_words
 		#self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time
 		#self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_chars
@@ -829,12 +831,12 @@ class Stimulus:
 		# Microsaccade Features
 		all_MS, ms_count, ms_duration = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_count"] = ms_count
-		print("MS_Count", ms_count)
+		# print("MS_Count", ms_count)
 		if ms_count == 0:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = [0]
 		else:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = ms_duration
-		print("MS_Duration", self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"])
+		# print("MS_Duration", self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"])
 
 		temp = np.zeros(1, dtype='float32')
 		for ms in all_MS:
@@ -848,7 +850,7 @@ class Stimulus:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_vel"] = [0]
 		else:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_vel"] = temp[1:]
-		print("MS_Vel", temp)
+		# print("MS_Vel", temp)
 
 		temp = np.zeros(1, dtype='float32')
 		for ms in all_MS:
@@ -862,7 +864,7 @@ class Stimulus:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_amplitude"] = [0]
 		else:
 			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_amplitude"] = temp[1:]
-		print("MS_amp", temp)
+		# print("MS_amp", temp)
 		#Arvind
 
 		index = np.argmin(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])

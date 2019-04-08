@@ -8,7 +8,7 @@ exp = Experiment("Exp1", "trial_data.json", ["EyeTracker", "EEG"],manual_eeg = F
 
 exp.analyse(standardise_flag = True, average_flag = False)
 
-#exp.visualizeData()
+# exp.visualizeData()
 
 b = datetime.now()
 print("End")

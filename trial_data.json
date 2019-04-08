@@ -44,11 +44,9 @@
    },
    "Subjects":{
       "innocent":[
-         "Innocent_Subject_11",
-         "Innocent_Subject_20"
+         "Innocent_Subject_15"
       ],
       "guilty":[
-         "Guilty_Subject_18"
       ]
    },
    "Stimuli":{
@@ -206,9 +204,7 @@
          "AF4_Epoc":{}   
       },
       "Extra":{
-         "EventSource":{
-            "Description" : "The EEG signal for the Occipital region of the brain"
-         }
+         "EventSource":{}
       }
    },
    "Analysis_Params":{

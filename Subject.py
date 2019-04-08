@@ -261,10 +261,14 @@ class Subject:
 						self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])
 
 
+	# def automatedEOGArtefactRemovalSubject(self):
+		 
+
+
 	def manualEEGArtefactRemovalSubject(self, data, json_file):
 
-		if os.path.isfile(".icaRejectionLog.p"):
-			with open(".icaRejectionLog.p", "rb") as f:
+		if os.path.isfile("icaRejectionLog.p"):
+			with open("icaRejectionLog.p", "rb") as f:
 				ica_rejection_dict = pickle.load(f)
 		else:
 			ica_rejection_dict = dict()
@@ -308,7 +312,7 @@ class Subject:
 			ica.plot_components(inst=raw)
 		
 		ica_rejection_dict.update({self.name: ica.exclude})
-		with open(".icaRejectionLog.p", "wb") as f:
+		with open("icaRejectionLog.p", "wb") as f:
 			pickle.dump(ica_rejection_dict, f)
 
 		raw_temp = raw.copy()
