@@ -37,7 +37,7 @@ def db_create(source_folder,database_name):
 	database = "sqlite:///" + database_name + ".db"
 	csv_database = create_engine(database)
 
-	dtype_dictionary = dtype_dictionary
+	dtype_dictionary = dtype_conversion_dict()
 
 	for file in newlist:
 

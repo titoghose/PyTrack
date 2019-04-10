@@ -261,9 +261,6 @@ class Subject:
 						self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])
 
 
-	# def automatedEOGArtefactRemovalSubject(self):
-		 
-
 
 	def manualEEGArtefactRemovalSubject(self, data, json_file):
 

@@ -44,9 +44,10 @@
    },
    "Subjects":{
       "innocent":[
-         "Innocent_Subject_15"
+         "Innocent_Subject_05"
       ],
       "guilty":[
+         "Guilty_Subject_06"
       ]
    },
    "Stimuli":{
@@ -164,48 +165,34 @@
          "Alpha11"
       ],
    "Columns_of_interest":{
-      "EyeTracker":{
-         "GazeLeftx":{
-            "Description" : "X coordinate of the Left Pupil Gaze"
-         },
-         "GazeLefty":{
-            "Description" : "Y coordinate of the Left Pupil Gaze"
-         },
-         "GazeRightx":{
-            "Description" : "X coordinate of the Right Pupil Gaze"
-         },
-         "GazeRighty":{
-            "Description" : "Y coordinate of the Right Pupil Gaze"
-         },
-         "PupilLeft":{
-            "Description" : "Size of the Left Pupil"
-         },
-         "PupilRight":{
-            "Description" : "Size of the Right Pupil"
-         },
-         "FixationSeq":{
-            "Description" : "Numbered instance of a fixation for a Sequence, for ex: 1 means 1st instance fixation"
-         }   
-      },
-      "EEG":{
-         "O1Pz_Epoc":{},   
-         "Af3_Epoc":{},
-         "F7_Epoc":{},
-         "F3_Epoc":{},
-         "FC5_Epoc":{},
-         "T7_Epoc":{},
-         "P7_Epoc":{},
-         "O2_Epoc":{},
-         "P8_Epoc":{},
-         "T8_Epoc":{},
-         "FC6_Epoc":{},
-         "F4_Epoc":{},
-         "F8_Epoc":{},
-         "AF4_Epoc":{}   
-      },
-      "Extra":{
-         "EventSource":{}
-      }
+      "EyeTracker":[
+         "GazeLeftx",
+         "GazeLefty",
+         "GazeRightx",
+         "GazeRighty",
+         "PupilLeft",
+         "PupilRight",
+         "FixationSeq"   
+      ],
+      "EEG":[
+         "O1Pz_Epoc",   
+         "Af3_Epoc",
+         "F7_Epoc",
+         "F3_Epoc",
+         "FC5_Epoc",
+         "T7_Epoc",
+         "P7_Epoc",
+         "O2_Epoc",
+         "P8_Epoc",
+         "T8_Epoc",
+         "FC6_Epoc",
+         "F4_Epoc",
+         "F8_Epoc",
+         "AF4_Epoc"   
+      ],
+      "Extra":[
+         "EventSource"
+      ]
    },
    "Analysis_Params":{
       "EyeTracker":{
