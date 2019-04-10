@@ -4,7 +4,7 @@ from datetime import datetime
 print("Start")
 a = datetime.now()
 
-exp = Experiment("Exp1", "trial_data.json", ["EyeTracker", "EEG"],manual_eeg = True)
+exp = Experiment("Exp1", "trial_data.json", ["EyeTracker", "EEG"], manual_eeg = True)
 
 exp.analyse(standardise_flag = False, average_flag = False)
 

@@ -112,6 +112,9 @@ class Subject:
 		1.	stimulus_object_dict: [dictionary] dictionary of objects of class stimulus ordered by category
 		'''	
 
+		if not os.path.isdir('./question_indices/'):
+			os.makedirs('./question_indices/')
+
 		if os.path.isfile('question_indices/' + self.name + '.pickle') == True:
 			flag = 1
 
@@ -176,6 +179,9 @@ class Subject:
 			json_data = json.load(json_f)
 
 		if "Control_Questions" in json_data:
+			if not os.path.isdir('./control_values/'):
+				os.makedirs('./control_values/')
+			
 			if os.path.isfile('control_values/' + self.name + '.pickle') == True:
 				pickle_in = open('control_values/' + self.name + '.pickle',"rb")
 				control = pickle.load(pickle_in)
@@ -270,7 +276,7 @@ class Subject:
 		else:
 			ica_rejection_dict = dict()
 
-		eeg_rows = np.where(data.EventSource.str.contains("Raw EEG Epoc"))[0]
+		eeg_rows = np.where(data.EventSource.str.contains("EEG"))[0]
 
 		with open(json_file) as f:
 			json_data = json.load(f)

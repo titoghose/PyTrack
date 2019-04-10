@@ -10,7 +10,7 @@ from Sensor import Sensor
 
 class Stimulus:
 
-	def __init__(self, name, stim_type, sensor_names, data, start_time, end_time, roi_time, json_file):
+	def __init__(self, name="id_rather_not", stim_type="doesnt_matter", sensor_names=["EyeTracker"], data=None, start_time=-1, end_time=-1, roi_time=-1, json_file=None):
 		self.name = name
 		self.stim_type = stim_type
 		self.start_time = start_time
@@ -20,10 +20,15 @@ class Stimulus:
 		self.json_file = json_file
 		self.sensors = []
 
-		if(self.start_time == -1):
-			self.data = None
+		# Experiment json file exists so stimulus is being created for experiment
+		if self.json_file != None:
+			if(self.start_time == -1):
+				self.data = None
+			else:
+				self.data = self.getData(data, sensor_names)
+		# Experiment json file does not exist so stimulus is being created as a stand alone object
 		else:
-			self.data = self.getData(data, sensor_names)
+			return
 
 
 	def diff(self, series):
@@ -601,6 +606,14 @@ class Stimulus:
 		return (saccade_count, saccade_duration, saccade_peak_vel, saccade_amplitude)
 
 
+	def gazePlot(self):
+		return
+	
+
+	def gazeHeatMap(self):
+		return
+
+
 	def visualize(self):
 		"""
 		Function to create dynamic plot of subject data (gaze, pupil size, eeg(Pz))
@@ -952,7 +965,6 @@ class Stimulus:
 				fixation_seq = np.squeeze(np.array([fixation_seq_df[i] for i in sorted(et_rows)], dtype="float32"))
 				
 				# Extracting the eye gaze data
-				et_rows = np.where(data.EventSource.str.contains("ET"))[0]
 				l_gaze_x = np.squeeze(np.array([l_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
 				l_gaze_y = np.squeeze(np.array([l_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
 				l_gaze = {"x": l_gaze_x, "y": l_gaze_y}
@@ -998,6 +1010,90 @@ class Stimulus:
 					eeg_dict.update({channel_name:eeg})
 
 				extracted_data["EEG"] = eeg_dict
+				extracted_data["EEGRows"] = eeg_rows
+
+		return extracted_data
+
+
+	def getDataStandAlone(self, data, sensor_names):
+		'''
+		Function to create data for stand alone data file and not entire experiment
+		'''
+
+		extracted_data = {	"ETRows" : None,
+							"FixationSeq" : None,
+							"Gaze" : None,
+							"InterpPupilSize" : None,
+							"InterpGaze" : None,
+							"BlinksLeft" : None,
+							"BlinksRight" : None,
+							"EEG" : None,
+							"EEGRows" : None}
+
+		for sen in sensor_names:
+			if sen == "EyeTracker":
+				et_sfreq = sen["Sampling_Freq"]
+
+				self.sensors.append(Sensor(col_class, et_sfreq))
+
+				l_gazex_df = np.array(data.GazeLeftx)
+				l_gazey_df = np.array(data.GazeLefty)
+				r_gazex_df = np.array(data.GazeRightx)
+				r_gazey_df = np.array(data.GazeRighty)
+				pupil_size_l_df = np.array(data.PupilLeft)
+				pupil_size_r_df = np.array(data.PupilRight)
+
+				# Extracting fixation sequences
+				et_rows = np.where(data.EventSource.str.contains("ET"))[0]
+				fixation_seq_df = np.array(data.FixationSeq.fillna(-1), dtype='float32')
+				fixation_seq = np.squeeze(np.array([fixation_seq_df[i] for i in sorted(et_rows)], dtype="float32"))
+				
+				# Extracting the eye gaze data
+				l_gaze_x = np.squeeze(np.array([l_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
+				l_gaze_y = np.squeeze(np.array([l_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
+				l_gaze = {"x": l_gaze_x, "y": l_gaze_y}
+				r_gaze_x = np.squeeze(np.array([r_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
+				r_gaze_y = np.squeeze(np.array([r_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
+				r_gaze = {"x": r_gaze_x, "y": r_gaze_y}
+				gaze = {"left" : l_gaze, "right" : r_gaze}
+				
+				# Extracting Pupil Size Data
+				pupil_size_r = np.squeeze(np.array([pupil_size_r_df[i] for i in sorted(et_rows)], dtype="float32"))
+				pupil_size_l = np.squeeze(np.array([pupil_size_l_df[i] for i in sorted(et_rows)], dtype="float32"))
+				
+				# Fixing Blinks and interpolating pupil size and gaze data
+				blinks_l, interp_pupil_size_l, new_gaze_l = self.fix_blinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
+				blinks_r, interp_pupil_size_r, new_gaze_r = self.fix_blinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
+				interp_pupil_size = np.mean([interp_pupil_size_r, interp_pupil_size_l], axis=0)
+
+				extracted_data["ETRows"] = et_rows
+				extracted_data["FixationSeq"] = fixation_seq
+				extracted_data["Gaze"] = gaze
+				extracted_data["InterpPupilSize"] = interp_pupil_size
+				extracted_data["InterpGaze"] = new_gaze_l
+				extracted_data["BlinksLeft"] = blinks_l
+				extracted_data["BlinksRight"] = blinks_r
+
+			if col_class == "EEG":
+				eeg_dict = {}
+				montage = sen["Montage"]
+				eeg_sfreq = sen["Sampling_Freq"]
+
+				self.sensors.append(Sensor(col_class, eeg_sfreq))
+
+				for channel in sen["Channels"]:
+					eeg_df = np.array(data[channel])
+					eeg_rows = np.where(data.EventSource.str.contains("EEG"))[0]
+					
+					if len(eeg_rows) != 0:
+						eeg = np.squeeze(np.array([eeg_df[i] for i in sorted(eeg_rows)], dtype="float32"))
+					else:
+						eeg = []
+
+					channel_name = [i for i in Sensor.eeg_montage[montage] if i.upper() in channel.upper()][0]
+					eeg_dict.update({channel_name:eeg})
+
+				extracted_data["EEG"] = (eeg_dict, sen["EOG"])
 				extracted_data["EEGRows"] = eeg_rows
 
 		return extracted_data

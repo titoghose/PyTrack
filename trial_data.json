@@ -1,6 +1,6 @@
 {
    "Name":"Corpus description",
-   "Database_name":"lie_detection_database.db",
+   "Database_name":"/home/upamanyu/Documents/NTU_Creton/.ntuExperiment/lie_detection_database.db",
    "Author Details":{
       "Name":"Arvind A S",
       "Date":"21/01/2018",
@@ -202,7 +202,8 @@
          "Sampling_Freq": 256,
          "Low_Freq": 0.1,
          "High_Freq": 30,
-         "Montage": "standard_1020"
+         "Montage": "standard_1020",
+         "EOG":[]
       }
    }
 }
