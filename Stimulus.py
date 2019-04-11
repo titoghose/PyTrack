@@ -22,13 +22,14 @@ class Stimulus:
 
 		# Experiment json file exists so stimulus is being created for experiment
 		if self.json_file != None:
-			if(self.start_time == -1):
+			if self.start_time == -1:
 				self.data = None
 			else:
 				self.data = self.getData(data, sensor_names)
+		
 		# Experiment json file does not exist so stimulus is being created as a stand alone object
 		else:
-			return
+			self.data = self.getDataStandAlone(data, sensor_names)
 
 
 	def diff(self, series):
@@ -39,6 +40,9 @@ class Stimulus:
 
 
 	def smooth(self, x, window_len):
+		"""
+		"""
+		
 		# Running average smoothing
 		if window_len < 3:
 			return x
@@ -60,11 +64,14 @@ class Stimulus:
 		return y
 
 
-	def fix_blinks(self, pupil_size, gaze=None, sampling_freq=1000, concat=False, concat_gap_interval=100, interpolate=False):
+	def findBlinks(self, pupil_size, gaze=None, sampling_freq=1000, concat=False, concat_gap_interval=100, interpolate=False):
 		"""
 		Function to find blinks and return blink onset, offset indices and interpolated pupil size data
 		Adapted from: R. Hershman, A. Henik, and N. Cohen, “A novel blink detection method based on pupillometry noise,” Behav. Res. Methods, vol. 50, no. 1, pp. 107–114, 2018.
-	
+		
+		Parameters
+		----------
+
 		Input:
 			pupil_size          : [numpy array/list] of average pupil size data for left and right eye
 			gaze                : [dictionary] {"x", "y"} containing numpy array/list of gaze in x and y direction
@@ -195,25 +202,25 @@ class Stimulus:
 		return blinks, interp_pupil_size, new_gaze
 
 
-	def findFixationsIDT(self, fixation_seq):
+	def findFixations(self):
 		"""
 		Function to extract fixation sequences from iMotions data
 		Input:
 			fixation_seq     : [numpy array] of fixation sequences identified by Duration Dispersion
 		Ouput:
 			fixation_indices : [dictionary] {"start", "end"} of numpy arrays containing the indices of start and end of fixations
-		"""	
-	
+		"""
+
 		fixation_onset = []
 		fixation_offset = []
 	
 		i = 0
 	
-		while i < len(fixation_seq):
-			if fixation_seq[i] != -1:
-				curr = fixation_seq[i]
+		while i < len(self.data["FixationSeq"]):
+			if self.data["FixationSeq"][i] != -1:
+				curr = self.data["FixationSeq"][i]
 				fixation_onset.append(i)
-				while i < len(fixation_seq) and fixation_seq[i] != -1 and fixation_seq[i] == curr:
+				while i < len(self.data["FixationSeq"]) and self.data["FixationSeq"][i] != -1 and self.data["FixationSeq"][i] == curr:
 					i += 1
 				fixation_offset.append(i-1)
 			else:
@@ -222,6 +229,33 @@ class Stimulus:
 		fixation_indices = {"start": fixation_onset, "end": fixation_offset}
 
 		return fixation_indices
+
+
+	def findSaccades(self):
+		"""
+		Function to extract fixation sequences from iMotions data
+		Input:
+			fixation_seq     : [numpy array] of fixation sequences identified by Duration Dispersion
+		Ouput:
+			fixation_indices : [dictionary] {"start", "end"} of numpy arrays containing the indices of start and end of fixations
+		"""	
+	
+		saccade_onset = []
+		saccade_offset = []
+	
+		i = 0
+		while i < len(self.data["FixationSeq"]):
+			if self.data["FixationSeq"][i] == -1:
+				saccade_onset.append(i)
+				while i < len(self.data["FixationSeq"]) and self.data["FixationSeq"][i] == -1:
+					i += 1
+				saccade_offset.append(i-1)
+			else:
+				i += 1
+	
+		saccade_indices = {"start": saccade_onset, "end": saccade_offset}
+
+		return saccade_indices
 
 
 	def position2Velocity(self, gaze, sampling_freq):
@@ -473,7 +507,7 @@ class Stimulus:
 		return np.array(MS), ms_count, ms_duration
 
 
-	def findMicrosaccades(self, fixation_seq, gaze, sampling_freq=1000):
+	def findMicrosaccades(self, fixation_seq, gaze, sampling_freq=1000, plot_ms=False):
 		"""
 		Function to detect microsaccades within fixations.
 		Adapted from R. Engbert and K. Mergenthaler, “Microsaccades are triggered by low retinal image slip,” Proc. Natl. Acad. Sci., vol. 103, no. 18, pp. 7192–7197, 2006.
@@ -483,7 +517,7 @@ class Stimulus:
 		Output:
 
 		"""
-		fixation_indices = self.findFixationsIDT(fixation_seq)
+		fixation_indices = self.findFixations()
 		all_bin_MS = []
 
 		for fix_ind in range(len(fixation_indices["start"])):
@@ -515,61 +549,106 @@ class Stimulus:
 			MS = self.findBinocularMS(all_MS["left"], all_MS["right"])
 			all_bin_MS.append(MS)
 			
-			# fig = plt.figure()
-			# a1 = fig.add_subplot(1, 2, 1)
-			# a2 = fig.add_subplot(1, 2, 2)
 
-			# a1.plot(smooth_gaze["left"]["x"][1:], smooth_gaze["left"]["y"][1:])
-			# a1.set_xlabel("x")
-			# a1.set_ylabel("y")
-			# a1.set_title("gaze plot")
-			# for i in range(len(MS["bin"])):
-			# 	a1.plot(smooth_gaze["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], smooth_gaze["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r')
+			if plot_ms:
+				
+				# Plot gaze and velocity with thresholds
+				fig = plt.figure()
+				a1 = fig.add_subplot(1, 2, 1)
+				a2 = fig.add_subplot(1, 2, 2)
 
-			# e = Ellipse((0, 0), 2*MS["bin"][0, 7], 2*MS["bin"][0, 8], linestyle='--', color='g', fill=False)
-			# a2.add_artist(e)
+				a1.plot(smooth_gaze["left"]["x"][1:], smooth_gaze["left"]["y"][1:])
+				a1.set_xlabel("x")
+				a1.set_ylabel("y")
+				a1.set_title("gaze plot")
+				for i in range(len(MS["bin"])):
+					a1.plot(smooth_gaze["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], smooth_gaze["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r')
 
-			# a2.plot(vel["left"]["x"], vel["left"]["y"], alpha=0.5)
-			# a2.set_xlabel("vel-x")
-			# a2.set_ylabel("vel-y")
-			# a2.set_title("gaze velocity plot")
-			# for i in range(len(MS["bin"])):
-			# 	a2.plot(vel["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], vel["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r') 
+				e = Ellipse((0, 0), 2*MS["bin"][0, 7], 2*MS["bin"][0, 8], linestyle='--', color='g', fill=False)
+				a2.add_artist(e)
 
-			# plt.savefig("sampleDataPlot.png")
-			# plt.show()
+				a2.plot(vel["left"]["x"], vel["left"]["y"], alpha=0.5)
+				a2.set_xlabel("vel-x")
+				a2.set_ylabel("vel-y")
+				a2.set_title("gaze velocity plot")
+				for i in range(len(MS["bin"])):
+					a2.plot(vel["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], vel["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r') 
+
+				plt.savefig("ms_gaze_vel" + self.name + "_" + str(fix_ind) + ".png")
+
+
+			if plot_ms:
+				# Plot main sequence i.e peak velocity vs peak amplitude
+				fig2 = plt.figure()
+				plt.xlabel("Amplitude (deg)")
+				plt.ylabel("Peak Velocity (deg/s)")
+				for ms in all_bin_MS:
+					for i in range(len(ms["bin"])):
+						peak_vel = (ms["bin"][i, 2] + ms["bin"][i, 11])/2
+						amp = (np.sqrt(ms["bin"][i, 5]**2 + ms["bin"][i, 6]**2) + np.sqrt(ms["bin"][i, 13]**2 + ms["bin"][i, 14]**2))/2
+
+						plt.scatter(amp, peak_vel, color='r', marker='o', fillstyle='none')
+				
+				plt.savefig("ms_main_seq" + self.name + ".png")
 
 		ms_count = 0
-		ms_duration = []
+		ms_duration = np.zeros(1, dtype='float32')
+		temp_vel = np.zeros(1, dtype='float32')
+		temp_amp = np.zeros(1, dtype='float32')
 		for ms in all_bin_MS:
+			# Net microsaccade count i.e binary + left +right
 			ms_count += ms["NB"] + ms["NL"] + ms["NR"]
-			if(ms["NB"] != 0):
-				for bms in ms["bin"]:
-					ms_duration.append((bms[1] - bms[0]) + (bms[10] - bms[9]) / 2.)
-			if(ms["NL"] != 0):
-				for lms in ms["left"]:
-					ms_duration.append(lms[1] - lms[0])
-			if(ms["NR"] != 0):
-				for rms in ms["right"]:
-					ms_duration.append(rms[1] - rms[0])
 
-		return all_bin_MS, ms_count, ms_duration
+			if(ms["NB"] != 0):
+				# Appending peak velocity for binary microsaccade
+				vel_val = (ms["bin"][:, 2] + ms["bin"][:, 11]) / 2.
+				temp_vel = np.hstack((temp_vel, vel_val))
+			
+				# Appending amplitude for binary microsaccade
+				amp_val = (np.sqrt(ms["bin"][:, 5]**2 + ms["bin"][:, 6]**2) + np.sqrt(ms["bin"][:, 13]**2 + ms["bin"][:, 14]**2)) / 2.
+				temp_amp = np.hstack((temp_amp, amp_val))
+
+				# Appending durations for binary microsaccade
+				dur_val = ((ms["bin"][:, 1] - ms["bin"][:, 0]) + (ms["bin"][:, 10] - ms["bin"][:, 9])) / 2.
+				ms_duration = np.hstack((ms_duration, dur_val))	
+			
+			if(ms["NL"] != 0):
+				# Appending peak velocity for left eye microsaccade
+				temp_vel = np.hstack((temp_vel, ms["left"][:, 2]))
+				
+				# Appending amplitude for left eye microsaccade
+				temp_amp = np.hstack((temp_amp, np.sqrt(ms["left"][:, 5]**2 + ms["left"][:, 6]**2)))
+
+				# Appending durations for left eye microsaccade
+				dur_val = ms["left"][:, 1] - ms["left"][:, 0]
+				ms_duration = np.hstack((ms_duration, dur_val))
+			
+			if(ms["NR"] != 0):
+				# Appending peak velocity for right eye microsaccade
+				temp_vel = np.hstack((temp_vel, ms["right"][:, 2]))
+				
+				# Appending amplitude for right eye microsaccade
+				temp_amp = np.hstack((temp_amp, np.sqrt(ms["right"][:, 5]**2 + ms["right"][:, 6]**2)))
+
+				# Appending durations for right eye microsaccade
+				dur_val = ms["right"][:, 1] - ms["right"][:, 0]
+				ms_duration = np.hstack((ms_duration, dur_val))
+
+		if ms_count == 0:
+			ms_duration = [0, 0]
+			temp_vel = [0, 0]
+			temp_amp = [0, 0]
+			
+		return all_bin_MS, ms_count, ms_duration[1:], temp_vel[1:], temp_amp[1:]
 
 
 	def findSaccadeParams(self, sampling_freq=1000):
-		saccade_onset = []
-		saccade_offset = []
-	
-		i = 0
-	
-		while i < len(self.data["FixationSeq"]):
-			if self.data["FixationSeq"][i] == -1:
-				saccade_onset.append(i)
-				while i < len(self.data["FixationSeq"]) and self.data["FixationSeq"][i] == -1:
-					i += 1
-				saccade_offset.append(i-1)
-			else:
-				i += 1
+		"""
+		"""
+		
+		saccade_indices = self.findSaccades()
+		saccade_onset = saccade_indices["start"]
+		saccade_offset = saccade_indices["end"]
 
 		saccade_count = 0
 		saccade_duration = np.array(saccade_offset) - np.array(saccade_onset)
@@ -604,6 +683,81 @@ class Stimulus:
 			saccade_amplitude.append(np.sqrt(dX**2 + dY**2))
 		
 		return (saccade_count, saccade_duration, saccade_peak_vel, saccade_amplitude)
+
+
+	def findResponseTime(self, sampling_freq=1000):
+		"""
+		"""
+		return len(self.data["ETRows"] * (1000/sampling_freq))
+	
+
+	def findFixationParams(self):
+		"""
+		"""
+		fix_num, fix_cnt = np.unique(self.data["FixationSeq"], return_counts=True)
+		
+		fixation_count = len(fix_num) - 1
+
+		if fixation_count != 0:
+			max_fixation_duration = np.max(fix_cnt[1:])
+			avg_fixation_duration = np.mean(fix_cnt[1:])
+		else:
+			max_fixation_duration = 0
+			avg_fixation_duration = 0
+		
+		return (fixation_count, max_fixation_duration, avg_fixation_duration)
+
+
+	def findPupilParams(self):
+		"""
+		"""
+
+		pupil_size = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
+		peak_pupil = max(pupil_size)
+		time_to_peak = np.argmax(pupil_size)
+
+		# Finding Area Under Curve (AUC)
+		index = np.argmin(pupil_size)
+		length = len(pupil_size)
+		pupil_AUC = 0
+		while index < length:
+			if pupil_size[index] < 0:
+				pupil_AUC += abs(pupil_size[index])
+			index += 1			
+
+		# Finding slope of regression line fit on pupil_size data
+		x = np.array([i for i in range(1500)])
+		y = pupil_size[0:1500]
+		pupil_slope, _, _, _, _ = stats.linregress(x[:len(y)],y)
+
+		# Finding mean of pupil_size data
+		pupil_mean = np.mean(pupil_size)		
+
+		# Finding decimated pupil_size value (at 60Hz)
+		frequency = 60
+		downsample_stride = int(1000/frequency)
+		index = 0
+		pupil_size_downsample = []
+		while index < length:
+			pupil_size_downsample.append(pupil_size[index])	
+			index += downsample_stride	
+
+		return (pupil_size, peak_pupil, time_to_peak, pupil_AUC, pupil_slope, pupil_mean, pupil_size_downsample)
+		
+
+	def findBlinkParams(self):
+		"""
+		"""
+
+		blink_cnt = len(self.data["BlinksLeft"]["blink_onset"])
+		if blink_cnt != 0:
+			peak_blink_duration = np.max((np.array(self.data["BlinksLeft"]["blink_offset"]) - np.array(self.data["BlinksLeft"]["blink_onset"])))
+			avg_blink_duration = np.mean((np.array(self.data["BlinksLeft"]["blink_offset"]) - np.array(self.data["BlinksLeft"]["blink_onset"])))
+		else:
+			peak_blink_duration = 0
+			avg_blink_duration = 0
+		
+		return (blink_cnt, peak_blink_duration, avg_blink_duration)
 
 
 	def gazePlot(self):
@@ -791,6 +945,7 @@ class Stimulus:
 			NA
 		"""
 
+		# Finding word and character count in text stimulus
 		num_chars = 1
 		num_words = 1
 		if self.stim_type in ["alpha", "relevant", "general", "general_lie"]:
@@ -801,132 +956,44 @@ class Stimulus:
 			num_words = len(data[self.name].split())
 
 		# Finding response time based on number of  samples 
-		self.response_time = len(self.data["ETRows"])
-
-		print(self.name, ": ", float(self.response_time/1000))
-
+		self.response_time = self.findResponseTime()
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_words
-		#self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time
-		#self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_chars
 	
 		# Pupil Features
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"] = self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0]
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_pupil"] = max(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["time_to_peak_pupil"] = np.argmax(self.data["InterpPupilSize"] - self.data["InterpPupilSize"][0])
-		
+		pupil_size, peak_pupil, time_to_peak, pupil_AUC, pupil_slope, pupil_mean, pupil_size_downsample = self.findPupilParams()
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"] = pupil_size
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_pupil"] = peak_pupil
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["time_to_peak_pupil"] = time_to_peak
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_area_curve"] = pupil_AUC	
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_slope"] = pupil_slope
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_mean"] = pupil_mean		
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size_downsample"] = pupil_size_downsample
+
 		# Blink Features
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_rate"] = len(self.data["BlinksLeft"]["blink_onset"]) / self.response_time
-		if self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_rate"] != 0:
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_blink_duration"] = np.max((np.array(self.data["BlinksLeft"]["blink_offset"]) - np.array(self.data["BlinksLeft"]["blink_onset"])))
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_blink_duration"] = np.mean((np.array(self.data["BlinksLeft"]["blink_offset"]) - np.array(self.data["BlinksLeft"]["blink_onset"])))
-		else:
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_blink_duration"] = 0
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_blink_duration"] = 0
+		blink_cnt, peak_blink, avg_blink = self.findBlinkParams()
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_rate"] = blink_cnt / self.response_time
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_blink_duration"] = peak_blink
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_blink_duration"] = avg_blink
 		
 		# Fixation Features
-		fix_num, fix_cnt = np.unique(self.data["FixationSeq"], return_counts=True)
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["fixation_count"] = (len(fix_num) - 1) / num_chars
-		if self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["fixation_count"] != 0:
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["max_fixation_duration"] = np.max(fix_cnt[1:])
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_fixation_duration"] = np.mean(fix_cnt[1:])
-		else:
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["max_fixation_duration"] = 0
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_fixation_duration"] = 0
+		fix_cnt, max_fix_cnt, avg_fix_cnt = self.findFixationParams()
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["fixation_count"] = fix_cnt
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["max_fixation_duration"] = max_fix_cnt
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_fixation_duration"] = avg_fix_cnt
 
 		# Saccade Features
-
-		saccade_params = self.findSaccadeParams(sampling_freq)
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = saccade_params[0]
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_duration"] = saccade_params[1]
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_vel"] = saccade_params[2]
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_amplitude"] = saccade_params[3]
+		saccade_count, saccade_duration, saccade_peak_vel, saccade_amplitude = self.findSaccadeParams(sampling_freq)
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = saccade_count
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_duration"] = saccade_duration
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_vel"] = saccade_peak_vel
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_amplitude"] = saccade_amplitude
 
 		# Microsaccade Features
-		all_MS, ms_count, ms_duration = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
+		_, ms_count, ms_duration, ms_vel, ms_amp = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
 		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_count"] = ms_count
-		# print("MS_Count", ms_count)
-		if ms_count == 0:
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = [0]
-		else:
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = ms_duration
-		# print("MS_Duration", self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"])
-
-		temp = np.zeros(1, dtype='float32')
-		for ms in all_MS:
-			if ms["NB"] != 0:
-				temp = np.hstack((temp, ms["bin"][:, 2]))
-			if ms["NL"] != 0:
-				temp = np.hstack((temp, ms["left"][:, 2]))
-			if ms["NR"] != 0:
-				temp = np.hstack((temp, ms["right"][:, 2]))
-		if ms_count == 0:
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_vel"] = [0]
-		else:
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_vel"] = temp[1:]
-		# print("MS_Vel", temp)
-
-		temp = np.zeros(1, dtype='float32')
-		for ms in all_MS:
-			if ms["NB"] != 0:
-				temp = np.hstack((temp, np.sqrt(ms["bin"][:, 5]**2 + ms["bin"][:, 6]**2)))
-			if ms["NL"] != 0:
-				temp = np.hstack((temp, np.sqrt(ms["left"][:, 5]**2 + ms["left"][:, 6]**2)))
-			if ms["NR"] != 0:
-				temp = np.hstack((temp, np.sqrt(ms["right"][:, 5]**2 + ms["right"][:, 6]**2)))
-		if ms_count == 0:
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_amplitude"] = [0]
-		else:
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_amplitude"] = temp[1:]
-		# print("MS_amp", temp)
-		#Arvind
-
-		index = np.argmin(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])
-
-		length = len(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])
-
-		pupil_area = 0.0
-
-		while(index < length):
-
-			if(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"][index] < 0):
-				
-				try:
-					pupil_area += abs(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"][index])
-					index += 1
-
-				except:
-					print(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"][index])
-					index += 1
-			
-			else:
-				break
-
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_area_curve"] = pupil_area		
-
-		x = np.array([i for i in range(1500)])
-		y = self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"][0:1500]
-
-		slope, intercept, r_value, p_value, std_err = stats.linregress(x[:len(y)],y)
-
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_slope"] = slope
-
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_mean"] = np.mean(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])		
-
-
-		frequency = 60
-		downsample_stride = int(1000/frequency)
-
-		index = 0
-		downsample_list = []
-
-		while(index < length):
-
-			downsample_list.append(self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"][index])	
-			index += downsample_stride	
-
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size_downsample"] = downsample_list
-		
-		#Arvind
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = ms_duration
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_vel"] = ms_vel
+		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_amplitude"] = ms_amp
 
 
 	def getData(self, data, sensor_names):
@@ -959,7 +1026,6 @@ class Stimulus:
 				pupil_size_r_df = np.array(data.PupilRight)
 
 				# Extracting fixation sequences
-				
 				et_rows = np.where(data.EventSource.str.contains("ET"))[0]
 				fixation_seq_df = np.array(data.FixationSeq.fillna(-1), dtype='float32')
 				fixation_seq = np.squeeze(np.array([fixation_seq_df[i] for i in sorted(et_rows)], dtype="float32"))
@@ -978,8 +1044,8 @@ class Stimulus:
 				pupil_size_l = np.squeeze(np.array([pupil_size_l_df[i] for i in sorted(et_rows)], dtype="float32"))
 				
 				# Fixing Blinks and interpolating pupil size and gaze data
-				blinks_l, interp_pupil_size_l, new_gaze_l = self.fix_blinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
-				blinks_r, interp_pupil_size_r, new_gaze_r = self.fix_blinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
+				blinks_l, interp_pupil_size_l, new_gaze_l = self.findBlinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
+				blinks_r, interp_pupil_size_r, new_gaze_r = self.findBlinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
 				interp_pupil_size = np.mean([interp_pupil_size_r, interp_pupil_size_l], axis=0)
 
 				extracted_data["ETRows"] = et_rows
@@ -1032,9 +1098,9 @@ class Stimulus:
 
 		for sen in sensor_names:
 			if sen == "EyeTracker":
-				et_sfreq = sen["Sampling_Freq"]
+				et_sfreq = sensor_names[sen]["Sampling_Freq"]
 
-				self.sensors.append(Sensor(col_class, et_sfreq))
+				self.sensors.append(Sensor(sen, et_sfreq))
 
 				l_gazex_df = np.array(data.GazeLeftx)
 				l_gazey_df = np.array(data.GazeLefty)
@@ -1062,8 +1128,8 @@ class Stimulus:
 				pupil_size_l = np.squeeze(np.array([pupil_size_l_df[i] for i in sorted(et_rows)], dtype="float32"))
 				
 				# Fixing Blinks and interpolating pupil size and gaze data
-				blinks_l, interp_pupil_size_l, new_gaze_l = self.fix_blinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
-				blinks_r, interp_pupil_size_r, new_gaze_r = self.fix_blinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
+				blinks_l, interp_pupil_size_l, new_gaze_l = self.findBlinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
+				blinks_r, interp_pupil_size_r, new_gaze_r = self.findBlinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
 				interp_pupil_size = np.mean([interp_pupil_size_r, interp_pupil_size_l], axis=0)
 
 				extracted_data["ETRows"] = et_rows
@@ -1074,12 +1140,12 @@ class Stimulus:
 				extracted_data["BlinksLeft"] = blinks_l
 				extracted_data["BlinksRight"] = blinks_r
 
-			if col_class == "EEG":
+			if sen == "EEG":
 				eeg_dict = {}
-				montage = sen["Montage"]
-				eeg_sfreq = sen["Sampling_Freq"]
+				montage = sensor_names[sen]["Montage"]
+				eeg_sfreq = sensor_names[sen]["Sampling_Freq"]
 
-				self.sensors.append(Sensor(col_class, eeg_sfreq))
+				self.sensors.append(Sensor(sen, eeg_sfreq))
 
 				for channel in sen["Channels"]:
 					eeg_df = np.array(data[channel])

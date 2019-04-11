@@ -1,6 +1,6 @@
 {
    "Name":"Corpus description",
-   "Database_name":"/home/upamanyu/Documents/NTU_Creton/.ntuExperiment/lie_detection_database.db",
+   "Database_name":"lie_detection_database.db",
    "Author Details":{
       "Name":"Arvind A S",
       "Date":"21/01/2018",
@@ -44,10 +44,14 @@
    },
    "Subjects":{
       "innocent":[
-         "Innocent_Subject_05"
+         "Innocent_Subject_05",
+         "Innocent_Subject_06",
+         "Innocent_Subject_15"
       ],
       "guilty":[
-         "Guilty_Subject_06"
+         "Guilty_Subject_06",
+         "Guilty_Subject_07",
+         "Guilty_Subject_08"
       ]
    },
    "Stimuli":{

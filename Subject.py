@@ -23,7 +23,7 @@ class Subject:
 		self.name = name
 		self.subj_type = subj_type
 		self.manual_eeg = manual_eeg
-		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns,json_file,sensors, database) #dictionary of objects of class stimulus demarcated by categories
+		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns,json_file,sensors, database) 
 		self.control_data = self.getControlData(columns, json_file, sensors, database)
 		self.aggregate_meta = {}
 		b = datetime.now()
@@ -31,7 +31,7 @@ class Subject:
 
 
 	def dataExtraction(self, columns,json_file, database):
-		'''
+		"""
 		Extracts the required columns from the data base and returns a pandas datastructure
 
 		Input:
@@ -40,7 +40,7 @@ class Subject:
 
 		Output:
 		1.	df: [pandas datastructure] contains the data of columns of our interest
-		'''
+		"""
 		string = 'SELECT '
 
 		index = 0
@@ -69,7 +69,7 @@ class Subject:
 
 	def timeIndexInitialisation(self, stimulus_column_name, stimulus_name, df):
 
-		'''
+		"""
 		This function that will retireve the index of the start, end and roi of a question
 
 		Input:
@@ -80,7 +80,7 @@ class Subject:
 		1.	start:[integer] the index of the start of a queation
 		2.	end:[integer] the index of the end of a question
 		3.	roi:[integer] the index when the eye lands on the region of interest
-		'''
+		"""
 
 		index = df[df[stimulus_column_name] == stimulus_name].index
 
@@ -96,12 +96,12 @@ class Subject:
 			end = -1
 			roi = -1
 
-		return start,end,roi
+		return start, end, roi
 
 	
 	def stimulusDictInitialisation(self, stimuli_names,columns,json_file,sensors, database):
 
-		'''
+		"""
 		Creates  a list of objects of class Stimuli
 
 		Input:
@@ -110,7 +110,7 @@ class Subject:
 
 		Output:
 		1.	stimulus_object_dict: [dictionary] dictionary of objects of class stimulus ordered by category
-		'''	
+		"""	
 
 		if not os.path.isdir('./question_indices/'):
 			os.makedirs('./question_indices/')
@@ -155,6 +155,8 @@ class Subject:
 
 			stimulus_object_dict[category] = stimulus_object_list
 		
+		del data
+
 		if flag == 0:	
 			pickle_out = open('question_indices/' + self.name + '.pickle',"wb")
 			pickle.dump(question_indices_dict, pickle_out)
@@ -164,11 +166,10 @@ class Subject:
 
 
 	def getControlData(self, columns, json_file, sensors, database):
-		'''
-
+		"""
 		This function returns the average value of control data (alpha questions) for the purpose of standardisation
+		"""
 
-		'''
 		control = dict()
 		for sen in self.sensors:
 			control.update({sen:dict()})
@@ -187,17 +188,17 @@ class Subject:
 				control = pickle.load(pickle_in)
 
 			else:
-				control_questions = {"Control" : json_data["Control_Questions"]}
-				control_q_objects = self.stimulusDictInitialisation(control_questions, columns, json_file, sensors, database)
-
 				cnt = 0
-				for cqo in control_q_objects["Control"]:
-					if cqo.data != None:
-						cnt += 1
-						cqo.findEyeMetaData()
-						for sen in self.sensors:
-							for c in control[sen]:
-								control[sen][c] = np.hstack((control[sen][c], cqo.sensors[Sensor.sensor_names.index(sen)].metadata[c]))
+				for stim_cat in self.stimuli_names:
+					for stim_ind, stim in enumerate(self.stimuli_names[stim_cat]):
+						if stim in json_data["Control_Questions"]:
+							cqo = self.stimulus[stim_cat][stim_ind]
+							if cqo.data != None:
+								cnt += 1
+								cqo.findEyeMetaData()
+								for sen in self.sensors:
+									for c in control[sen]:
+										control[sen][c] = np.hstack((control[sen][c], cqo.sensors[Sensor.sensor_names.index(sen)].metadata[c]))
 				
 				for sen in self.sensors:
 					for c in control[sen]:
@@ -212,7 +213,9 @@ class Subject:
 
 
 	def subjectVisualize(self):
-		
+		"""
+		"""
+
 		plt.figure()
 
 		def stimFunction(text):
@@ -233,12 +236,8 @@ class Subject:
 
 
 	def subjectAnalysis(self,average_flag,standardise_flag):
-
-		'''
-
-
-		'''
-		print(self.control_data)
+		"""
+		"""
 		
 		for st in self.stimulus:
 			self.aggregate_meta.update({st : {}})
@@ -267,8 +266,9 @@ class Subject:
 						self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])
 
 
-
 	def manualEEGArtefactRemovalSubject(self, data, json_file):
+		"""
+		"""
 
 		if os.path.isfile("icaRejectionLog.p"):
 			with open("icaRejectionLog.p", "rb") as f:
