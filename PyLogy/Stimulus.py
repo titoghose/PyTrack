@@ -8,6 +8,9 @@ from matplotlib.widgets import Slider, CheckButtons
 import matplotlib.animation as animation
 from Sensor import Sensor
 
+import matplotlib as mpl
+mpl.use("TkAgg")
+
 class Stimulus:
 
 	def __init__(self, name="id_rather_not", stim_type="doesnt_matter", sensor_names=["EyeTracker"], data=None, start_time=-1, end_time=-1, roi_time=-1, json_file=None):
@@ -18,7 +21,7 @@ class Stimulus:
 		self.response_time = self.end_time - self.start_time
 		self.roi_time = roi_time
 		self.json_file = json_file
-		self.sensors = []
+		self.sensors = dict()
 
 		# Experiment json file exists so stimulus is being created for experiment
 		if self.json_file != None:
@@ -778,6 +781,8 @@ class Stimulus:
 			NA
 		"""
 		
+		# plt.ion()
+
 		if len(self.sensors) == 0:
 			return
 
@@ -791,7 +796,8 @@ class Stimulus:
 		ax = fig.add_subplot(3, 1, 1)
 		ax2 = fig.add_subplot(3, 1, 2)
 		ax3 = fig.add_subplot(3, 1, 3)
-		
+	
+
 		img = plt.imread("Stimuli/" + self.name + ".jpg")
 		ax.imshow(img)
 
@@ -957,43 +963,43 @@ class Stimulus:
 
 		# Finding response time based on number of  samples 
 		self.response_time = self.findResponseTime()
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["response_time"] = self.response_time / num_words
+		self.sensors["EyeTracker"].metadata["response_time"] = self.response_time / num_words
 	
 		# Pupil Features
 		pupil_size, peak_pupil, time_to_peak, pupil_AUC, pupil_slope, pupil_mean, pupil_size_downsample = self.findPupilParams()
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"] = pupil_size
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_pupil"] = peak_pupil
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["time_to_peak_pupil"] = time_to_peak
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_area_curve"] = pupil_AUC	
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_slope"] = pupil_slope
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_mean"] = pupil_mean		
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size_downsample"] = pupil_size_downsample
+		self.sensors["EyeTracker"].metadata["pupil_size"] = pupil_size
+		self.sensors["EyeTracker"].metadata["peak_pupil"] = peak_pupil
+		self.sensors["EyeTracker"].metadata["time_to_peak_pupil"] = time_to_peak
+		self.sensors["EyeTracker"].metadata["pupil_area_curve"] = pupil_AUC	
+		self.sensors["EyeTracker"].metadata["pupil_slope"] = pupil_slope
+		self.sensors["EyeTracker"].metadata["pupil_mean"] = pupil_mean		
+		self.sensors["EyeTracker"].metadata["pupil_size_downsample"] = pupil_size_downsample
 
 		# Blink Features
 		blink_cnt, peak_blink, avg_blink = self.findBlinkParams()
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["blink_rate"] = blink_cnt / self.response_time
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["peak_blink_duration"] = peak_blink
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_blink_duration"] = avg_blink
+		self.sensors["EyeTracker"].metadata["blink_rate"] = blink_cnt / self.response_time
+		self.sensors["EyeTracker"].metadata["peak_blink_duration"] = peak_blink
+		self.sensors["EyeTracker"].metadata["avg_blink_duration"] = avg_blink
 		
 		# Fixation Features
 		fix_cnt, max_fix_cnt, avg_fix_cnt = self.findFixationParams()
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["fixation_count"] = fix_cnt
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["max_fixation_duration"] = max_fix_cnt
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["avg_fixation_duration"] = avg_fix_cnt
+		self.sensors["EyeTracker"].metadata["fixation_count"] = fix_cnt
+		self.sensors["EyeTracker"].metadata["max_fixation_duration"] = max_fix_cnt
+		self.sensors["EyeTracker"].metadata["avg_fixation_duration"] = avg_fix_cnt
 
 		# Saccade Features
 		saccade_count, saccade_duration, saccade_peak_vel, saccade_amplitude = self.findSaccadeParams(sampling_freq)
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_count"] = saccade_count
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_duration"] = saccade_duration
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_vel"] = saccade_peak_vel
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["sacc_amplitude"] = saccade_amplitude
+		self.sensors["EyeTracker"].metadata["sacc_count"] = saccade_count
+		self.sensors["EyeTracker"].metadata["sacc_duration"] = saccade_duration
+		self.sensors["EyeTracker"].metadata["sacc_vel"] = saccade_peak_vel
+		self.sensors["EyeTracker"].metadata["sacc_amplitude"] = saccade_amplitude
 
 		# Microsaccade Features
 		_, ms_count, ms_duration, ms_vel, ms_amp = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_count"] = ms_count
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_duration"] = ms_duration
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_vel"] = ms_vel
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["ms_amplitude"] = ms_amp
+		self.sensors["EyeTracker"].metadata["ms_count"] = ms_count
+		self.sensors["EyeTracker"].metadata["ms_duration"] = ms_duration
+		self.sensors["EyeTracker"].metadata["ms_vel"] = ms_vel
+		self.sensors["EyeTracker"].metadata["ms_amplitude"] = ms_amp
 
 
 	def getData(self, data, sensor_names):
@@ -1016,7 +1022,7 @@ class Stimulus:
 			if col_class == "EyeTracker":
 				et_sfreq = contents["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
 
-				self.sensors.append(Sensor(col_class, et_sfreq))
+				self.sensors.update({col_class : Sensor(col_class, et_sfreq)})
 
 				l_gazex_df = np.array(data.GazeLeftx)
 				l_gazey_df = np.array(data.GazeLefty)
@@ -1061,7 +1067,7 @@ class Stimulus:
 				montage = contents["Analysis_Params"]["EEG"]["Montage"]
 				eeg_sfreq = contents["Analysis_Params"]["EEG"]["Sampling_Freq"]
 
-				self.sensors.append(Sensor(col_class, eeg_sfreq))
+				self.sensors.update({col_class : Sensor(col_class, et_sfreq)})
 
 				for channel in contents["Columns_of_interest"][col_class]:
 					eeg_df = np.array(data[channel])
@@ -1100,7 +1106,7 @@ class Stimulus:
 			if sen == "EyeTracker":
 				et_sfreq = sensor_names[sen]["Sampling_Freq"]
 
-				self.sensors.append(Sensor(sen, et_sfreq))
+				self.sensors.update({sen : Sensor(sen, et_sfreq)})
 
 				l_gazex_df = np.array(data.GazeLeftx)
 				l_gazey_df = np.array(data.GazeLefty)
@@ -1145,7 +1151,7 @@ class Stimulus:
 				montage = sensor_names[sen]["Montage"]
 				eeg_sfreq = sensor_names[sen]["Sampling_Freq"]
 
-				self.sensors.append(Sensor(sen, eeg_sfreq))
+				self.sensors.update({sen : Sensor(sen, et_sfreq)})
 
 				for channel in sen["Channels"]:
 					eeg_df = np.array(data[channel])

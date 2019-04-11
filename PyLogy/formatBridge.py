@@ -25,29 +25,36 @@ def eyeLinkToBase(filename):
         temp_dict['GazeRighty'] = d['y']
         temp_dict['PupilLeft'] = d['size']
         temp_dict['PupilRight'] = d['size']
-        temp_dict['FixationSeq'] = np.zeros(len(temp_dict['Timestamp']))
-        temp_dict['SaccadeSeq'] = np.zeros(len(temp_dict['Timestamp']))
-        temp_dict['Blink'] = np.zeros(len(temp_dict['Timestamp']))
+        temp_dict['FixationSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
+        temp_dict['SaccadeSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
+        temp_dict['Blink'] = np.ones(len(temp_dict['Timestamp'])) * -1
         
+        cnt = 0
         for e in d['events']['Efix']:
             ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
             ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
-            temp_dict['FixationSeq'][ind_start : ind_end + 1] = 1
+            temp_dict['FixationSeq'][ind_start : ind_end + 1] = cnt
+            cnt += 1
 
+        cnt = 0
         for e in d['events']['Esac']:
             ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
             ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
-            temp_dict['SaccadeSeq'][ind_start : ind_end + 1] = 1
+            temp_dict['SaccadeSeq'][ind_start : ind_end + 1] = cnt
+            cnt += 1
         
+        cnt = 0
         for e in d['events']['Eblk']:
             ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
             ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
-            temp_dict['Blink'][ind_start : ind_end + 1] = 1
+            temp_dict['Blink'][ind_start : ind_end + 1] = cnt
+            cnt += 1
 
         df = df.append(pd.DataFrame.from_dict(temp_dict, orient='index').transpose(), ignore_index=True, sort=False)
         del(temp_dict)
 
-    df.to_csv(filename.split('.')[0] + '.csv') 
+    df.to_csv(filename.split('.')[0] + '.csv')
+    return df
 
 
 def smiToBase(filename):
@@ -68,27 +75,35 @@ def smiToBase(filename):
         temp_dict['GazeRighty'] = d['y']
         temp_dict['PupilLeft'] = d['size']
         temp_dict['PupilRight'] = d['size']
-        temp_dict['FixationSeq'] = np.zeros(len(temp_dict['Timestamp']))
-        temp_dict['SaccadeSeq'] = np.zeros(len(temp_dict['Timestamp']))
-        temp_dict['Blink'] = np.zeros(len(temp_dict['Timestamp']))
+        temp_dict['FixationSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
+        temp_dict['SaccadeSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
+        temp_dict['Blink'] = np.ones(len(temp_dict['Timestamp'])) * -1
         
-
+        fix_cnt = 0
+        sac_cnt = 0
+        prev_end = 0
         for e in d['events']['Efix']:
             ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
             ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
-            temp_dict['FixationSeq'][ind_start : ind_end + 1] = 1
+            temp_dict['FixationSeq'][ind_start : ind_end + 1] = fix_cnt
+            fix_cnt += 1
+            if prev_end != ind_start:
+                temp_dict['SaccadeSeq'][prev_end + 1 : ind_start + 1] = sac_cnt
+                sac_cnt += 1
+            prev_end = ind_end
 
-        temp_dict['SaccadeSeq'][np.where(temp_dict['FixationSeq'] == 0)[0]] = 1
-        
+        cnt = 0
         for e in d['events']['Eblk']:
             ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
             ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
-            temp_dict['Blink'][ind_start : ind_end + 1] = 1
+            temp_dict['Blink'][ind_start : ind_end + 1] = cnt
+            cnt += 1
 
         df = df.append(pd.DataFrame.from_dict(temp_dict, orient='index').transpose(), ignore_index=True, sort=False)
         del(temp_dict)
 
     df.to_csv(filename.split('.')[0] + '.csv') 
+    return df
 
 
 def csvToBase(filename):
@@ -99,10 +114,10 @@ def convertToBase(filename):
     file_type = filename.split('.')[1]
 
     if file_type == 'asc':
-        eyeLinkToBase(filename)
+        return eyeLinkToBase(filename)
     
     elif file_type == 'idf':
-        smiToBase(filename)
+        return smiToBase(filename)
 
     elif file_type == 'csv':
-        csvToBase(filename)
+        return csvToBase(filename)

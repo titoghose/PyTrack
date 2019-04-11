@@ -11,6 +11,8 @@ from datetime import datetime
 from matplotlib.widgets import TextBox
 import matplotlib.pyplot as plt
 
+import matplotlib as mpl
+mpl.use("TkAgg")
 
 class Subject:
 
@@ -62,6 +64,7 @@ class Subject:
 		df = df.replace(to_replace=r'Unnamed:*', value=float(-1), regex=True)
 
 		b = datetime.now()
+		print(string)
 		print("Query: ", (b-a).seconds)
 		
 		return df
@@ -173,7 +176,7 @@ class Subject:
 		control = dict()
 		for sen in self.sensors:
 			control.update({sen:dict()})
-			for meta in Sensor.meta_cols[Sensor.sensor_names.index(sen)]:
+			for meta in Sensor.meta_cols[sen]:
 				control[sen].update({meta: 0})
 
 		with open(json_file) as json_f:
@@ -198,7 +201,7 @@ class Subject:
 								cqo.findEyeMetaData()
 								for sen in self.sensors:
 									for c in control[sen]:
-										control[sen][c] = np.hstack((control[sen][c], cqo.sensors[Sensor.sensor_names.index(sen)].metadata[c]))
+										control[sen][c] = np.hstack((control[sen][c], cqo.sensors[sen].metadata[c]))
 				
 				for sen in self.sensors:
 					for c in control[sen]:
@@ -215,14 +218,16 @@ class Subject:
 	def subjectVisualize(self):
 		"""
 		"""
-
-		plt.figure()
+		# plt.ion()
+		fig = plt.figure()
 
 		def stimFunction(text):
 			stim_t = text.split(",")[0].strip(" ")
 			stim_n = text.split(",")[1].strip(" ")
 			stim = self.stimulus[stim_t][self.stimuli_names[stim_t].index(stim_n)]
+			# plt.close(fig)
 			stim.visualize()
+			# self.subjectVisualize()
 
 		tax1 = plt.axes([0.25, 0.25, 0.50, 0.50])
 		tb1 = TextBox(tax1, "Stimulus [type,name]", initial="alpha,Alpha1")
@@ -242,7 +247,7 @@ class Subject:
 		for st in self.stimulus:
 			self.aggregate_meta.update({st : {}})
 			for sen in self.sensors:
-				for mc in Sensor.meta_cols[Sensor.sensor_names.index(sen)]:
+				for mc in Sensor.meta_cols[sen]:
 					self.aggregate_meta[st].update({mc : []})
 
 		for s in self.stimulus:
@@ -253,11 +258,11 @@ class Subject:
 						# Normalizing by subtracting control data
 						for cd in self.control_data[sen]:
 							if(standardise_flag):
-								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[cd] - self.control_data[sen][cd])))
+								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors["EyeTracker"].metadata[cd] - self.control_data[sen][cd])))
 							else:
-								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata[cd]))
+								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors["EyeTracker"].metadata[cd]))
 
-						# temp_pup_size.append(stim.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["pupil_size"])
+						# temp_pup_size.append(stim.sensors["EyeTracker"].metadata["pupil_size"])
 
 		if(average_flag):	
 			for s in self.stimulus:

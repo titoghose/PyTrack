@@ -6,9 +6,9 @@ a = datetime.now()
 
 exp = Experiment("Exp1", "trial_data.json", ["EyeTracker", "EEG"], manual_eeg = False)
 
-exp.analyse(standardise_flag = False, average_flag = False)
+# exp.analyse(standardise_flag = False, average_flag = False)
 
-# exp.visualizeData()
+exp.visualizeData()
 
 b = datetime.now()
 print("End")

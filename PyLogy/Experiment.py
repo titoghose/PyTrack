@@ -14,6 +14,9 @@ import pingouin as pg
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RadioButtons
 
+import matplotlib as mpl
+mpl.use("TkAgg")
+
 
 class Experiment:
 
@@ -120,13 +123,17 @@ class Experiment:
 
 
 	def visualizeData(self):
+		# plt.ion()
+		fig = plt.figure()
 		subject_names = [s.name for s in self.subjects]
 		rax = plt.axes([0, 0, 1.00, 1.00])
 		radio = RadioButtons(rax, subject_names)
 		
 		def subjFunction(label):
 			subj_dict = {s.name:s for s in self.subjects}
+			# plt.close(fig)
 			subj_dict[label].subjectVisualize()
+			# self.visualizeData()
 
 		radio.on_clicked(subjFunction)
 		plt.show()
