@@ -13,6 +13,7 @@
 *.ods
 *.xls
 *.csv
+.vscode
 .DS_Store
 .DS_Store?
 .Trashes

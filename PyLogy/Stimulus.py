@@ -1,12 +1,15 @@
 import json
 import numpy as np
 import pandas as pd
-from scipy import signal, io, stats
+from scipy import signal, io, stats, misc
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 from matplotlib.widgets import Slider, CheckButtons
 import matplotlib.animation as animation
 from Sensor import Sensor
+import matplotlib.cm as cm
+from scipy.ndimage.filters import gaussian_filter
+
 
 import matplotlib as mpl
 mpl.use("TkAgg")
@@ -192,10 +195,17 @@ class Stimulus:
 					
 					gaze_x_no_blinks = gaze_x[pupil_size_no_blinks_indices]
 					gaze_y_no_blinks = gaze_y[pupil_size_no_blinks_indices]
-					
+
+					# if eye == "left":
+					# 	plt.plot(gaze_x, gaze_y)
+
 					interp_gaze_x = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices), gaze_x_no_blinks)
 					interp_gaze_y = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices), gaze_y_no_blinks)
-					
+
+					# if eye == "left":
+					# 	plt.plot(interp_gaze_x, interp_gaze_y, alpha=0.5)
+
+					# plt.show()
 					new_gaze[eye] = {"x": interp_gaze_x, "y": interp_gaze_y}
 
 		else:
@@ -324,6 +334,9 @@ class Stimulus:
 
 
 	def findBinocularMS(self, msl, msr):
+		"""
+		"""
+
 		numr = len(msl)
 		numl = len(msr)
 
@@ -406,6 +419,8 @@ class Stimulus:
 
 	
 	def findMonocularMS(self, gaze, vel, sampling_freq=1000):
+		"""
+		"""
 
 		MINDUR = int((sampling_freq / 1000) * 6)
 		gaze_x = gaze["x"]
@@ -510,7 +525,7 @@ class Stimulus:
 		return np.array(MS), ms_count, ms_duration
 
 
-	def findMicrosaccades(self, fixation_seq, gaze, sampling_freq=1000, plot_ms=False):
+	def findMicrosaccades(self, sampling_freq=1000, plot_ms=False):
 		"""
 		Function to detect microsaccades within fixations.
 		Adapted from R. Engbert and K. Mergenthaler, “Microsaccades are triggered by low retinal image slip,” Proc. Natl. Acad. Sci., vol. 103, no. 18, pp. 7192–7197, 2006.
@@ -534,8 +549,8 @@ class Stimulus:
 
 			for i in ["left", "right"]:
 
-				curr_gaze = {"x" : gaze[i]["x"][fixation_indices["start"][fix_ind] : fixation_indices["end"][fix_ind] + 1],
-							"y" : gaze[i]["y"][fixation_indices["start"][fix_ind] : fixation_indices["end"][fix_ind] + 1]}
+				curr_gaze = {"x" : self.data["Gaze"][i]["x"][fixation_indices["start"][fix_ind] : fixation_indices["end"][fix_ind] + 1],
+							"y" : self.data["Gaze"][i]["y"][fixation_indices["start"][fix_ind] : fixation_indices["end"][fix_ind] + 1]}
 
 				vel_x = self.position2Velocity(curr_gaze["x"], sampling_freq)
 				vel_y = self.position2Velocity(curr_gaze["y"], sampling_freq)
@@ -578,6 +593,7 @@ class Stimulus:
 					a2.plot(vel["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], vel["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r') 
 
 				plt.savefig("ms_gaze_vel" + self.name + "_" + str(fix_ind) + ".png")
+				fig.close()
 
 
 			if plot_ms:
@@ -590,9 +606,10 @@ class Stimulus:
 						peak_vel = (ms["bin"][i, 2] + ms["bin"][i, 11])/2
 						amp = (np.sqrt(ms["bin"][i, 5]**2 + ms["bin"][i, 6]**2) + np.sqrt(ms["bin"][i, 13]**2 + ms["bin"][i, 14]**2))/2
 
-						plt.scatter(amp, peak_vel, color='r', marker='o', fillstyle='none')
+						plt.scatter(amp, peak_vel, marker='o', facecolors='none', edgecolors='r')
 				
 				plt.savefig("ms_main_seq" + self.name + ".png")
+				fig2.close()
 
 		ms_count = 0
 		ms_duration = np.zeros(1, dtype='float32')
@@ -763,12 +780,97 @@ class Stimulus:
 		return (blink_cnt, peak_blink_duration, avg_blink_duration)
 
 
-	def gazePlot(self):
-		return
-	
+	def gazePlot(self, save_fig=False, show_fig=True):
+		"""
+		"""
+		
+		fig = plt.figure()
+		
+		try:
+			img = plt.imread("Stimuli/" + self.name + ".jpg")
+		except:
+			try:
+				img = plt.imread("Stimuli/" + self.name + ".jpeg")
+			except:
+				img = np.zeros((1024, 1280))
+		
+		ax = plt.gca()
+		ax.imshow(img)
 
-	def gazeHeatMap(self):
-		return
+		fixation_dict = self.findFixations()
+		fixation_indices = np.vstack((fixation_dict["start"], fixation_dict["end"]))
+		fixation_indices = np.reshape(fixation_indices, (fixation_indices.shape[0] * fixation_indices.shape[1]), order='F')
+
+		gaze_x = np.array(np.split(self.data["InterpGaze"]["left"]["x"], fixation_indices))
+		gaze_y = np.array(np.split(self.data["InterpGaze"]["left"]["y"], fixation_indices))
+		
+		fixation_mask = np.arange(start=1, stop=len(gaze_x), step=2)
+		saccade_mask = np.arange(start=0, stop=len(gaze_x), step=2)
+
+		fixation_gaze_x = gaze_x[fixation_mask]
+		saccade_gaze_x = gaze_x[saccade_mask]
+
+		fixation_gaze_y = gaze_y[fixation_mask]
+		saccade_gaze_y = gaze_y[saccade_mask]
+
+		i = 0
+		for x, y in zip(fixation_gaze_x, fixation_gaze_y):
+			ax.plot(x, y, 'r-')
+			ax.plot(np.mean(x), np.mean(y), 'go', markersize=15, alpha=0.7)
+			ax.text(np.mean(x), np.mean(y), str(i), fontsize=10, color='w')
+			i += 1
+		
+		for x, y in zip(saccade_gaze_x, saccade_gaze_y):
+			ax.plot(x, y, 'r-')
+		
+		if show_fig:
+			plt.show()
+		
+		if save_fig:
+			plt.savefig("gaze_plot" + self.name + ".png")
+
+
+	def gazeHeatMap(self, save_fig=False, show_fig=True):
+		"""
+		"""
+		
+		fig = plt.figure()
+		ax = plt.gca()
+
+		# Generate some test data
+		x = self.data["InterpGaze"]["left"]["x"]
+		y = self.data["InterpGaze"]["left"]["y"]
+		
+		try:
+			img = plt.imread("Stimuli/" + self.name + ".jpg")
+		except:
+			try:
+				img = plt.imread("Stimuli/" + self.name + ".jpeg")
+			except:
+				img = np.zeros((1024, 1280))
+		
+		print(img.shape)
+
+		downsample_fraction = 0.25
+		col_shape = img.shape[1]
+		row_shape = img.shape[0]
+
+		hist, _, _ = np.histogram2d(x, y, bins=[int(row_shape*downsample_fraction), int(col_shape*downsample_fraction)], range=[[0, int(row_shape)],[0, int(col_shape)]])
+		print(hist.shape)
+		hist = gaussian_filter(hist, sigma=32)
+
+		mycmap = cm.GnBu
+		mycmap._init()
+		mycmap._lut[:,-1] = np.linspace(0, 0.8, 255+4)
+		
+		img = misc.imresize(img, size=downsample_fraction, interp='cubic')
+		ax.imshow(img)
+		ax.contourf(np.arange(0, int(row_shape*downsample_fraction), 1), np.arange(0, int(col_shape*downsample_fraction), 1), hist.T, cmap=mycmap)
+		ax.set_xlim(0, int(col_shape * downsample_fraction))
+		ax.set_ylim(int(row_shape * downsample_fraction), 0)
+
+		plt.show()
+		plt.close(fig)
 
 
 	def visualize(self):
@@ -797,8 +899,14 @@ class Stimulus:
 		ax2 = fig.add_subplot(3, 1, 2)
 		ax3 = fig.add_subplot(3, 1, 3)
 	
-
-		img = plt.imread("Stimuli/" + self.name + ".jpg")
+		try:
+			img = plt.imread("Stimuli/" + self.name + ".jpg")
+		except:
+			try:
+				img = plt.imread("Stimuli/" + self.name + ".jpeg")
+			except:
+				img = np.zeros((1024, 1280))
+				
 		ax.imshow(img)
 
 		if self.data["InterpGaze"] != None:
@@ -849,10 +957,11 @@ class Stimulus:
 		axamp = plt.axes([0.25, .03, 0.50, 0.02])
 		samp = Slider(axamp, 'Time', 1, total_range[-1], valinit=0, valstep=1)
 
-		rax = plt.axes([0.05, 0.7, 0.2, 0.25])
-		eeg_visible = np.zeros(len(eeg_channels), dtype=bool)
-		eeg_visible[0] = True
-		check = CheckButtons(rax, eeg_channels, eeg_visible)
+		if self.data["EEG"] != None:
+			rax = plt.axes([0.05, 0.7, 0.2, 0.25])
+			eeg_visible = np.zeros(len(eeg_channels), dtype=bool)
+			eeg_visible[0] = True
+			check = CheckButtons(rax, eeg_channels, eeg_visible)
 
 		is_manual = False
 
@@ -933,7 +1042,9 @@ class Stimulus:
 
 		# call update function on slider value change
 		samp.on_changed(update_slider)
-		check.on_clicked(eeg_check)
+		
+		if self.data["EEG"] != None:
+			check.on_clicked(eeg_check)
 
 		fig.canvas.mpl_connect('button_press_event', on_click)
 
@@ -995,7 +1106,7 @@ class Stimulus:
 		self.sensors["EyeTracker"].metadata["sacc_amplitude"] = saccade_amplitude
 
 		# Microsaccade Features
-		_, ms_count, ms_duration, ms_vel, ms_amp = self.findMicrosaccades(self.data["FixationSeq"], self.data["Gaze"])
+		_, ms_count, ms_duration, ms_vel, ms_amp = self.findMicrosaccades()
 		self.sensors["EyeTracker"].metadata["ms_count"] = ms_count
 		self.sensors["EyeTracker"].metadata["ms_duration"] = ms_duration
 		self.sensors["EyeTracker"].metadata["ms_vel"] = ms_vel
@@ -1088,9 +1199,9 @@ class Stimulus:
 
 
 	def getDataStandAlone(self, data, sensor_names):
-		'''
+		"""
 		Function to create data for stand alone data file and not entire experiment
-		'''
+		"""
 
 		extracted_data = {	"ETRows" : None,
 							"FixationSeq" : None,
