@@ -1,5 +1,10 @@
 
 # File types to ignore #
+*.jpg
+*.jpeg
+*.png
+*.tiff
+*.gif
 *.pyc
 *.db
 *.pickle
