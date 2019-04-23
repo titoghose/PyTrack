@@ -3,6 +3,7 @@
 from Sensor import Sensor
 from Subject import Subject
 import numpy as np
+import os
 import csv
 from datetime import datetime
 from scipy import stats
@@ -13,23 +14,57 @@ from sqlalchemy import create_engine
 import pingouin as pg
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RadioButtons
+import tkinter as tk
+from functools import partial
 
-import matplotlib as mpl
-mpl.use("TkAgg")
+
+class Visualize:
+	
+	def __init__(self, master, subjects):
+		master.title("PyTrack Visualization")
+		self.root = master
+		self.sub_frame = tk.Frame(master, height=30, width=70)
+		self.sub_frame.grid_propagate(False)
+	
+		self.subjects = subjects
+		
+		text = tk.Text(self.sub_frame, width=50)
+		
+		for i, sub in enumerate(self.subjects):
+			func = partial(self.button_click, sub)
+			bt = tk.Button(self.sub_frame, width=30, text=sub.name, command=func)
+			text.window_create(tk.END, window=bt)
+			text.insert(tk.END, "\n")	
+
+		vsb = tk.Scrollbar(self.sub_frame, orient="vertical")
+		vsb.config(command=text.yview)
+		
+		text.configure(yscrollcommand=vsb.set)
+		
+		text.pack(side="left", fill="both", expand=True)
+		vsb.pack(side="right", fill="y")
+
+		self.sub_frame.pack(side="top", fill="both", expand=True)
+
+	def button_click(self, sub):
+		print(sub.name)
+		sub.subjectVisualize(self.root)
 
 
 class Experiment:
 
-	def __init__(self, name, json_file, sensors, manual_eeg = False):
+	def __init__(self, name, json_file, sensors=["EyeTracker"]):
 
 		self.name = name #string
 		self.json_file = json_file #string
 		self.sensors = sensors
-		self.manual_eeg = manual_eeg
 		self.columns = self.columnsArrayInitialisation()
 		self.stimuli = self.stimuliArrayInitialisation() #dict of names of stimuli demarcated by category
 		self.subjects = self.subjectArrayInitialisation() #list of subject objects
 		self.meta_matrix_dict = (np.ndarray(len(self.subjects), dtype=str), dict())
+
+		if not os.path.isdir('./Subjects/'):
+			os.makedirs('./Subjects/')
 		
 
 	def stimuliArrayInitialisation(self):
@@ -85,7 +120,7 @@ class Experiment:
 
 			for subject_name in subject_data[k]:
 
-				subject_object = Subject(subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database, self.manual_eeg)
+				subject_object = Subject(subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database)
 
 				subject_list.append(subject_object)
 
@@ -123,26 +158,17 @@ class Experiment:
 
 
 	def visualizeData(self):
-		# plt.ion()
-		fig = plt.figure()
-		subject_names = [s.name for s in self.subjects]
-		rax = plt.axes([0, 0, 1.00, 1.00])
-		radio = RadioButtons(rax, subject_names)
-		
-		def subjFunction(label):
-			subj_dict = {s.name:s for s in self.subjects}
-			# plt.close(fig)
-			subj_dict[label].subjectVisualize()
-			# self.visualizeData()
+		"""
+		"""
 
-		radio.on_clicked(subjFunction)
-		plt.show()
-
+		root = tk.Tk()
+		viz = Visualize(root, self.subjects)
+		root.mainloop()
 
 	def analyse(self, average_flag=True, standardise_flag=False, stat_test=True):
 		
 		for sensor_type in Sensor.meta_cols:
-			for meta_col in sensor_type:
+			for meta_col in Sensor.meta_cols[sensor_type]:
 				self.meta_matrix_dict[1].update({meta_col : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object)})
 
 		for sub_index, sub in enumerate(self.subjects):
@@ -278,3 +304,4 @@ class Experiment:
 						p_value_table[meta] = column_values
 
 					p_value_table.to_csv("p_values"+ str(i) + ".csv" , index = False)
+

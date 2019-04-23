@@ -7,32 +7,91 @@ from Sensor import Sensor
 from sqlalchemy import create_engine
 import os
 import pickle
+import tkinter as tk
 from datetime import datetime
 from matplotlib.widgets import TextBox
 import matplotlib.pyplot as plt
+from functools import partial
 
-import matplotlib as mpl
-mpl.use("TkAgg")
+
+class SubjectVisualize:
+	
+	def __init__(self, master, subj_name, stimuli):
+		
+		self.root = master
+		self.v = tk.IntVar()
+		self.v.set(1)
+
+		self.subject_window = tk.Toplevel(master)
+		self.subject_window.title(subj_name)
+
+		self.stimuli = stimuli
+
+		plot_type_frame = tk.Frame(self.subject_window)
+		
+		tk.Radiobutton(plot_type_frame, text="Live Plot", padx=20, variable=self.v, value=1).pack(side="left", anchor=tk.W)
+		tk.Radiobutton(plot_type_frame, text="Fixation Plot", padx=20, variable=self.v, value=2).pack(side="right", anchor=tk.W)
+		tk.Radiobutton(plot_type_frame, text="Gaze Heat Map", padx=20, variable=self.v, value=3).pack(side="right", anchor=tk.W)
+		
+		plot_type_frame.pack(side="top")
+
+		stim_names_frame = tk.Frame(self.subject_window)
+
+		for stim_type in self.stimuli:
+			
+			live_plot_frame = tk.Frame(stim_names_frame, width=30, height=30)
+			live_plot_frame.grid_propagate(False)
+
+			text = tk.Text(live_plot_frame, width=20)
+			text.tag_configure("bold", font="Helvetica 12 bold")
+			text.insert("end", stim_type, "bold")
+			text.insert("end", "\n\n")
+			
+			for i, stim in enumerate(self.stimuli[stim_type]):
+				func = partial(self.button_click, stim)
+				bt = tk.Button(live_plot_frame, text=stim.name, width=10, command=func)
+				text.window_create(tk.END, window=bt)
+				text.insert(tk.END, "\n")
+			
+			scroll = tk.Scrollbar(live_plot_frame, orient="vertical")
+			scroll.config(command=text.yview)
+
+			text.configure(yscrollcommand=scroll.set)
+			
+			text.pack(side="left", expand=True, fill="both")
+			scroll.pack(side="right", fill="y")
+			live_plot_frame.pack(side="right", expand=True)	
+		
+		stim_names_frame.pack(side="bottom")
+
+	def button_click(self, stim):
+		if self.v.get() == 1:
+			stim.visualize()
+
+		elif self.v.get() == 2:
+			stim.gazePlot()
+		
+		elif self.v.get() == 3:
+			stim.gazeHeatMap()
+
 
 class Subject:
 
-
-	def __init__(self, name, subj_type, stimuli_names, columns, json_file, sensors, database, manual_eeg):
+	def __init__(self, name, subj_type, stimuli_names, columns, json_file, sensors, database):
 		print(name)
 		a = datetime.now()
 		self.sensors = sensors
 		self.stimuli_names = stimuli_names
 		self.name = name
 		self.subj_type = subj_type
-		self.manual_eeg = manual_eeg
-		self.stimulus = self.stimulusDictInitialisation(stimuli_names,columns,json_file,sensors, database) 
+		self.stimulus = self.stimulusDictInitialisation(stimuli_names, columns, json_file, sensors, database) 
 		self.control_data = self.getControlData(columns, json_file, sensors, database)
 		self.aggregate_meta = {}
 		b = datetime.now()
 		print("Total time for subject: ", (b-a).seconds, "\n")
 
 
-	def dataExtraction(self, columns,json_file, database):
+	def dataExtraction(self, columns, json_file, database):
 		"""
 		Extracts the required columns from the data base and returns a pandas datastructure
 
@@ -64,7 +123,6 @@ class Subject:
 		df = df.replace(to_replace=r'Unnamed:*', value=float(-1), regex=True)
 
 		b = datetime.now()
-		print(string)
 		print("Query: ", (b-a).seconds)
 		
 		return df
@@ -102,7 +160,7 @@ class Subject:
 		return start, end, roi
 
 	
-	def stimulusDictInitialisation(self, stimuli_names,columns,json_file,sensors, database):
+	def stimulusDictInitialisation(self, stimuli_names, columns, json_file, sensors, database):
 
 		"""
 		Creates  a list of objects of class Stimuli
@@ -131,10 +189,7 @@ class Subject:
 			stimulus_column = self.dataExtraction(["StimulusName"],json_file, database)
 
 
-		data = self.dataExtraction(columns,json_file, database)
-
-		if "EEG" in self.sensors and self.manual_eeg:
-			data = self.manualEEGArtefactRemovalSubject(data, json_file)
+		data = self.dataExtraction(columns, json_file, database)
 
 		stimulus_object_dict = {}
 
@@ -152,7 +207,7 @@ class Subject:
 
 				stimuli_data = data[start_time : end_time+1]
 
-				stimulus_object = Stimulus(stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file)
+				stimulus_object = Stimulus(stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file, self.name)
 
 				stimulus_object_list.append(stimulus_object)
 
@@ -215,29 +270,10 @@ class Subject:
 		return control
 
 
-	def subjectVisualize(self):
+	def subjectVisualize(self, master):
 		"""
 		"""
-		# plt.ion()
-		fig = plt.figure()
-
-		def stimFunction(text):
-			stim_t = text.split(",")[0].strip(" ")
-			stim_n = text.split(",")[1].strip(" ")
-			stim = self.stimulus[stim_t][self.stimuli_names[stim_t].index(stim_n)]
-			# plt.close(fig)
-			stim.visualize()
-			# self.subjectVisualize()
-
-		tax1 = plt.axes([0.25, 0.25, 0.50, 0.50])
-		tb1 = TextBox(tax1, "Stimulus [type,name]", initial="alpha,Alpha1")
-		
-		try:
-			tb1.on_submit(stimFunction)
-		except:
-			print("ERROR: STIMULUS NOT FOUND")
-
-		plt.show()
+		sub_viz = SubjectVisualize(master, self.name, self.stimulus)
 
 
 	def subjectAnalysis(self,average_flag,standardise_flag):
@@ -256,7 +292,7 @@ class Subject:
 					stim.findEyeMetaData()
 					for sen in self.sensors:
 						# Normalizing by subtracting control data
-						for cd in self.control_data[sen]:
+						for cd in Sensor.meta_cols[sen]:
 							if(standardise_flag):
 								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors["EyeTracker"].metadata[cd] - self.control_data[sen][cd])))
 							else:
@@ -267,71 +303,5 @@ class Subject:
 		if(average_flag):	
 			for s in self.stimulus:
 				for sen in self.sensors:
-					for cd in self.control_data[sen]:
+					for cd in Sensor.meta_cols[sen]:
 						self.aggregate_meta[s][cd] = np.array([np.mean(self.aggregate_meta[s][cd], axis=0)])
-
-
-	def manualEEGArtefactRemovalSubject(self, data, json_file):
-		"""
-		"""
-
-		if os.path.isfile("icaRejectionLog.p"):
-			with open("icaRejectionLog.p", "rb") as f:
-				ica_rejection_dict = pickle.load(f)
-		else:
-			ica_rejection_dict = dict()
-
-		eeg_rows = np.where(data.EventSource.str.contains("EEG"))[0]
-
-		with open(json_file) as f:
-			json_data = json.load(f)
-		
-		# Getting eeg preprocessing parameters from experiment json file
-		low = json_data["Analysis_Params"]["EEG"]["Low_Freq"]
-		high = json_data["Analysis_Params"]["EEG"]["High_Freq"]
-		sampling_freq = json_data["Analysis_Params"]["EEG"]["Sampling_Freq"]
-		montage = json_data["Analysis_Params"]["EEG"]["Montage"]
-		
-		eeg_cols = [*json_data["Columns_of_interest"]["EEG"]]
-		ch_names = []
-		for channel in eeg_cols:
-			ch_names.append([i for i in Sensor.eeg_montage[montage] if i.upper() in channel.upper()][0])
-
-		del(json_data)
-
-		eeg_df = data[eeg_cols]
-		eeg_data = np.transpose(eeg_df.values)
-		info = mne.create_info(ch_types=["eeg"]*len(ch_names), ch_names=ch_names, sfreq=sampling_freq, verbose=False, montage=montage)
-		raw = mne.io.RawArray(data=eeg_data[:, eeg_rows], info=info, verbose=False)
-
-		# Apply bandpass filter to eeg data
-		raw = raw.filter(l_freq=low, h_freq=high)
-
-		ica = mne.preprocessing.ICA(method='fastica', random_state=1, verbose=False)
-		ica.fit(raw, verbose=False)
-		
-		if self.name in ica_rejection_dict:
-			flag = input("Use previously rejected components? (Y/N)")
-			if flag == 'Y' or flag == 'y':
-				ica.exclude = ica_rejection_dict[self.name]
-			else:
-				ica.plot_components(inst=raw)
-		else:
-			ica.plot_components(inst=raw)
-		
-		ica_rejection_dict.update({self.name: ica.exclude})
-		with open("icaRejectionLog.p", "wb") as f:
-			pickle.dump(ica_rejection_dict, f)
-
-		raw_temp = raw.copy()
-		ica.apply(raw)
-
-		raw_temp.plot(n_channels=len(eeg_cols), duration=8, scalings='auto', show=True, title="Before ICA")
-		raw.plot(n_channels=len(eeg_cols), duration=8, scalings='auto', show=True, title="After ICA")
-		plt.show()
-
-		eeg_data[:, eeg_rows] = raw.get_data()
-		data[eeg_cols] = np.transpose(eeg_data)
-
-		return data
-		

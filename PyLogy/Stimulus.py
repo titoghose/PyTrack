@@ -1,3 +1,4 @@
+import os
 import json
 import numpy as np
 import pandas as pd
@@ -10,13 +11,13 @@ from Sensor import Sensor
 import matplotlib.cm as cm
 from scipy.ndimage.filters import gaussian_filter
 
-
 import matplotlib as mpl
 mpl.use("TkAgg")
 
+
 class Stimulus:
 
-	def __init__(self, name="id_rather_not", stim_type="doesnt_matter", sensor_names=["EyeTracker"], data=None, start_time=-1, end_time=-1, roi_time=-1, json_file=None):
+	def __init__(self, name="id_rather_not", stim_type="doesnt_matter", sensor_names=["EyeTracker"], data=None, start_time=-1, end_time=-1, roi_time=-1, json_file=None, subject_name="buttersnaps"):
 		self.name = name
 		self.stim_type = stim_type
 		self.start_time = start_time
@@ -25,6 +26,10 @@ class Stimulus:
 		self.roi_time = roi_time
 		self.json_file = json_file
 		self.sensors = dict()
+		self.subject_name = subject_name
+		
+		if not os.path.isdir('./Subjects/' + self.subject_name + '/'):
+			os.makedirs('./Subjects/' + self.subject_name + '/')
 
 		# Experiment json file exists so stimulus is being created for experiment
 		if self.json_file != None:
@@ -592,7 +597,7 @@ class Stimulus:
 				for i in range(len(MS["bin"])):
 					a2.plot(vel["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], vel["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r') 
 
-				plt.savefig("ms_gaze_vel" + self.name + "_" + str(fix_ind) + ".png")
+				plt.savefig("./Subjects/" + self.subject_name + "/ms_gaze_vel" + self.name + "_" + str(fix_ind) + ".png")
 				fig.close()
 
 
@@ -608,7 +613,7 @@ class Stimulus:
 
 						plt.scatter(amp, peak_vel, marker='o', facecolors='none', edgecolors='r')
 				
-				plt.savefig("ms_main_seq" + self.name + ".png")
+				plt.savefig("./Subjects/" + self.subject_name + "/ms_main_seq" + self.name + ".png")
 				fig2.close()
 
 		ms_count = 0
@@ -784,6 +789,9 @@ class Stimulus:
 		"""
 		"""
 		
+		if self.data == None:
+			return
+
 		fig = plt.figure()
 		
 		try:
@@ -813,34 +821,38 @@ class Stimulus:
 		fixation_gaze_y = gaze_y[fixation_mask]
 		saccade_gaze_y = gaze_y[saccade_mask]
 
+		ax.plot(self.data["InterpGaze"]["left"]["x"], self.data["InterpGaze"]["left"]["y"], 'r-')
+
 		i = 0
 		for x, y in zip(fixation_gaze_x, fixation_gaze_y):
-			ax.plot(x, y, 'r-')
 			ax.plot(np.mean(x), np.mean(y), 'go', markersize=15, alpha=0.7)
 			ax.text(np.mean(x), np.mean(y), str(i), fontsize=10, color='w')
 			i += 1
-		
-		for x, y in zip(saccade_gaze_x, saccade_gaze_y):
-			ax.plot(x, y, 'r-')
-		
+
 		if show_fig:
 			plt.show()
 		
 		if save_fig:
-			plt.savefig("gaze_plot" + self.name + ".png")
+			fig.savefig("./Subjects/" + self.subject_name + "/gaze_plot_" + self.name + ".png", dpi=300)
 
 
 	def gazeHeatMap(self, save_fig=False, show_fig=True):
 		"""
 		"""
 		
+		if self.data == None:
+			return
+
 		fig = plt.figure()
 		ax = plt.gca()
-
-		# Generate some test data
+		
 		x = self.data["InterpGaze"]["left"]["x"]
 		y = self.data["InterpGaze"]["left"]["y"]
 		
+		# In order to get more intense values for the heatmap (ratio of points is unaffected)
+		x = np.repeat(x, 5)
+		y = np.repeat(y, 5)
+
 		try:
 			img = plt.imread("Stimuli/" + self.name + ".jpg")
 		except:
@@ -848,29 +860,29 @@ class Stimulus:
 				img = plt.imread("Stimuli/" + self.name + ".jpeg")
 			except:
 				img = np.zeros((1024, 1280))
-		
-		print(img.shape)
 
 		downsample_fraction = 0.25
 		col_shape = img.shape[1]
 		row_shape = img.shape[0]
 
 		hist, _, _ = np.histogram2d(x, y, bins=[int(row_shape*downsample_fraction), int(col_shape*downsample_fraction)], range=[[0, int(row_shape)],[0, int(col_shape)]])
-		print(hist.shape)
-		hist = gaussian_filter(hist, sigma=32)
+		hist = gaussian_filter(hist, sigma=12)
 
 		mycmap = cm.GnBu
 		mycmap._init()
 		mycmap._lut[:,-1] = np.linspace(0, 0.8, 255+4)
-		
-		img = misc.imresize(img, size=downsample_fraction, interp='cubic')
+		img = misc.imresize(img, size=downsample_fraction, interp='lanczos')
 		ax.imshow(img)
 		ax.contourf(np.arange(0, int(row_shape*downsample_fraction), 1), np.arange(0, int(col_shape*downsample_fraction), 1), hist.T, cmap=mycmap)
 		ax.set_xlim(0, int(col_shape * downsample_fraction))
 		ax.set_ylim(int(row_shape * downsample_fraction), 0)
 
-		plt.show()
-		plt.close(fig)
+		if show_fig:
+			plt.show()
+			plt.close(fig)
+
+		if save_fig:
+			fig.savefig("./Subjects/" + self.subject_name + "/gaze_heatmap_" + self.name + ".png", dpi=300)
 
 
 	def visualize(self):
@@ -882,22 +894,16 @@ class Stimulus:
 		Output:
 			NA
 		"""
-		
-		# plt.ion()
-
-		if len(self.sensors) == 0:
+		if self.data == None:
 			return
 
 		total_range = None
-		viz_eeg = None
-		eeg_lines = None
-		eeg_channels = None
+		
 		# Initialising Plots
 		fig = plt.figure()
 		fig.canvas.set_window_title(self.name)
-		ax = fig.add_subplot(3, 1, 1)
-		ax2 = fig.add_subplot(3, 1, 2)
-		ax3 = fig.add_subplot(3, 1, 3)
+		ax = fig.add_subplot(2, 1, 1)
+		ax2 = fig.add_subplot(2, 1, 2)
 	
 		try:
 			img = plt.imread("Stimuli/" + self.name + ".jpg")
@@ -917,12 +923,12 @@ class Stimulus:
 			ax.set_title("Gaze")
 		
 			# Plot for pupil size
-			line3, = ax3.plot(total_range[:1], self.data["InterpPupilSize"][:1])
-			ax3.set_xlim([0, len(total_range)])
-			ax3.set_ylim([-2, 11])
-			ax3.set_title("Pupil Size vs. Time")
-			ax3.set_xlabel("Time (ms)")
-			ax3.set_ylabel("Pupil Size")
+			line3, = ax2.plot(total_range[:1], self.data["InterpPupilSize"][:1])
+			ax2.set_xlim([0, len(total_range)])
+			ax2.set_ylim([-2, 11])
+			ax2.set_title("Pupil Size vs. Time")
+			ax2.set_xlabel("Time (ms)")
+			ax2.set_ylabel("Pupil Size")
 
 			for i in range(len(self.data["BlinksLeft"]["blink_onset"])):
 				plt.axvline(x=self.data["BlinksLeft"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
@@ -931,42 +937,10 @@ class Stimulus:
 				plt.axvline(x=self.data["BlinksLeft"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
 				plt.axvline(x=self.data["BlinksLeft"]["blink_offset"][i], linestyle="--", color="g", alpha=0.6)
 
-		if self.data["EEG"] != None:
-			# Plot for eeg (Pz)
-			viz_eeg = self.data["EEG"].copy()
-			eeg_channels = [i for i in viz_eeg]
-
-			if total_range != None:
-				for channel in viz_eeg:
-					(viz_eeg[channel], eeg_time) = signal.resample(viz_eeg[channel], len(total_range), t=sorted(self.data["EEGRows"]))
-			else:
-				total_range = range(len(self.data["EEGRows"]))
-			
-			eeg_lines = []
-			for ind, channel in enumerate(viz_eeg):
-				eeg_lines_temp, = ax2.plot(total_range[:1], viz_eeg[channel][:1], alpha=0.7)
-				eeg_lines.append(eeg_lines_temp)
-				eeg_lines[ind].set_visible(False)
-			eeg_lines[0].set_visible(True)
-			
-			ax2.set_xlim([0, len(total_range)])
-			ax2.set_title("Usampled EEG : [256Hz to 1000Hz] vs. Time")
-			ax2.set_xlabel("Time (ms)")
-			ax2.set_ylabel("EEG")
-
 		axamp = plt.axes([0.25, .03, 0.50, 0.02])
 		samp = Slider(axamp, 'Time', 1, total_range[-1], valinit=0, valstep=1)
 
-		if self.data["EEG"] != None:
-			rax = plt.axes([0.05, 0.7, 0.2, 0.25])
-			eeg_visible = np.zeros(len(eeg_channels), dtype=bool)
-			eeg_visible[0] = True
-			check = CheckButtons(rax, eeg_channels, eeg_visible)
-
 		is_manual = False
-
-		def eeg_check(label):
-			eeg_lines[eeg_channels.index(label)].set_visible(not eeg_lines[eeg_channels.index(label)].get_visible())
 
 		def update_slider(val):
 			nonlocal is_manual
@@ -975,7 +949,7 @@ class Stimulus:
 			update(val)
 
 		def update(i):
-			i = int(i + 1)
+			i = int(i)
 			
 			if self.data["InterpGaze"] != None:
 				line.set_xdata(self.data["InterpGaze"]["left"]["x"][:i])
@@ -986,48 +960,22 @@ class Stimulus:
 				
 				line3.set_xdata(total_range[:i])
 				line3.set_ydata(self.data["InterpPupilSize"][:i])
-				ax3.set_ylim([min(self.data["InterpPupilSize"][:i]) - 5, max(self.data["InterpPupilSize"][:i]) + 5])      
-
-			if self.data["EEG"] != None:
-				for ind, channel in enumerate(viz_eeg):
-					eeg_lines[ind].set_xdata(total_range[:i])
-					eeg_lines[ind].set_ydata(viz_eeg[channel][:i])
-					ax2.set_ylim([min(viz_eeg[channel][:i]) - 10, max(viz_eeg[channel][:i]) + 10])
+				ax2.set_ylim([min(self.data["InterpPupilSize"][:i]) - 5, max(self.data["InterpPupilSize"][:i]) + 5])      
 		
 			fig.canvas.draw_idle()
 
 		def update_plot(i):
 			nonlocal is_manual
 			if is_manual:
-				if self.data["EEG"] != None and self.data["InterpGaze"] != None:
-					plots = [i for i in eeg_lines]
-					plots.append(line)
-					plots.append(line3)
-					plots.append(circle)
-					return plots
-				elif self.data["EEG"] == None and self.data["InterpGaze"] != None:
-					return [line, circle, line3]
-				elif self.data["EEG"] != None and self.data["InterpGaze"] == None:
-					return eeg_lines
-				else:
-					return
+				return [line, circle, line3]
 
 			i = int(samp.val + 1) % total_range[-1]
 			samp.set_val(i)
 			is_manual = False # the above line called update_slider, so we need to reset this
 			fig.canvas.draw_idle()
-			if self.data["EEG"] != None and self.data["InterpGaze"] != None:
-				plots = [i for i in eeg_lines]
-				plots.append(line)
-				plots.append(line3)
-				plots.append(circle)
-				return plots
-			elif self.data["EEG"] == None and self.data["InterpGaze"] != None:
-				return [line, circle, line3]
-			elif self.data["EEG"] != None and self.data["InterpGaze"] == None:
-				return eeg_lines
-			else:
-				return
+			
+			return [line, circle, line3]
+			
 
 		def on_click(event):
 			nonlocal is_manual
@@ -1042,10 +990,6 @@ class Stimulus:
 
 		# call update function on slider value change
 		samp.on_changed(update_slider)
-		
-		if self.data["EEG"] != None:
-			check.on_clicked(eeg_check)
-
 		fig.canvas.mpl_connect('button_press_event', on_click)
 
 		ani = animation.FuncAnimation(fig, update_plot, interval=1)
@@ -1125,9 +1069,7 @@ class Stimulus:
 							"InterpPupilSize" : None,
 							"InterpGaze" : None,
 							"BlinksLeft" : None,
-							"BlinksRight" : None,
-							"EEG" : None,
-							"EEGRows" : None}
+							"BlinksRight" : None}
 
 		for col_class in sensor_names:
 			if col_class == "EyeTracker":
@@ -1173,28 +1115,6 @@ class Stimulus:
 				extracted_data["BlinksLeft"] = blinks_l
 				extracted_data["BlinksRight"] = blinks_r
 
-			if col_class == "EEG":
-				eeg_dict = {}
-				montage = contents["Analysis_Params"]["EEG"]["Montage"]
-				eeg_sfreq = contents["Analysis_Params"]["EEG"]["Sampling_Freq"]
-
-				self.sensors.update({col_class : Sensor(col_class, et_sfreq)})
-
-				for channel in contents["Columns_of_interest"][col_class]:
-					eeg_df = np.array(data[channel])
-					eeg_rows = np.where(data.EventSource.str.contains("Raw EEG Epoc"))[0]
-					
-					if len(eeg_rows) != 0:
-						eeg = np.squeeze(np.array([eeg_df[i] for i in sorted(eeg_rows)], dtype="float32"))
-					else:
-						eeg = []
-
-					channel_name = [i for i in Sensor.eeg_montage[montage] if i.upper() in channel.upper()][0]
-					eeg_dict.update({channel_name:eeg})
-
-				extracted_data["EEG"] = eeg_dict
-				extracted_data["EEGRows"] = eeg_rows
-
 		return extracted_data
 
 
@@ -1209,9 +1129,7 @@ class Stimulus:
 							"InterpPupilSize" : None,
 							"InterpGaze" : None,
 							"BlinksLeft" : None,
-							"BlinksRight" : None,
-							"EEG" : None,
-							"EEGRows" : None}
+							"BlinksRight" : None}
 
 		for sen in sensor_names:
 			if sen == "EyeTracker":
@@ -1256,27 +1174,5 @@ class Stimulus:
 				extracted_data["InterpGaze"] = new_gaze_l
 				extracted_data["BlinksLeft"] = blinks_l
 				extracted_data["BlinksRight"] = blinks_r
-
-			if sen == "EEG":
-				eeg_dict = {}
-				montage = sensor_names[sen]["Montage"]
-				eeg_sfreq = sensor_names[sen]["Sampling_Freq"]
-
-				self.sensors.update({sen : Sensor(sen, et_sfreq)})
-
-				for channel in sen["Channels"]:
-					eeg_df = np.array(data[channel])
-					eeg_rows = np.where(data.EventSource.str.contains("EEG"))[0]
-					
-					if len(eeg_rows) != 0:
-						eeg = np.squeeze(np.array([eeg_df[i] for i in sorted(eeg_rows)], dtype="float32"))
-					else:
-						eeg = []
-
-					channel_name = [i for i in Sensor.eeg_montage[montage] if i.upper() in channel.upper()][0]
-					eeg_dict.update({channel_name:eeg})
-
-				extracted_data["EEG"] = (eeg_dict, sen["EOG"])
-				extracted_data["EEGRows"] = eeg_rows
 
 		return extracted_data
