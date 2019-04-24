@@ -793,7 +793,8 @@ class Stimulus:
 			return
 
 		fig = plt.figure()
-		
+		fig.canvas.set_window_title("Gaze Plot: " + self.name)
+
 		try:
 			img = plt.imread("Stimuli/" + self.name + ".jpg")
 		except:
@@ -844,6 +845,8 @@ class Stimulus:
 			return
 
 		fig = plt.figure()
+		fig.canvas.set_window_title("Gaze Heat Map: " + self.name)
+		
 		ax = plt.gca()
 		
 		x = self.data["InterpGaze"]["left"]["x"]
@@ -1176,3 +1179,52 @@ class Stimulus:
 				extracted_data["BlinksRight"] = blinks_r
 
 		return extracted_data
+
+
+def groupHeatMap(sub_list, stim_name):
+	"""
+	"""
+	fig = plt.figure()
+	fig.canvas.set_window_title("Aggregate Gaze Heat Map")
+	
+	ax = plt.gca()
+	
+	x = []
+	y = []
+	stim_type, stim_num = stim_name.popitem()
+
+	for sub in sub_list:
+		if sub.stimulus[stim_type][stim_num].data != None:
+			x = np.concatenate((x, sub.stimulus[stim_type][stim_num].data["InterpGaze"]["left"]["x"]))
+			y = np.concatenate((y, sub.stimulus[stim_type][stim_num].data["InterpGaze"]["left"]["y"]))
+	
+	# In order to get more intense values for the heatmap (ratio of points is unaffected)
+	x = np.repeat(x, 5)
+	y = np.repeat(y, 5)
+
+	try:
+		img = plt.imread("Stimuli/" + sub_list[0].stimulus[stim_type][stim_num].name + ".jpg")
+	except:
+		try:
+			img = plt.imread("Stimuli/" + sub_list[0].stimulus[stim_type][stim_num].name + ".jpeg")
+		except:
+			img = np.zeros((1024, 1280))
+
+	downsample_fraction = 0.25
+	col_shape = img.shape[1]
+	row_shape = img.shape[0]
+
+	hist, _, _ = np.histogram2d(x, y, bins=[int(row_shape*downsample_fraction), int(col_shape*downsample_fraction)], range=[[0, int(row_shape)],[0, int(col_shape)]])
+	hist = gaussian_filter(hist, sigma=12)
+
+	mycmap = cm.GnBu
+	mycmap._init()
+	mycmap._lut[:,-1] = np.linspace(0, 0.8, 255+4)
+	img = misc.imresize(img, size=downsample_fraction, interp='lanczos')
+	ax.imshow(img)
+	ax.contourf(np.arange(0, int(row_shape*downsample_fraction), 1), np.arange(0, int(col_shape*downsample_fraction), 1), hist.T, cmap=mycmap)
+	ax.set_xlim(0, int(col_shape * downsample_fraction))
+	ax.set_ylim(int(row_shape * downsample_fraction), 0)
+
+	plt.show()
+	plt.close(fig)

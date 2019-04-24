@@ -4,6 +4,7 @@ from Sensor import Sensor
 from Subject import Subject
 import numpy as np
 import os
+import time
 import csv
 from datetime import datetime
 from scipy import stats
@@ -20,35 +21,86 @@ from functools import partial
 
 class Visualize:
 	
-	def __init__(self, master, subjects):
+	def __init__(self, master, subjects, exp):
+		self.exp = exp
 		master.title("PyTrack Visualization")
 		self.root = master
-		self.sub_frame = tk.Frame(master, height=30, width=70)
-		self.sub_frame.grid_propagate(False)
-	
+		self.v = tk.IntVar()
+		# self.v.set(1)
 		self.subjects = subjects
+
+		self.master_frame = tk.Frame(self.root, height=30, width=70)
+		self.sub_frame = tk.Frame(self.master_frame, height=30, width=70)
+		self.sub_frame.grid_propagate(False)
+		self.text = tk.Text(self.sub_frame, width=50)
 		
-		text = tk.Text(self.sub_frame, width=50)
+		self.submit_frame = tk.Frame(self.root, width=70)
+		func = partial(self.button_click)
+		self.submit_btn = tk.Button(self.submit_frame, text="Visualize", command=func)
+		self.submit_btn.pack()
+
+		viz_type_frame = tk.Frame(self.root, width=70)
+		tk.Radiobutton(viz_type_frame, text="Group Visualization", padx=20, variable=self.v, value=1, command=self.subFrameSetup).pack(side="left", anchor=tk.W)
+		tk.Radiobutton(viz_type_frame, text="Individual Visualization", padx=20, variable=self.v, value=2, command=self.subFrameSetup).pack(side="right", anchor=tk.W)
+		viz_type_frame.pack(side="top", fill="both", expand=True)
 		
-		for i, sub in enumerate(self.subjects):
-			func = partial(self.button_click, sub)
-			bt = tk.Button(self.sub_frame, width=30, text=sub.name, command=func)
-			text.window_create(tk.END, window=bt)
-			text.insert(tk.END, "\n")	
+		self.master_frame.pack()
+		# self.subFrameSetup()
+
+	def subFrameSetup(self):
+		
+		self.sub_frame.destroy()
+		self.submit_frame.pack_forget()
+
+		if self.v.get() == 1:
+			
+			self.sub_frame = tk.Frame(self.master_frame, height=30, width=70)
+			self.sub_frame.grid_propagate(False)
+			self.text = tk.Text(self.sub_frame, width=50)
+
+			self.chk_bt_var = [tk.IntVar() for i in range(len(self.subjects))]
+
+			for i, sub in enumerate(self.subjects):
+				func = partial(self.button_click, sub)
+				chk_bt = tk.Checkbutton(self.sub_frame, text=sub.name, variable=self.chk_bt_var[i], onvalue=1, offvalue=0)
+				self.text.window_create(tk.END, window=chk_bt)
+				self.text.insert(tk.END, "\n")	
+			
+			self.submit_frame.pack(side="bottom", fill="both", expand=True)
+
+		else:
+			
+			self.sub_frame = tk.Frame(self.master_frame, height=30, width=70)
+			self.sub_frame.grid_propagate(False)
+			self.text = tk.Text(self.sub_frame, width=50)
+
+			for i, sub in enumerate(self.subjects):
+				func = partial(self.button_click, sub)
+				bt = tk.Button(self.sub_frame, width=30, text=sub.name, command=func)
+				self.text.window_create(tk.END, window=bt)
+				self.text.insert(tk.END, "\n")	
 
 		vsb = tk.Scrollbar(self.sub_frame, orient="vertical")
-		vsb.config(command=text.yview)
+		vsb.config(command=self.text.yview)
 		
-		text.configure(yscrollcommand=vsb.set)
+		self.text.configure(yscrollcommand=vsb.set)
 		
-		text.pack(side="left", fill="both", expand=True)
+		self.text.pack(side="left", fill="both", expand=True)
 		vsb.pack(side="right", fill="y")
 
-		self.sub_frame.pack(side="top", fill="both", expand=True)
+		self.sub_frame.pack(side="bottom", fill="both", expand=True)
 
-	def button_click(self, sub):
-		print(sub.name)
-		sub.subjectVisualize(self.root)
+	def button_click(self, sub=None):
+		if sub == None:
+			sub_list = []
+			for ind, i in enumerate(self.chk_bt_var):
+				if i.get() == 1:
+					sub_list.append(self.subjects[ind])
+			
+			sub_list[0].subjectVisualize(self.root, viz_type="group", sub_list=sub_list)
+
+		else:
+			sub.subjectVisualize(self.root)
 
 
 class Experiment:
@@ -162,9 +214,11 @@ class Experiment:
 		"""
 
 		root = tk.Tk()
-		viz = Visualize(root, self.subjects)
+		root.resizable(False, False)
+		viz = Visualize(root, self.subjects, self)
 		root.mainloop()
 
+	
 	def analyse(self, average_flag=True, standardise_flag=False, stat_test=True):
 		
 		for sensor_type in Sensor.meta_cols:

@@ -2,7 +2,7 @@ import mne
 import json
 import pandas as pd
 import numpy as np
-from Stimulus import Stimulus
+from Stimulus import *
 from Sensor import Sensor
 from sqlalchemy import create_engine
 import os
@@ -16,22 +16,29 @@ from functools import partial
 
 class SubjectVisualize:
 	
-	def __init__(self, master, subj_name, stimuli):
+	def __init__(self, master, subj_name, stimuli, viz_type="individual", sub_list=None):
 		
+		self.sub_list = sub_list
+		self.viz_type = viz_type
+
 		self.root = master
 		self.v = tk.IntVar()
-		self.v.set(1)
+		self.v.set(3)
 
 		self.subject_window = tk.Toplevel(master)
 		self.subject_window.title(subj_name)
+
+		self.subject_window.resizable(False, False)
 
 		self.stimuli = stimuli
 
 		plot_type_frame = tk.Frame(self.subject_window)
 		
-		tk.Radiobutton(plot_type_frame, text="Live Plot", padx=20, variable=self.v, value=1).pack(side="left", anchor=tk.W)
-		tk.Radiobutton(plot_type_frame, text="Fixation Plot", padx=20, variable=self.v, value=2).pack(side="right", anchor=tk.W)
-		tk.Radiobutton(plot_type_frame, text="Gaze Heat Map", padx=20, variable=self.v, value=3).pack(side="right", anchor=tk.W)
+		tk.Radiobutton(plot_type_frame, text="Gaze Heat Map", padx=20, variable=self.v, value=3).pack(side="left", anchor=tk.W)
+		
+		if viz_type == "individual":
+			tk.Radiobutton(plot_type_frame, text="Live Plot", padx=20, variable=self.v, value=1).pack(side="right", anchor=tk.W)
+			tk.Radiobutton(plot_type_frame, text="Fixation Plot", padx=20, variable=self.v, value=2).pack(side="right", anchor=tk.W)
 		
 		plot_type_frame.pack(side="top")
 
@@ -48,7 +55,7 @@ class SubjectVisualize:
 			text.insert("end", "\n\n")
 			
 			for i, stim in enumerate(self.stimuli[stim_type]):
-				func = partial(self.button_click, stim)
+				func = partial(self.button_click, stim, i)
 				bt = tk.Button(live_plot_frame, text=stim.name, width=10, command=func)
 				text.window_create(tk.END, window=bt)
 				text.insert(tk.END, "\n")
@@ -64,7 +71,7 @@ class SubjectVisualize:
 		
 		stim_names_frame.pack(side="bottom")
 
-	def button_click(self, stim):
+	def button_click(self, stim, stim_num=-1):
 		if self.v.get() == 1:
 			stim.visualize()
 
@@ -72,7 +79,13 @@ class SubjectVisualize:
 			stim.gazePlot()
 		
 		elif self.v.get() == 3:
-			stim.gazeHeatMap()
+			if self.viz_type == "group":
+				stim_name = {stim.stim_type : stim_num}
+				# self.subject_window.destroy()
+				groupHeatMap(self.sub_list, stim_name)
+
+			else:
+				stim.gazeHeatMap()
 
 
 class Subject:
@@ -270,10 +283,10 @@ class Subject:
 		return control
 
 
-	def subjectVisualize(self, master):
+	def subjectVisualize(self, master, viz_type="individual", sub_list=None):
 		"""
 		"""
-		sub_viz = SubjectVisualize(master, self.name, self.stimulus)
+		sub_viz = SubjectVisualize(master, self.name, self.stimulus, viz_type=viz_type, sub_list=sub_list)
 
 
 	def subjectAnalysis(self,average_flag,standardise_flag):
