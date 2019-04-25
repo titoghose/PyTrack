@@ -24,9 +24,11 @@
 .Trashes
 test.py
 .icaRejectionLog.p
-Results/
-Subjects/
-Stimuli/
-control_values/
-question_indices/
-__pycache__/
+.vscode
+docs/
+PyTrack/Results/
+PyTrack/Subjects/
+PyTrack/Stimuli/
+PyTrack/control_values/
+PyTrack/question_indices/
+PyTrack/__pycache__/
