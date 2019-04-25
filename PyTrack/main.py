@@ -1,10 +1,13 @@
+from formatBridge import generateCompatibleFormat
 from Experiment import Experiment
 from datetime import datetime
 
 print("Start")
 a = datetime.now()
 
-exp = Experiment("Exp1", "trial_data.json")
+# generateCompatibleFormat("test_formats.json", data_path="/home/upamanyu/Documents/NTU_Creton/Paul/Data/EyeTracker")
+
+exp = Experiment("test_formats.json")
 
 # exp.analyse(standardise_flag = False, average_flag = False, stat_test=False)
 # print(exp.subjects[0].aggregate_meta)

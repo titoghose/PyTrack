@@ -2,7 +2,7 @@ import mne
 import json
 import pandas as pd
 import numpy as np
-from Stimulus import *
+from Stimulus import Stimulus, groupHeatMap
 from Sensor import Sensor
 from sqlalchemy import create_engine
 import os
@@ -16,8 +16,8 @@ from functools import partial
 
 class SubjectVisualize:
 	
-	def __init__(self, master, subj_name, stimuli, viz_type="individual", sub_list=None):
-		
+	def __init__(self, master, subj_name, stimuli, json_file=None, viz_type="individual", sub_list=None):
+		self.json_file = json_file
 		self.sub_list = sub_list
 		self.viz_type = viz_type
 
@@ -82,7 +82,7 @@ class SubjectVisualize:
 			if self.viz_type == "group":
 				stim_name = {stim.stim_type : stim_num}
 				# self.subject_window.destroy()
-				groupHeatMap(self.sub_list, stim_name)
+				groupHeatMap(self.sub_list, stim_name, self.json_file)
 
 			else:
 				stim.gazeHeatMap()
@@ -97,6 +97,7 @@ class Subject:
 		self.stimuli_names = stimuli_names
 		self.name = name
 		self.subj_type = subj_type
+		self.json_file = json_file
 		self.stimulus = self.stimulusDictInitialisation(stimuli_names, columns, json_file, sensors, database) 
 		self.control_data = self.getControlData(columns, json_file, sensors, database)
 		self.aggregate_meta = {}
@@ -286,7 +287,7 @@ class Subject:
 	def subjectVisualize(self, master, viz_type="individual", sub_list=None):
 		"""
 		"""
-		sub_viz = SubjectVisualize(master, self.name, self.stimulus, viz_type=viz_type, sub_list=sub_list)
+		sub_viz = SubjectVisualize(master, self.name, self.stimulus, json_file=self.json_file, viz_type=viz_type, sub_list=sub_list)
 
 
 	def subjectAnalysis(self,average_flag,standardise_flag):

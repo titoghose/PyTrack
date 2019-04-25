@@ -105,9 +105,12 @@ class Visualize:
 
 class Experiment:
 
-	def __init__(self, name, json_file, sensors=["EyeTracker"]):
+	def __init__(self, json_file, sensors=["EyeTracker"]):
 
-		self.name = name #string
+		with open(json_file, "r") as json_f:
+			json_data = json.load(json_f)
+
+		self.name = json_data["Experiment_name"]
 		self.json_file = json_file #string
 		self.sensors = sensors
 		self.columns = self.columnsArrayInitialisation()
@@ -164,8 +167,8 @@ class Experiment:
 
 		subject_data = json_data["Subjects"]
 
-		name_of_database = json_data["Database_name"]
-		extended_name = "sqlite:///" + name_of_database
+		name_of_database = json_data["Experiment_name"]
+		extended_name = "sqlite:///" + name_of_database + ".db"
 		database = create_engine(extended_name)
 
 		for k in subject_data:

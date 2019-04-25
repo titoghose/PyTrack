@@ -109,7 +109,7 @@ class Stimulus:
 		
 		blink_onset = sorted(blink_onset)
 		blink_offset = sorted(blink_offset)
-		
+
 		length_blinks = len(blink_offset) + len(blink_onset)
 		
 		if (length_blinks == 0):
@@ -801,7 +801,11 @@ class Stimulus:
 			try:
 				img = plt.imread("Stimuli/" + self.name + ".jpeg")
 			except:
-				img = np.zeros((1024, 1280))
+				with open(self.json_file) as json_f:
+					json_data = json.load(json_f)
+				width = json_data["Analysis_Params"]["EyeTracker"]["Display_width"]
+				height = json_data["Analysis_Params"]["EyeTracker"]["Display_height"]
+				img = np.zeros((height, width))
 		
 		ax = plt.gca()
 		ax.imshow(img)
@@ -862,7 +866,11 @@ class Stimulus:
 			try:
 				img = plt.imread("Stimuli/" + self.name + ".jpeg")
 			except:
-				img = np.zeros((1024, 1280))
+				with open(self.json_file) as json_f:
+					json_data = json.load(json_f)
+				width = json_data["Analysis_Params"]["EyeTracker"]["Display_width"]
+				height = json_data["Analysis_Params"]["EyeTracker"]["Display_height"]
+				img = np.zeros((height, width))
 
 		downsample_fraction = 0.25
 		col_shape = img.shape[1]
@@ -914,7 +922,11 @@ class Stimulus:
 			try:
 				img = plt.imread("Stimuli/" + self.name + ".jpeg")
 			except:
-				img = np.zeros((1024, 1280))
+				with open(self.json_file) as json_f:
+					json_data = json.load(json_f)
+				width = json_data["Analysis_Params"]["EyeTracker"]["Display_width"]
+				height = json_data["Analysis_Params"]["EyeTracker"]["Display_height"]
+				img = np.zeros((height, width))
 				
 		ax.imshow(img)
 
@@ -1181,7 +1193,7 @@ class Stimulus:
 		return extracted_data
 
 
-def groupHeatMap(sub_list, stim_name):
+def groupHeatMap(sub_list, stim_name, json_file):
 	"""
 	"""
 	fig = plt.figure()
@@ -1193,10 +1205,17 @@ def groupHeatMap(sub_list, stim_name):
 	y = []
 	stim_type, stim_num = stim_name.popitem()
 
+	cnt = 0
 	for sub in sub_list:
 		if sub.stimulus[stim_type][stim_num].data != None:
 			x = np.concatenate((x, sub.stimulus[stim_type][stim_num].data["InterpGaze"]["left"]["x"]))
 			y = np.concatenate((y, sub.stimulus[stim_type][stim_num].data["InterpGaze"]["left"]["y"]))
+		else:
+			cnt += 1
+
+	if cnt == len(sub_list):
+		plt.close(fig)
+		return		
 	
 	# In order to get more intense values for the heatmap (ratio of points is unaffected)
 	x = np.repeat(x, 5)
@@ -1208,7 +1227,11 @@ def groupHeatMap(sub_list, stim_name):
 		try:
 			img = plt.imread("Stimuli/" + sub_list[0].stimulus[stim_type][stim_num].name + ".jpeg")
 		except:
-			img = np.zeros((1024, 1280))
+			with open(json_file) as json_f:
+				json_data = json.load(json_f)
+			width = json_data["Analysis_Params"]["EyeTracker"]["Display_width"]
+			height = json_data["Analysis_Params"]["EyeTracker"]["Display_height"]
+			img = np.zeros((height, width))
 
 	downsample_fraction = 0.25
 	col_shape = img.shape[1]

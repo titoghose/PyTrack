@@ -1,0 +1,98 @@
+{
+    "Name": "Corpus description",
+    "Experiment_name": "test_exp",
+    "Columns_of_interest": {
+        "EyeTracker": [
+            "GazeLeftx",
+            "GazeLefty",
+            "GazeRightx",
+            "GazeRighty",
+            "PupilLeft",
+            "PupilRight",
+            "FixationSeq"
+        ],
+        "Extra": [
+            "EventSource"
+        ]
+    },
+    "Analysis_Params": {
+        "EyeTracker": {
+            "Sampling_Freq": 1000,
+            "Display_width": 1920,
+            "Display_height": 1200
+        }
+    },
+    "Subjects": {
+        "Group1": [
+            "TrigTria"
+        ]
+    },
+    "Stimuli": {
+        "Type1": [
+            "stimulus_0",
+            "stimulus_1",
+            "stimulus_10",
+            "stimulus_11",
+            "stimulus_12",
+            "stimulus_13",
+            "stimulus_14",
+            "stimulus_15",
+            "stimulus_16",
+            "stimulus_17",
+            "stimulus_18",
+            "stimulus_19",
+            "stimulus_2",
+            "stimulus_20",
+            "stimulus_21",
+            "stimulus_22",
+            "stimulus_23",
+            "stimulus_24",
+            "stimulus_25",
+            "stimulus_26",
+            "stimulus_27",
+            "stimulus_28",
+            "stimulus_29",
+            "stimulus_3",
+            "stimulus_30",
+            "stimulus_31",
+            "stimulus_32",
+            "stimulus_33",
+            "stimulus_34",
+            "stimulus_35",
+            "stimulus_36",
+            "stimulus_37",
+            "stimulus_38",
+            "stimulus_39",
+            "stimulus_4",
+            "stimulus_40",
+            "stimulus_41",
+            "stimulus_42",
+            "stimulus_43",
+            "stimulus_44",
+            "stimulus_45",
+            "stimulus_46",
+            "stimulus_47",
+            "stimulus_48",
+            "stimulus_49",
+            "stimulus_5",
+            "stimulus_50",
+            "stimulus_51",
+            "stimulus_52",
+            "stimulus_53",
+            "stimulus_54",
+            "stimulus_55",
+            "stimulus_56",
+            "stimulus_57",
+            "stimulus_58",
+            "stimulus_59",
+            "stimulus_6",
+            "stimulus_60",
+            "stimulus_61",
+            "stimulus_62",
+            "stimulus_63",
+            "stimulus_7",
+            "stimulus_8",
+            "stimulus_9"
+        ]
+    }
+}

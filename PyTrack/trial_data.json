@@ -1,6 +1,6 @@
 {
    "Name":"Corpus description",
-   "Database_name":"lie_detection_database.db",
+   "Experiment_name":"lie_detection_database",
    "Author Details":{
       "Name":"Arvind A S",
       "Date":"21/01/2018",

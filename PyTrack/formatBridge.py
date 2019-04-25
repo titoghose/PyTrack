@@ -1,27 +1,29 @@
-import subprocess
 from pygazeanalyser.edfreader import read_edf
 # from pygazeanalyser.idfreader import read_idf
-import pickle
+from sqlalchemy import create_engine
+from datetime import datetime
 import scipy.io as sio
 import pandas as pd
 import numpy as np
+import subprocess
+import pickle
 import json
 import sys
-import mne
+import os
 
 col_headers = ['Timestamp', 'StimulusName', 'EventSource', 'GazeLeftx', 'GazeRightx', 'GazeLefty', 'GazeRighty', 'PupilLeft', 'PupilRight', 'FixationSeq', 'SaccadeSeq', 'Blink']
 
-def eyeLinkToBase(filename, sensor_info):
+def eyeLinkToBase(filename, stim_list=None, event_start='START'):
     """
-    Bridge function that converts ASCII (asc) EyeLink eye tracking data files to the base CSV format that the framework uses.
+    Bridge function that converts ASCII (asc) EyeLink eye tracking data files to the base CSV format that the framework uses. This function assumes that the file recorded on the Eye Link device marks th onset of events with the keyword START. 
 
     Parameters
     ----------
     filename : str 
         Full file name (with path) of the data file
     
-    sensor_info : str | dict
-        If str, it is the name of the json file containing experiment details. If dict, contains the details of the sensor parameters as a dictionary of values (see documentation for details on needed parameters).
+    event_start : str
+        Marker for start of event in the .asc file. Default value is 'START'.
 
     Returns
     -------
@@ -30,7 +32,9 @@ def eyeLinkToBase(filename, sensor_info):
     """
     global col_headers
 
-    data = read_edf(filename, 'START', missing=-1.0)
+    print("Converting EyeLink ASC file to Pandas CSV: ", filename.split("/")[-1])
+
+    data = read_edf(filename, event_start, missing=-1)
     df = pd.DataFrame(columns=col_headers)
 
     i = 0
@@ -38,14 +42,21 @@ def eyeLinkToBase(filename, sensor_info):
         temp_dict = dict.fromkeys(col_headers)
 
         temp_dict['Timestamp'] = d['trackertime']
-        temp_dict['StimulusName'] = ['stimulus_' + str(i)] * len(temp_dict['Timestamp'])
+
+        if stim_list == None:
+            temp_dict['StimulusName'] = ['stimulus_' + str(i)] * len(temp_dict['Timestamp'])
+        else:
+            temp_dict['StimulusName'] = [stim_list[i]] * len(temp_dict['Timestamp'])
+
         temp_dict['EventSource'] = ['ET'] * len(temp_dict['Timestamp'])
         temp_dict['GazeLeftx'] = d['x']
         temp_dict['GazeRightx'] = d['x']
         temp_dict['GazeLefty'] = d['y']
         temp_dict['GazeRighty'] = d['y']
         temp_dict['PupilLeft'] = d['size']
+        temp_dict['PupilLeft'][np.where(temp_dict['PupilLeft'] == 0)[0]] = -1
         temp_dict['PupilRight'] = d['size']
+        temp_dict['PupilRight'][np.where(temp_dict['PupilRight'] == 0)[0]] = -1
         temp_dict['FixationSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['SaccadeSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['Blink'] = np.ones(len(temp_dict['Timestamp'])) * -1
@@ -76,11 +87,10 @@ def eyeLinkToBase(filename, sensor_info):
         
         i += 1
 
-    df.to_csv(filename.split('.')[0] + '.csv')
     return df
 
 
-def smiToBase(filename, sensor_info):
+def smiToBase(filename, stim_list=None):
     """
     Bridge function that converts SMI (idf) raw eye tracking data files to the base CSV format that the framework uses.
 
@@ -88,9 +98,7 @@ def smiToBase(filename, sensor_info):
     ----------
     filename : str 
         Full file name (with path) of the data file
-    
-    sensor_info : str | dict
-        If str, it is the name of the json file containing experiment details. If dict, contains the details of the sensor parameters as a dictionary of values (see documentation for details on needed parameters).
+
 
     Returns
     -------
@@ -100,6 +108,8 @@ def smiToBase(filename, sensor_info):
     
     # global col_headers
     
+    # print("Converting SMI IDF file to Pandas CSV: ", filename.split("/")[-1])
+
     # data = read_idf(filename, 'START', missing=-1.0)
     # df = pd.DataFrame(columns=col_headers)
 
@@ -108,7 +118,12 @@ def smiToBase(filename, sensor_info):
     #     temp_dict = dict.fromkeys(col_headers)
 
     #     temp_dict['Timestamp'] = d['trackertime']
-    #     temp_dict['StimulusName'] = ['stimulus_' + str(i)] * len(temp_dict['Timestamp'])
+        
+    #     if stim_list == None:
+    #         temp_dict['StimulusName'] = ['stimulus_' + str(i)] * len(temp_dict['Timestamp'])
+    #     else:
+    #         temp_dict['StimulusName'] = [stim_list[i]] * len(temp_dict['Timestamp'])
+        
     #     temp_dict['EventSource'] = ['ET'] * len(temp_dict['Timestamp'])
     #     temp_dict['GazeLeftx'] = d['x']
     #     temp_dict['GazeRightx'] = d['x']
@@ -150,180 +165,28 @@ def smiToBase(filename, sensor_info):
     return
 
 
-def csvToBaseET(filename, sensor_info):
+def csvToBaseET(filename, stim_list=None):
     """
-    """
-    return
-
-
-def csvToBaseEEG(filename, sensor_info, ch_names, stimulus_channel):
-    """
-    """
-
-    if type(sensor_info) is str:
-        with open(sensor_info) as f: 
-            json_data = json.load(f)
-        montage = json_data["Analysis_Params"]["EEG"]["Montage"]
-        sfreq = sensor_info["Analysis_Params"]["EEG"]["Sampling_Freq"]
-        eog = sensor_info["Analysis_Params"]["EEG"]["EOG"]
-
-    elif type(sensor_info) is dict:
-        montage = sensor_info["EEG"]["Montage"]
-        sfreq = sensor_info["EEG"]["Sampling_Freq"]
-        eog = sensor_info["EEG"]["EOG"]
-
-    ch_types = {key:"eeg" for key in ch_names}
-    for i in eog:
-        ch_types[i] = "eog"
-    ch_types[stimulus_channel] = "stim"
+    """ 
     
-    df = pd.read_csv(filename, usecols=ch_names)
-
-    info = mne.create_info(ch_names=ch_names, ch_types = [v for v in ch_types.values()], sfreq=sfreq, montage=montage)
-    raw = mne.io.RawArray(data=df, info=info, verbose=False)
+    # print("Converting CSV file to PyTrack Pandas CSV: ", filename.split("/")[-1])
 
     return
 
 
-def edfToBase(filename, sensor_info):
-    """
-    Bridge function that converts European Data Format (EDF and EDF+) raw EEG data files to the base CSV format that the framework uses.
-
-    Parameters
-    ----------
-    filename : str 
-        Full file name (with path) of the data file
-    
-    sensor_info : str | dict
-        If str, it is the name of the json file containing experiment details. If dict, contains the details of the sensor parameters as a dictionary of values (see documentation for details on needed parameters).
-
-    Returns
-    -------
-    raw : mne Raw array   
-        Raw array of mne containing the EEG data (Not preloaded. Data will actually be loaded into memory only while analysisng each stimulus.)
-     """
-
-    if type(sensor_info) is str:
-        with open(sensor_info) as f: 
-            json_data = json.load(f)
-        montage = json_data["Analysis_Params"]["EEG"]["Montage"]
-        sfreq = sensor_info["Analysis_Params"]["EEG"]["Sampling_Freq"]
-        eog = sensor_info["Analysis_Params"]["EEG"]["EOG"]
-
-    elif type(sensor_info) is dict:
-        montage = sensor_info["EEG"]["Montage"]
-        sfreq = sensor_info["EEG"]["Sampling_Freq"]
-        eog = sensor_info["EEG"]["EOG"]
-
-    raw = mne.io.read_raw_edf(filename, montage=montage, eog=eog, verbose=False)
-    
-    data = raw.get_data(picks=[-1])
-    
-    stim_data = np.array(data[-1], dtype=int)
-
-    diff = stim_data[1:] - stim_data[:-1]
-    start = np.where(diff > 0)[0]
-    end = np.where(diff < 0)[0]
-
-    if start[0] > end[0]:
-        start = np.hstack((0, start))
-    
-    if end[-1] < start[-1]:
-        start = np.hstack((end, len(stim_data)))
-
-    joining_char = "/"
-    components = filename.split(joining_char)
-    f_name = components[-1].split(".")[0]
-    stim_indices_file = "question_indices/" + f_name + "_eeg.pickle"
-
-    pickle.dump((start, end), open(stim_indices_file, "wb"))
-
-    return raw
-
-
-def brainvisionToBase(filename, sensor_info):
-    """
-    """
-    return
-
-def neuroscanToBase(filename, sensor_info):
-    """
-    """
-    return
-
-
-def egiToBase(filename, sensor_info):
-    """
-    """
-    return
-
-
-def mffToBase(filename, sensor_info):
-    """
-    """
-    return
-
-
-def eeglabToBase(filename, sensor_info):
-    """
-    """
-    return
-
-
-def matlabToBase(filename, sensor_info):
-    """
-    """
-    return
-
-
-def eximiaToBase(filename, sensor_info):
-    """
-    """
-    return
-
-
-def convertToBase(filename, sensor_type, sensor_info=None):
+def convertToBase(filename, sensor_type, stim_list=None):
     file_type = filename.split('.')[1]
 
     if sensor_type == 'EyeTracker':
         if file_type == 'asc':
-            return eyeLinkToBase(filename, sensor_info)
+            return eyeLinkToBase(filename, stim_list)
         
         elif file_type == 'idf':
-            return smiToBase(filename, sensor_info)
+            return smiToBase(filename, stim_list)
 
         elif file_type == 'csv':
-            return csvToBaseET(filename, sensor_info)
+            return csvToBaseET(filename, stim_list)
         
-        else:
-            print("Sorry " + sensor_type + " data format not supported!\n")
-            return
-    
-    elif sensor_type == 'EEG':
-        if file_type == 'csv':
-            return csvToBaseEEG(filename, sensor_info)
-        
-        if file_type in ['edf', 'gdf', 'bdf']:
-            return edfToBase(filename, sensor_info)
-        
-        elif file_type == 'vhdr':
-            return brainvisionToBase(filename, sensor_info)
-        
-        elif file_type == 'cnt':
-            return neuroscanToBase(filename, sensor_info)
-        
-        elif file_type == 'egi':
-            return egiToBase(filename, sensor_info)
-        
-        elif file_type == 'mff':
-            return mffToBase(filename, sensor_info)
-        
-        elif file_type == 'nxe':
-            return eximiaToBase(filename, sensor_info)
-        
-        elif file_type == 'mat':
-            return matlabToBase(filename, sensor_info)
-
         else:
             print("Sorry " + sensor_type + " data format not supported!\n")
             return
@@ -332,6 +195,105 @@ def convertToBase(filename, sensor_type, sensor_info=None):
         print("Sorry " + sensor_type + " not supported!\n")
 
 
-data = convertToBase("/home/upamanyu/Documents/NTU_Creton/Paul/Data/x2012_01_006_facehousepriming.bdf", "EEG", sensor_info={"EEG" : {"Sampling_Freq":1000, "Montage":'biosemi128', "EOG":None}})
+def db_create(source_folder, database_name, dtype_dictionary=None, na_strings=None):
+    """
+    """
+    
+    all_files = os.listdir(source_folder) 
+    
+    newlist = []
+    for names in all_files:
+        if names.endswith(".csv"):
+            newlist.append(names)
 
-print(type(data))
+    database = "sqlite:///" + database_name + ".db"
+    csv_database = create_engine(database)
+
+    for file in newlist:
+
+        print("Creating sql file for: ", file)
+
+        file_name = source_folder + "/" + file
+
+        length = len(file)
+        file_name_no_extension = file[:length-4]
+        table_name = file_name_no_extension.replace(' ','_') #To ensure table names dont haves spaces
+
+        chunksize = 100000
+        i = 0
+        j = 1
+        for df in pd.read_csv(file_name, chunksize=chunksize, iterator=True,na_values = na_strings, dtype=dtype_dictionary):
+            
+            #SQL columns ideally should not have ' ', '/', '(', ')'
+
+            df = df.rename(columns={c: c.replace(' ', '_') for c in df.columns})
+            df = df.rename(columns={c: c.replace('/', '') for c in df.columns})
+            df = df.rename(columns={c: c.replace('(', '') for c in df.columns})
+            df = df.rename(columns={c: c.replace(')', '') for c in df.columns})
+
+            df.index += j
+            i+=1
+            df.to_sql(table_name, csv_database, if_exists='append',index = True, index_label = "Index")
+            j = df.index[-1] + 1
+
+
+def generateCompatibleFormat(exp_info, data_path, stim_list_mode="NA"):
+    """
+    """
+    
+    if os.path.isdir(data_path):
+        
+        if not os.path.isdir(data_path + "/csv_files/"):
+            os.makedirs(data_path + "/csv_files/")
+
+        stim = None
+
+        if stim_list_mode == "common":
+            stim = np.loadtxt(data_path + "/" + "stim_file.txt", dtype=str)
+
+        subjects = {"Subjects":{"Group1":[]}}
+
+        for f in os.listdir(data_path):
+            if os.path.isdir(data_path + "/" + f):
+                continue
+            
+            print("Converting to base csv formate: ", f)
+
+            if stim_list_mode == "diff":
+                stim = np.loadtxt(data_path + "/stim/" + f.split(".")[0] + ".txt", dtype=str)
+            
+            df = convertToBase(data_path + "/" + f, sensor_type='EyeTracker', stim_list=stim)
+            df.to_csv(data_path + "/csv_files/" + f.split(".")[0] + ".csv")
+            subjects["Subjects"]["Group1"].append(f.split(".")[0])
+
+        if stim_list_mode == "NA":
+            stimuli = {"Stimuli":{"Type1":[]}}
+            for s in np.unique(df["StimulusName"]):
+                stimuli["Stimuli"]["Type1"].append(s)
+
+            with open(exp_info, 'r') as json_f:
+                json_dict = json.load(json_f)
+
+            json_dict.update(subjects)
+            json_dict.update(stimuli)
+
+            with open(exp_info, 'w') as json_f:
+                json.dump(json_dict, json_f, indent=4)
+
+        source_folder = data_path + "/csv_files/"
+
+        with open(exp_info, "r") as json_f:
+            json_data = json.load(json_f)
+
+        db_create(source_folder, json_data["Experiment_name"])
+
+    else:
+
+        print("Converting to base csv formate: ", data_path.split("/")[-1])
+
+        stim = None
+        if stim_list_mode != "NA":
+            stim = np.loadtxt("stim_file.txt", dtype=str)
+        
+        df = convertToBase(data_path, sensor_type='EyeTracker', stim_list=stim)
+        df.to_csv(data_path.split(".")[0] + ".csv")
