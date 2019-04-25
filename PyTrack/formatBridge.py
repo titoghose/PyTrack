@@ -8,7 +8,6 @@ import numpy as np
 import subprocess
 import pickle
 import json
-import sys
 import os
 
 col_headers = ['Timestamp', 'StimulusName', 'EventSource', 'GazeLeftx', 'GazeRightx', 'GazeLefty', 'GazeRighty', 'PupilLeft', 'PupilRight', 'FixationSeq', 'SaccadeSeq', 'Blink']
