@@ -25,7 +25,6 @@
 test.py
 .icaRejectionLog.p
 .vscode
-docs/
 PyTrack/Results/
 PyTrack/Subjects/
 PyTrack/Stimuli/
