@@ -1,0 +1,867 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>PyTrack.etDataReader &#8212; PyTrack 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">PyTrack 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for PyTrack.etDataReader</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<div class="viewcode-block" id="blink_detection"><a class="viewcode-back" href="../../PyTrack.html#PyTrack.etDataReader.blink_detection">[docs]</a><span class="k">def</span> <span class="nf">blink_detection</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">minlen</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Detects blinks, defined as a period of missing data that lasts for at least a minimal amount of samples</span>
+<span class="sd">	</span>
+<span class="sd">	Parameters</span>
+<span class="sd">	----------</span>
+<span class="sd">	x : array</span>
+<span class="sd">		Gaze x positions</span>
+<span class="sd">	y :	array</span>
+<span class="sd">		Gaze y positions</span>
+<span class="sd">	time : array</span>
+<span class="sd">		Timestamps</span>
+<span class="sd">	missing	: float</span>
+<span class="sd">		Value to be used for missing data (default = 0.0)</span>
+<span class="sd">	minlen : int </span>
+<span class="sd">		Minimal amount of consecutive missing samples</span>
+<span class="sd">	</span>
+<span class="sd">	Returns</span>
+<span class="sd">	-------</span>
+<span class="sd">	Sblk : list of lists</span>
+<span class="sd">		Each containing [starttime]</span>
+<span class="sd">	Eblk : list of lists</span>
+<span class="sd">		Each containing [starttime, endtime, duration]</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="c1"># empty list to contain data</span>
+	<span class="n">Sblk</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">Eblk</span> <span class="o">=</span> <span class="p">[]</span>
+	
+	<span class="c1"># check where the missing samples are</span>
+	<span class="n">mx</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="o">==</span><span class="n">missing</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+	<span class="n">my</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="o">==</span><span class="n">missing</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+	<span class="n">miss</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">mx</span><span class="o">+</span><span class="n">my</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+	
+	<span class="c1"># check where the starts and ends are (+1 to counteract shift to left)</span>
+	<span class="n">diff</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">miss</span><span class="p">)</span>
+	<span class="n">starts</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">diff</span><span class="o">==</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+	<span class="n">ends</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">diff</span><span class="o">==-</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+	
+	<span class="c1"># compile blink starts and ends</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">starts</span><span class="p">)):</span>
+		<span class="c1"># get starting index</span>
+		<span class="n">s</span> <span class="o">=</span> <span class="n">starts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+		<span class="c1"># get ending index</span>
+		<span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ends</span><span class="p">):</span>
+			<span class="n">e</span> <span class="o">=</span> <span class="n">ends</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+		<span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">ends</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="n">e</span> <span class="o">=</span> <span class="n">ends</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">e</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+		<span class="c1"># append only if the duration in samples is equal to or greater than</span>
+		<span class="c1"># the minimal duration</span>
+		<span class="k">if</span> <span class="n">e</span><span class="o">-</span><span class="n">s</span> <span class="o">&gt;=</span> <span class="n">minlen</span><span class="p">:</span>
+			<span class="c1"># add starting time</span>
+			<span class="n">Sblk</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">time</span><span class="p">[</span><span class="n">s</span><span class="p">]])</span>
+			<span class="c1"># add ending time</span>
+			<span class="n">Eblk</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">time</span><span class="p">[</span><span class="n">s</span><span class="p">],</span><span class="n">time</span><span class="p">[</span><span class="n">e</span><span class="p">],</span><span class="n">time</span><span class="p">[</span><span class="n">e</span><span class="p">]</span><span class="o">-</span><span class="n">time</span><span class="p">[</span><span class="n">s</span><span class="p">]])</span>
+	
+	<span class="k">return</span> <span class="n">Sblk</span><span class="p">,</span> <span class="n">Eblk</span></div>
+
+
+<div class="viewcode-block" id="fixation_detection"><a class="viewcode-back" href="../../PyTrack.html#PyTrack.etDataReader.fixation_detection">[docs]</a><span class="k">def</span> <span class="nf">fixation_detection</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">maxdist</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">mindur</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Detects fixations, defined as consecutive samples with an inter-sample distance of less than a set amount of pixels (disregarding missing data)</span>
+<span class="sd">	</span>
+<span class="sd">	Parameters</span>
+<span class="sd">	----------</span>
+<span class="sd">	x : array</span>
+<span class="sd">		Gaze x positions</span>
+<span class="sd">	y :	array</span>
+<span class="sd">		Gaze y positions</span>
+<span class="sd">	time : array</span>
+<span class="sd">		Timestamps</span>
+<span class="sd">	missing	: float</span>
+<span class="sd">		Value to be used for missing data (default = 0.0)</span>
+<span class="sd">	maxdist : int</span>
+<span class="sd">		Maximal inter sample distance in pixels (default = 25)</span>
+<span class="sd">	mindur : int</span>
+<span class="sd">		Minimal duration of a fixation in milliseconds; detected fixation cadidates will be disregarded if they are below this duration (default = 100)</span>
+<span class="sd">	</span>
+<span class="sd">	Returns</span>
+<span class="sd">	-------</span>
+<span class="sd">	Sfix : list of lists</span>
+<span class="sd">		Each containing [starttime]</span>
+<span class="sd">	Efix : list of lists</span>
+<span class="sd">		Each containing [starttime, endtime, duration, endx, endy]</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="c1"># empty list to contain data</span>
+	<span class="n">Sfix</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">Efix</span> <span class="o">=</span> <span class="p">[]</span>
+	
+	<span class="c1"># loop through all coordinates</span>
+	<span class="n">si</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="n">fixstart</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
+		<span class="c1"># calculate Euclidean distance from the current fixation coordinate</span>
+		<span class="c1"># to the next coordinate</span>
+		<span class="n">dist</span> <span class="o">=</span> <span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">si</span><span class="p">]</span><span class="o">-</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+		<span class="c1"># check if the next coordinate is below maximal distance</span>
+		<span class="k">if</span> <span class="n">dist</span> <span class="o">&lt;=</span> <span class="n">maxdist</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">fixstart</span><span class="p">:</span>
+			<span class="c1"># start a new fixation</span>
+			<span class="n">si</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">+</span> <span class="n">i</span>
+			<span class="n">fixstart</span> <span class="o">=</span> <span class="kc">True</span>
+			<span class="n">Sfix</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">time</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+		<span class="k">elif</span> <span class="n">dist</span> <span class="o">&gt;</span> <span class="n">maxdist</span> <span class="ow">and</span> <span class="n">fixstart</span><span class="p">:</span>
+			<span class="c1"># end the current fixation</span>
+			<span class="n">fixstart</span> <span class="o">=</span> <span class="kc">False</span>
+			<span class="c1"># only store the fixation if the duration is ok</span>
+			<span class="k">if</span> <span class="n">time</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">Sfix</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">mindur</span><span class="p">:</span>
+				<span class="n">Efix</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">Sfix</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">time</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">time</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">Sfix</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="n">si</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">si</span><span class="p">]])</span>
+			<span class="c1"># delete the last fixation start if it was too short</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">Sfix</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+			<span class="n">si</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">+</span> <span class="n">i</span>
+		<span class="k">elif</span> <span class="ow">not</span> <span class="n">fixstart</span><span class="p">:</span>
+			<span class="n">si</span> <span class="o">+=</span> <span class="mi">1</span>
+	
+	<span class="k">return</span> <span class="n">Sfix</span><span class="p">,</span> <span class="n">Efix</span></div>
+
+
+<div class="viewcode-block" id="saccade_detection"><a class="viewcode-back" href="../../PyTrack.html#PyTrack.etDataReader.saccade_detection">[docs]</a><span class="k">def</span> <span class="nf">saccade_detection</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">minlen</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">maxvel</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">maxacc</span><span class="o">=</span><span class="mi">340</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Detects saccades, defined as consecutive samples with an inter-sample velocity of over a velocity threshold or an acceleration threshold</span>
+<span class="sd">	</span>
+<span class="sd">	Parameters</span>
+<span class="sd">	----------</span>
+<span class="sd">	x : array</span>
+<span class="sd">		Gaze x positions</span>
+<span class="sd">	y :	array</span>
+<span class="sd">		Gaze y positions</span>
+<span class="sd">	time : array</span>
+<span class="sd">		Timestamps</span>
+<span class="sd">	missing	: float</span>
+<span class="sd">		Value to be used for missing data (default = 0.0)</span>
+<span class="sd">	minlen : int</span>
+<span class="sd">		Minimal length of saccades in milliseconds; all detected saccades with len(sac) &lt; minlen will be ignored (default = 5)</span>
+<span class="sd">	maxvel : int</span>
+<span class="sd">		Velocity threshold in pixels/second (default = 40)</span>
+<span class="sd">	maxacc : int</span>
+<span class="sd">		Acceleration threshold in pixels / second**2 (default = 340)</span>
+<span class="sd">	</span>
+<span class="sd">	Returns</span>
+<span class="sd">	-------</span>
+<span class="sd">	Ssac : list of lists</span>
+<span class="sd">		Each containing [starttime]</span>
+<span class="sd">	Esac : list of lists</span>
+<span class="sd">		Each containing [starttime, endtime, duration, startx, starty, endx, endy]</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="c1"># CONTAINERS</span>
+	<span class="n">Ssac</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">Esac</span> <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="c1"># INTER-SAMPLE MEASURES</span>
+	<span class="c1"># the distance between samples is the square root of the sum</span>
+	<span class="c1"># of the squared horizontal and vertical interdistances</span>
+	<span class="n">intdist</span> <span class="o">=</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">numpy</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span>
+	<span class="c1"># get inter-sample times</span>
+	<span class="n">inttime</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+	<span class="c1"># recalculate inter-sample times to seconds</span>
+	<span class="n">inttime</span> <span class="o">=</span> <span class="n">inttime</span> <span class="o">/</span> <span class="mf">1000.0</span>
+	
+	<span class="c1"># VELOCITY AND ACCELERATION</span>
+	<span class="c1"># the velocity between samples is the inter-sample distance</span>
+	<span class="c1"># divided by the inter-sample time</span>
+	<span class="n">vel</span> <span class="o">=</span> <span class="n">intdist</span> <span class="o">/</span> <span class="n">inttime</span>
+	<span class="c1"># the acceleration is the sample-to-sample difference in</span>
+	<span class="c1"># eye movement velocity</span>
+	<span class="n">acc</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">vel</span><span class="p">)</span>
+
+	<span class="c1"># SACCADE START AND END</span>
+	<span class="n">t0i</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="n">stop</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="k">while</span> <span class="ow">not</span> <span class="n">stop</span><span class="p">:</span>
+		<span class="c1"># saccade start (t1) is when the velocity or acceleration</span>
+		<span class="c1"># surpass threshold, saccade end (t2) is when both return</span>
+		<span class="c1"># under threshold</span>
+	
+		<span class="c1"># detect saccade starts</span>
+		<span class="n">sacstarts</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">vel</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">t0i</span><span class="p">:]</span> <span class="o">&gt;</span> <span class="n">maxvel</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">acc</span><span class="p">[</span><span class="n">t0i</span><span class="p">:]</span> <span class="o">&gt;</span> <span class="n">maxacc</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sacstarts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="c1"># timestamp for starting position</span>
+			<span class="n">t1i</span> <span class="o">=</span> <span class="n">t0i</span> <span class="o">+</span> <span class="n">sacstarts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+			<span class="k">if</span> <span class="n">t1i</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+				<span class="n">t1i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span>
+			<span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="p">[</span><span class="n">t1i</span><span class="p">]</span>
+			
+			<span class="c1"># add to saccade starts</span>
+			<span class="n">Ssac</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">t1</span><span class="p">])</span>
+			
+			<span class="c1"># detect saccade endings</span>
+			<span class="n">sacends</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">vel</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="n">t1i</span><span class="p">:]</span> <span class="o">&lt;</span> <span class="n">maxvel</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">acc</span><span class="p">[</span><span class="n">t1i</span><span class="p">:]</span> <span class="o">&lt;</span> <span class="n">maxacc</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+			<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sacends</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+				<span class="c1"># timestamp for ending position</span>
+				<span class="n">t2i</span> <span class="o">=</span> <span class="n">sacends</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">t1i</span> <span class="o">+</span> <span class="mi">2</span>
+				<span class="k">if</span> <span class="n">t2i</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+					<span class="n">t2i</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+				<span class="n">t2</span> <span class="o">=</span> <span class="n">time</span><span class="p">[</span><span class="n">t2i</span><span class="p">]</span>
+				<span class="n">dur</span> <span class="o">=</span> <span class="n">t2</span> <span class="o">-</span> <span class="n">t1</span>
+
+				<span class="c1"># ignore saccades that did not last long enough</span>
+				<span class="k">if</span> <span class="n">dur</span> <span class="o">&gt;=</span> <span class="n">minlen</span><span class="p">:</span>
+					<span class="c1"># add to saccade ends</span>
+					<span class="n">Esac</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">,</span> <span class="n">dur</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="n">t1i</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">t1i</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="n">t2i</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">t2i</span><span class="p">]])</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="c1"># remove last saccade start on too low duration</span>
+					<span class="n">Ssac</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+				<span class="c1"># update t0i</span>
+				<span class="n">t0i</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">+</span> <span class="n">t2i</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">stop</span> <span class="o">=</span> <span class="kc">True</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">stop</span> <span class="o">=</span> <span class="kc">True</span>
+	
+	<span class="k">return</span> <span class="n">Ssac</span><span class="p">,</span> <span class="n">Esac</span></div>
+
+
+<div class="viewcode-block" id="read_idf"><a class="viewcode-back" href="../../PyTrack.html#PyTrack.etDataReader.read_idf">[docs]</a><span class="k">def</span> <span class="nf">read_idf</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Returns a list with dicts for every trial.</span>
+<span class="sd">		</span>
+<span class="sd">	Parameters</span>
+<span class="sd">	----------</span>
+<span class="sd">	filename : str</span>
+<span class="sd">		Path to the file that has to be read</span>
+<span class="sd">	start : str</span>
+<span class="sd">		Trial start string</span>
+<span class="sd">	stop : str</span>
+<span class="sd">		Trial ending string (default = None)</span>
+<span class="sd">	missing : float</span>
+<span class="sd">		Value to be used for missing data (default = 0.0)</span>
+<span class="sd">	debug : bool</span>
+<span class="sd">		Indicating if DEBUG mode should be on or off; if DEBUG mode is on, information on what the script currently is doing will be printed to the console (default = False)</span>
+<span class="sd">	</span>
+<span class="sd">	Returns</span>
+<span class="sd">	-------</span>
+<span class="sd">	data : list</span>
+<span class="sd">		With a dict for every trial. Following is the dictionary</span>
+<span class="sd">		0. x -array of Gaze x positions,</span>
+<span class="sd">		1. y -array of Gaze y positions,</span>
+<span class="sd">		2. size -array of pupil size,</span>
+<span class="sd">		3. time -array of timestamps, t=0 at trialstart,</span>
+<span class="sd">		4. trackertime -array of timestamps, according to the tracker,</span>
+<span class="sd">		5. events -dict {Sfix, Ssac, Sblk, Efix, Esac, Eblk, msg}</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="c1"># # # # #</span>
+	<span class="c1"># debug mode</span>
+	
+	<span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+		<span class="k">def</span> <span class="nf">message</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+			<span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">def</span> <span class="nf">message</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+			<span class="k">pass</span>
+		
+	
+	<span class="c1"># # # # #</span>
+	<span class="c1"># file handling</span>
+	
+	<span class="c1"># check if the file exists</span>
+	<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+		<span class="c1"># open file</span>
+		<span class="n">message</span><span class="p">(</span><span class="s2">&quot;opening file &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+		<span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+	<span class="c1"># raise exception if the file does not exist</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Error in read_idf: file &#39;</span><span class="si">%s</span><span class="s2">&#39; does not exist&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+	
+	<span class="c1"># read file contents</span>
+	<span class="n">message</span><span class="p">(</span><span class="s2">&quot;reading file &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+	<span class="n">raw</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+	
+	<span class="c1"># close file</span>
+	<span class="n">message</span><span class="p">(</span><span class="s2">&quot;closing file &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+	<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+	
+	<span class="c1"># # # # #</span>
+	<span class="c1"># parse lines</span>
+	
+	<span class="c1"># variables</span>
+	<span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">x_l</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">y_l</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">x_r</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">y_r</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">size_l</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">size_r</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">time</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">trackertime</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">events</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Sfix&#39;</span><span class="p">:[],</span><span class="s1">&#39;Ssac&#39;</span><span class="p">:[],</span><span class="s1">&#39;Sblk&#39;</span><span class="p">:[],</span><span class="s1">&#39;Efix&#39;</span><span class="p">:[],</span><span class="s1">&#39;Esac&#39;</span><span class="p">:[],</span><span class="s1">&#39;Eblk&#39;</span><span class="p">:[],</span><span class="s1">&#39;msg&#39;</span><span class="p">:[]}</span>
+	<span class="n">starttime</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="n">started</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">trialend</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">filestarted</span> <span class="o">=</span> <span class="kc">False</span>
+	
+	<span class="n">timei</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">typei</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">msgi</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+	<span class="n">xi</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">}</span>
+	<span class="n">yi</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">}</span>
+	<span class="n">sizei</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">}</span>
+
+	<span class="c1"># loop through all lines</span>
+	<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">raw</span><span class="p">)):</span>
+		
+		<span class="c1"># string to list</span>
+		<span class="n">line</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="c1"># check if the line starts with &#39;##&#39; (denoting header)</span>
+		<span class="k">if</span> <span class="s1">&#39;##&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+			<span class="c1"># skip processing</span>
+			<span class="k">continue</span>
+		<span class="k">elif</span> <span class="s1">&#39;##&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">filestarted</span><span class="p">:</span>
+			<span class="c1"># check the indexes for several key things we want to extract</span>
+			<span class="c1"># (we need to do this, because ASCII outputs of the IDF reader</span>
+			<span class="c1"># are different, based on whatever the user wanted to extract)</span>
+			<span class="n">timei</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;Time&quot;</span><span class="p">)</span>
+			<span class="n">typei</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span>
+			<span class="n">msgi</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+			<span class="n">xi</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">}</span>
+			<span class="n">yi</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">}</span>
+			<span class="n">sizei</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;L&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;R&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">}</span>
+			<span class="k">if</span> <span class="s2">&quot;L POR X [px]&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+				<span class="n">xi</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;L POR X [px]&quot;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="s2">&quot;R POR X [px]&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+				<span class="n">xi</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;R POR X [px]&quot;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="s2">&quot;L POR Y [px]&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+				<span class="n">yi</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;L POR Y [px]&quot;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="s2">&quot;R POR Y [px]&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+				<span class="n">yi</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;R POR Y [px]&quot;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="s2">&quot;L Dia [mm]&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+				<span class="n">sizei</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;L Dia [mm]&quot;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="s2">&quot;R Dia [mm]&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+				<span class="n">sizei</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;R Dia [mm]&quot;</span><span class="p">)</span>
+			<span class="c1"># set filestarted to True, so we don&#39;t attempt to extract</span>
+			<span class="c1"># this info on all consecutive lines</span>
+			<span class="n">filestarted</span> <span class="o">=</span> <span class="kc">True</span>
+
+		<span class="c1"># check if trial has already started</span>
+		<span class="k">if</span> <span class="n">started</span><span class="p">:</span>
+			<span class="c1"># only check for stop if there is one</span>
+			<span class="k">if</span> <span class="n">stop</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">stop</span> <span class="ow">in</span> <span class="n">line</span><span class="p">[</span><span class="n">msgi</span><span class="p">]</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+					<span class="n">started</span> <span class="o">=</span> <span class="kc">False</span>
+					<span class="n">trialend</span> <span class="o">=</span> <span class="kc">True</span>
+			<span class="c1"># check for new start otherwise</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+					<span class="n">started</span> <span class="o">=</span> <span class="kc">True</span>
+					<span class="n">trialend</span> <span class="o">=</span> <span class="kc">True</span>
+
+			<span class="c1"># # # # #</span>
+			<span class="c1"># trial ending</span>
+			
+			<span class="k">if</span> <span class="n">trialend</span><span class="p">:</span>
+				<span class="n">message</span><span class="p">(</span><span class="s2">&quot;trialend </span><span class="si">%d</span><span class="s2">; </span><span class="si">%d</span><span class="s2"> samples found&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">x_l</span><span class="p">)))</span>
+				<span class="c1"># message(&quot;trialend %d; %d x_r samples found&quot; % (len(data),len(x_r)))</span>
+				<span class="c1"># message(&quot;trialend %d; %d y_l samples found&quot; % (len(data),len(y_l)))</span>
+				<span class="c1"># message(&quot;trialend %d; %d y_r samples found&quot; % (len(data),len(y_r)))</span>
+				<span class="c1"># message(&quot;trialend %d; %d size_l samples found&quot; % (len(data),len(size_l)))</span>
+				<span class="c1"># message(&quot;trialend %d; %d size_r samples found&quot; % (len(data),len(size_r)))</span>
+				<span class="c1"># trial dict</span>
+				<span class="n">trial</span> <span class="o">=</span> <span class="p">{}</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;x_l&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x_l</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;y_l&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_l</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;x_r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x_r</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;y_r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_r</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;size_l&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">size_l</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;size_r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">size_r</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;trackertime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">trackertime</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;events&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">events</span><span class="p">)</span>
+				<span class="c1"># events</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;events&#39;</span><span class="p">][</span><span class="s1">&#39;Sblk&#39;</span><span class="p">],</span> <span class="n">trial</span><span class="p">[</span><span class="s1">&#39;events&#39;</span><span class="p">][</span><span class="s1">&#39;Eblk&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">blink_detection</span><span class="p">(</span><span class="n">trial</span><span class="p">[</span><span class="s1">&#39;x_l&#39;</span><span class="p">],</span><span class="n">trial</span><span class="p">[</span><span class="s1">&#39;y_l&#39;</span><span class="p">],</span><span class="n">trial</span><span class="p">[</span><span class="s1">&#39;trackertime&#39;</span><span class="p">],</span><span class="n">missing</span><span class="o">=</span><span class="n">missing</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;events&#39;</span><span class="p">][</span><span class="s1">&#39;Sfix&#39;</span><span class="p">],</span> <span class="n">trial</span><span class="p">[</span><span class="s1">&#39;events&#39;</span><span class="p">][</span><span class="s1">&#39;Efix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fixation_detection</span><span class="p">(</span><span class="n">trial</span><span class="p">[</span><span class="s1">&#39;x_l&#39;</span><span class="p">],</span><span class="n">trial</span><span class="p">[</span><span class="s1">&#39;y_l&#39;</span><span class="p">],</span><span class="n">trial</span><span class="p">[</span><span class="s1">&#39;trackertime&#39;</span><span class="p">],</span><span class="n">missing</span><span class="o">=</span><span class="n">missing</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;events&#39;</span><span class="p">][</span><span class="s1">&#39;Ssac&#39;</span><span class="p">],</span> <span class="n">trial</span><span class="p">[</span><span class="s1">&#39;events&#39;</span><span class="p">][</span><span class="s1">&#39;Esac&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">saccade_detection</span><span class="p">(</span><span class="n">trial</span><span class="p">[</span><span class="s1">&#39;x_l&#39;</span><span class="p">],</span><span class="n">trial</span><span class="p">[</span><span class="s1">&#39;y_l&#39;</span><span class="p">],</span><span class="n">trial</span><span class="p">[</span><span class="s1">&#39;trackertime&#39;</span><span class="p">],</span><span class="n">missing</span><span class="o">=</span><span class="n">missing</span><span class="p">)</span>
+				<span class="c1"># add trial to data</span>
+				<span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trial</span><span class="p">)</span>
+				<span class="c1"># reset stuff</span>
+				<span class="n">x_l</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">y_l</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">x_r</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">y_r</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">size_l</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">size_r</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">time</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">trackertime</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">events</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Sfix&#39;</span><span class="p">:[],</span><span class="s1">&#39;Ssac&#39;</span><span class="p">:[],</span><span class="s1">&#39;Sblk&#39;</span><span class="p">:[],</span><span class="s1">&#39;Efix&#39;</span><span class="p">:[],</span><span class="s1">&#39;Esac&#39;</span><span class="p">:[],</span><span class="s1">&#39;Eblk&#39;</span><span class="p">:[],</span><span class="s1">&#39;msg&#39;</span><span class="p">:[]}</span>
+				<span class="n">trialend</span> <span class="o">=</span> <span class="kc">False</span>
+				
+		<span class="c1"># check if the current line contains start message</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">line</span><span class="p">[</span><span class="n">msgi</span><span class="p">]:</span>
+				<span class="n">message</span><span class="p">(</span><span class="s2">&quot;trialstart </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+				<span class="c1"># set started to True</span>
+				<span class="n">started</span> <span class="o">=</span> <span class="kc">True</span>
+				<span class="c1"># find starting time</span>
+				<span class="n">starttime</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">timei</span><span class="p">])</span>
+		
+		<span class="c1"># # # # #</span>
+		<span class="c1"># parse line</span>
+		
+		<span class="k">if</span> <span class="n">started</span><span class="p">:</span>
+			<span class="c1"># message lines will usually start with a timestamp, followed</span>
+			<span class="c1"># by &#39;MSG&#39;, the trial number and the actual message, e.g.:</span>
+			<span class="c1">#	&quot;7818328012	MSG	1	# Message: 3&quot;</span>
+			<span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="n">typei</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;MSG&quot;</span><span class="p">:</span>
+				<span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">timei</span><span class="p">])</span> <span class="c1"># time</span>
+				<span class="n">m</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">msgi</span><span class="p">]</span> <span class="c1"># message</span>
+				<span class="n">events</span><span class="p">[</span><span class="s1">&#39;msg&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">t</span><span class="p">,</span><span class="n">m</span><span class="p">])</span>
+			
+			<span class="c1"># regular lines will contain tab separated values, beginning with</span>
+			<span class="c1"># a timestamp, follwed by the values that were chosen to be</span>
+			<span class="c1"># extracted by the IDF converter</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="c1"># see if current line contains relevant data</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="c1"># extract data on POR and pupil size</span>
+					<span class="n">vi</span> <span class="o">=</span> <span class="kc">None</span>
+					<span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">sizei</span><span class="p">]):</span>
+						<span class="n">vi</span> <span class="o">=</span> <span class="n">var</span>
+						<span class="n">val_l</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+						<span class="n">val_r</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+						<span class="c1"># nothing</span>
+						<span class="k">if</span> <span class="n">vi</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">vi</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+							<span class="k">continue</span>
+						<span class="c1"># only left eye</span>
+						<span class="k">elif</span> <span class="n">vi</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">vi</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+							<span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">vi</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+								<span class="n">line</span><span class="p">[</span><span class="n">vi</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span>
+							<span class="n">val_l</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">vi</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]])</span>
+							<span class="n">val_r</span> <span class="o">=</span> <span class="n">val_l</span>
+						<span class="c1"># only right eye</span>
+						<span class="k">elif</span> <span class="n">vi</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">vi</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+							<span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">vi</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+								<span class="n">line</span><span class="p">[</span><span class="n">vi</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span>
+							<span class="n">val_r</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">vi</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]])</span>
+							<span class="n">val_l</span> <span class="o">=</span> <span class="n">val_r</span>
+						<span class="c1"># average the two eyes, but only if they both</span>
+						<span class="c1"># contain valid data</span>
+						<span class="k">elif</span> <span class="n">vi</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">vi</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+							<span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">vi</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+								<span class="n">line</span><span class="p">[</span><span class="n">vi</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span>
+							<span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">vi</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+								<span class="n">line</span><span class="p">[</span><span class="n">vi</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span>
+							<span class="n">val_r</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">vi</span><span class="p">[</span><span class="s1">&#39;R&#39;</span><span class="p">]])</span>
+							<span class="n">val_l</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">vi</span><span class="p">[</span><span class="s1">&#39;L&#39;</span><span class="p">]])</span>
+						
+						<span class="k">if</span> <span class="n">ind</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+							<span class="n">x_l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val_l</span><span class="p">)</span>
+							<span class="n">x_r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val_r</span><span class="p">)</span>
+						<span class="k">elif</span> <span class="n">ind</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+							<span class="n">y_l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val_l</span><span class="p">)</span>
+							<span class="n">y_r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val_r</span><span class="p">)</span>
+						<span class="k">elif</span> <span class="n">ind</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+							<span class="n">size_l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val_l</span><span class="p">)</span>
+							<span class="n">size_r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val_r</span><span class="p">)</span>
+
+					<span class="c1"># extract time data</span>
+					<span class="n">time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">timei</span><span class="p">])</span><span class="o">-</span><span class="n">starttime</span><span class="p">)</span>
+					<span class="n">trackertime</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">timei</span><span class="p">]))</span>
+
+				<span class="k">except</span><span class="p">:</span>
+					<span class="n">message</span><span class="p">(</span><span class="s2">&quot;line &#39;</span><span class="si">%s</span><span class="s2">&#39; could not be parsed&quot;</span> <span class="o">%</span> <span class="n">line</span><span class="p">)</span>
+					<span class="k">continue</span> <span class="c1"># skip this line	</span>
+	
+	<span class="c1"># # # # #</span>
+	<span class="c1"># return</span>
+	
+	<span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="replace_missing"><a class="viewcode-back" href="../../PyTrack.html#PyTrack.etDataReader.replace_missing">[docs]</a><span class="k">def</span> <span class="nf">replace_missing</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Returns missing code if passed value is missing, or the passed value if it is not missing; a missing value in the EDF contains only a period, no numbers; NOTE: this function is for gaze position values only, NOT for pupil size, as missing pupil size data is coded &#39;0.0&#39;</span>
+<span class="sd">	</span>
+<span class="sd">	Parameters</span>
+<span class="sd">	----------</span>
+<span class="sd">	value : str</span>
+<span class="sd">		Either an X or a Y gaze position value (NOT pupil size! This is coded &#39;0.0&#39;)</span>
+<span class="sd">	missing : float</span>
+<span class="sd">		The missing code to replace missing data with (default = 0.0)</span>
+<span class="sd">	</span>
+<span class="sd">	Returns</span>
+<span class="sd">	-------</span>
+<span class="sd">	float</span>
+<span class="sd">		Either a missing code, or a float value of the gaze position</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;.&#39;</span><span class="p">:</span>
+		<span class="k">return</span> <span class="n">missing</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="read_edf"><a class="viewcode-back" href="../../PyTrack.html#PyTrack.etDataReader.read_edf">[docs]</a><span class="k">def</span> <span class="nf">read_edf</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Returns a list with dicts for every trial.</span>
+<span class="sd">		</span>
+<span class="sd">	Parameters</span>
+<span class="sd">	----------</span>
+<span class="sd">	filename : str</span>
+<span class="sd">		Path to the file that has to be read</span>
+<span class="sd">	start : str</span>
+<span class="sd">		Trial start string</span>
+<span class="sd">	stop : str</span>
+<span class="sd">		Trial ending string (default = None)</span>
+<span class="sd">	missing : float</span>
+<span class="sd">		Value to be used for missing data (default = 0.0)</span>
+<span class="sd">	debug : bool</span>
+<span class="sd">		Indicating if DEBUG mode should be on or off; if DEBUG mode is on, information on what the script currently is doing will be printed to the console (default = False)</span>
+<span class="sd">	</span>
+<span class="sd">	Returns</span>
+<span class="sd">	-------</span>
+<span class="sd">	data : list</span>
+<span class="sd">		With a dict for every trial. Following is the dictionary</span>
+<span class="sd">		0. x -array of Gaze x positions,</span>
+<span class="sd">		1. y -array of Gaze y positions,</span>
+<span class="sd">		2. size -array of pupil size,</span>
+<span class="sd">		3. time -array of timestamps, t=0 at trialstart,</span>
+<span class="sd">		4. trackertime -array of timestamps, according to the tracker,</span>
+<span class="sd">		5. events -dict {Sfix, Ssac, Sblk, Efix, Esac, Eblk, msg}</span>
+<span class="sd">				</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="c1"># # # # #</span>
+	<span class="c1"># debug mode</span>
+	
+	<span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+		<span class="k">def</span> <span class="nf">message</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+			<span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">def</span> <span class="nf">message</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+			<span class="k">pass</span>
+		
+	
+	<span class="c1"># # # # #</span>
+	<span class="c1"># file handling</span>
+	
+	<span class="c1"># check if the file exists</span>
+	<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+		<span class="c1"># open file</span>
+		<span class="n">message</span><span class="p">(</span><span class="s2">&quot;opening file &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+		<span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+	<span class="c1"># raise exception if the file does not exist</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Error in read_edf: file &#39;</span><span class="si">%s</span><span class="s2">&#39; does not exist&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+	
+	<span class="c1"># read file contents</span>
+	<span class="n">message</span><span class="p">(</span><span class="s2">&quot;reading file &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+	<span class="n">raw</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+	
+	<span class="c1"># close file</span>
+	<span class="n">message</span><span class="p">(</span><span class="s2">&quot;closing file &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+	<span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+	
+	<span class="c1"># # # # #</span>
+	<span class="c1"># parse lines</span>
+	
+	<span class="c1"># variables</span>
+	<span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">x_l</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">y_l</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">x_r</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">y_r</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">size_l</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">size_r</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">time</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">trackertime</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">events</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Sfix&#39;</span><span class="p">:[],</span><span class="s1">&#39;Ssac&#39;</span><span class="p">:[],</span><span class="s1">&#39;Sblk&#39;</span><span class="p">:[],</span><span class="s1">&#39;Efix&#39;</span><span class="p">:[],</span><span class="s1">&#39;Esac&#39;</span><span class="p">:[],</span><span class="s1">&#39;Eblk&#39;</span><span class="p">:[],</span><span class="s1">&#39;msg&#39;</span><span class="p">:[]}</span>
+	<span class="n">starttime</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="n">started</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">trialend</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">finalline</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+	
+	<span class="c1"># loop through all lines</span>
+	<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">:</span>
+		
+		<span class="c1"># check if trial has already started</span>
+		<span class="k">if</span> <span class="n">started</span><span class="p">:</span>
+			<span class="c1"># only check for stop if there is one</span>
+			<span class="k">if</span> <span class="n">stop</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="k">if</span> <span class="n">stop</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+					<span class="n">started</span> <span class="o">=</span> <span class="kc">False</span>
+					<span class="n">trialend</span> <span class="o">=</span> <span class="kc">True</span>
+			<span class="c1"># check for new start otherwise</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="k">if</span> <span class="p">(</span><span class="n">start</span> <span class="ow">in</span> <span class="n">line</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">line</span> <span class="o">==</span> <span class="n">finalline</span><span class="p">):</span>
+					<span class="n">started</span> <span class="o">=</span> <span class="kc">True</span>
+					<span class="n">trialend</span> <span class="o">=</span> <span class="kc">True</span>
+			
+			<span class="c1"># # # # #</span>
+			<span class="c1"># trial ending</span>
+			
+			<span class="k">if</span> <span class="n">trialend</span><span class="p">:</span>
+				<span class="n">message</span><span class="p">(</span><span class="s2">&quot;trialend </span><span class="si">%d</span><span class="s2">; </span><span class="si">%d</span><span class="s2"> samples found&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">x_l</span><span class="p">)))</span>
+				<span class="c1"># trial dict</span>
+				<span class="n">trial</span> <span class="o">=</span> <span class="p">{}</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;x_l&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x_l</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;y_l&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_l</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;x_r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x_r</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;y_r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_r</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;size_l&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">size_l</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;size_r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">size_r</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;trackertime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">trackertime</span><span class="p">)</span>
+				<span class="n">trial</span><span class="p">[</span><span class="s1">&#39;events&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">events</span><span class="p">)</span>
+				<span class="c1"># add trial to data</span>
+				<span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trial</span><span class="p">)</span>
+				<span class="c1"># reset stuff</span>
+				<span class="n">x_l</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">y_l</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">size_l</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">x_r</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">y_r</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">size_r</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">time</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">trackertime</span> <span class="o">=</span> <span class="p">[]</span>
+				<span class="n">events</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Sfix&#39;</span><span class="p">:[],</span><span class="s1">&#39;Ssac&#39;</span><span class="p">:[],</span><span class="s1">&#39;Sblk&#39;</span><span class="p">:[],</span><span class="s1">&#39;Efix&#39;</span><span class="p">:[],</span><span class="s1">&#39;Esac&#39;</span><span class="p">:[],</span><span class="s1">&#39;Eblk&#39;</span><span class="p">:[],</span><span class="s1">&#39;msg&#39;</span><span class="p">:[]}</span>
+				<span class="n">trialend</span> <span class="o">=</span> <span class="kc">False</span>
+				
+		<span class="c1"># check if the current line contains start message</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+				<span class="n">message</span><span class="p">(</span><span class="s2">&quot;trialstart </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+				<span class="c1"># set started to True</span>
+				<span class="n">started</span> <span class="o">=</span> <span class="kc">True</span>
+				<span class="c1"># find starting time</span>
+				<span class="n">starttime</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)])</span>
+		
+		<span class="c1"># # # # #</span>
+		<span class="c1"># parse line</span>
+		
+		<span class="k">if</span> <span class="n">started</span><span class="p">:</span>
+			<span class="c1"># message lines will start with MSG, followed by a tab, then a</span>
+			<span class="c1"># timestamp, a space, and finally the message, e.g.:</span>
+			<span class="c1">#	&quot;MSG\t12345 something of importance here&quot;</span>
+			<span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;MSG&quot;</span><span class="p">:</span>
+				<span class="n">ms</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span> <span class="c1"># message start</span>
+				<span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="n">ms</span><span class="p">])</span> <span class="c1"># time</span>
+				<span class="n">m</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">ms</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span> <span class="c1"># message</span>
+				<span class="n">events</span><span class="p">[</span><span class="s1">&#39;msg&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">t</span><span class="p">,</span><span class="n">m</span><span class="p">])</span>
+	
+			<span class="c1"># EDF event lines are constructed of 9 characters, followed by</span>
+			<span class="c1"># tab separated values; these values MAY CONTAIN SPACES, but</span>
+			<span class="c1"># these spaces are ignored by float() (thank you Python!)</span>
+					
+			<span class="c1"># fixation start</span>
+			<span class="k">elif</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;SFIX&quot;</span><span class="p">:</span>
+				<span class="n">message</span><span class="p">(</span><span class="s2">&quot;fixation start&quot;</span><span class="p">)</span>
+				<span class="n">l</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">9</span><span class="p">:]</span>
+				<span class="n">events</span><span class="p">[</span><span class="s1">&#39;Sfix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">))</span>
+			<span class="c1"># fixation end</span>
+			<span class="k">elif</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;EFIX&quot;</span><span class="p">:</span>
+				<span class="n">message</span><span class="p">(</span><span class="s2">&quot;fixation end&quot;</span><span class="p">)</span>
+				<span class="n">l</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">9</span><span class="p">:]</span>
+				<span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+				<span class="n">st</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c1"># starting time</span>
+				<span class="n">et</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1"># ending time</span>
+				<span class="n">dur</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="c1"># duration</span>
+				<span class="n">sx</span> <span class="o">=</span> <span class="n">replace_missing</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">missing</span><span class="o">=</span><span class="n">missing</span><span class="p">)</span> <span class="c1"># x position</span>
+				<span class="n">sy</span> <span class="o">=</span> <span class="n">replace_missing</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">missing</span><span class="o">=</span><span class="n">missing</span><span class="p">)</span> <span class="c1"># y position</span>
+				<span class="n">events</span><span class="p">[</span><span class="s1">&#39;Efix&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">st</span><span class="p">,</span> <span class="n">et</span><span class="p">,</span> <span class="n">dur</span><span class="p">,</span> <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span><span class="p">])</span>
+			<span class="c1"># saccade start</span>
+			<span class="k">elif</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;SSACC&#39;</span><span class="p">:</span>
+				<span class="n">message</span><span class="p">(</span><span class="s2">&quot;saccade start&quot;</span><span class="p">)</span>
+				<span class="n">l</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">9</span><span class="p">:]</span>
+				<span class="n">events</span><span class="p">[</span><span class="s1">&#39;Ssac&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">))</span>
+			<span class="c1"># saccade end</span>
+			<span class="k">elif</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;ESACC&quot;</span><span class="p">:</span>
+				<span class="n">message</span><span class="p">(</span><span class="s2">&quot;saccade end&quot;</span><span class="p">)</span>
+				<span class="n">l</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">9</span><span class="p">:]</span>
+				<span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+				<span class="n">st</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c1"># starting time</span>
+				<span class="n">et</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1"># endint time</span>
+				<span class="n">dur</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="c1"># duration</span>
+				<span class="n">sx</span> <span class="o">=</span> <span class="n">replace_missing</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">missing</span><span class="o">=</span><span class="n">missing</span><span class="p">)</span> <span class="c1"># start x position</span>
+				<span class="n">sy</span> <span class="o">=</span> <span class="n">replace_missing</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">missing</span><span class="o">=</span><span class="n">missing</span><span class="p">)</span> <span class="c1"># start y position</span>
+				<span class="n">ex</span> <span class="o">=</span> <span class="n">replace_missing</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">missing</span><span class="o">=</span><span class="n">missing</span><span class="p">)</span> <span class="c1"># end x position</span>
+				<span class="n">ey</span> <span class="o">=</span> <span class="n">replace_missing</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">missing</span><span class="o">=</span><span class="n">missing</span><span class="p">)</span> <span class="c1"># end y position</span>
+				<span class="n">events</span><span class="p">[</span><span class="s1">&#39;Esac&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">st</span><span class="p">,</span> <span class="n">et</span><span class="p">,</span> <span class="n">dur</span><span class="p">,</span> <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span><span class="p">,</span> <span class="n">ex</span><span class="p">,</span> <span class="n">ey</span><span class="p">])</span>
+			<span class="c1"># blink start</span>
+			<span class="k">elif</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;SBLINK&quot;</span><span class="p">:</span>
+				<span class="n">message</span><span class="p">(</span><span class="s2">&quot;blink start&quot;</span><span class="p">)</span>
+				<span class="n">l</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">9</span><span class="p">:]</span>
+				<span class="n">events</span><span class="p">[</span><span class="s1">&#39;Sblk&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">))</span>
+			<span class="c1"># blink end</span>
+			<span class="k">elif</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;EBLINK&quot;</span><span class="p">:</span>
+				<span class="n">message</span><span class="p">(</span><span class="s2">&quot;blink end&quot;</span><span class="p">)</span>
+				<span class="n">l</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">9</span><span class="p">:]</span>
+				<span class="n">l</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+				<span class="n">st</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+				<span class="n">et</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+				<span class="n">dur</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+				<span class="n">events</span><span class="p">[</span><span class="s1">&#39;Eblk&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">st</span><span class="p">,</span><span class="n">et</span><span class="p">,</span><span class="n">dur</span><span class="p">])</span>
+			
+			<span class="c1"># regular lines will contain tab separated values, beginning with</span>
+			<span class="c1"># a timestamp, follwed by the values that were asked to be stored</span>
+			<span class="c1"># in the EDF and a mysterious &#39;...&#39;. Usually, this comes down to</span>
+			<span class="c1"># timestamp, x, y, pupilsize, ...</span>
+			<span class="c1"># e.g.: &quot;985288\t  504.6\t  368.2\t 4933.0\t...&quot;</span>
+			<span class="c1"># NOTE: these values MAY CONTAIN SPACES, but these spaces are</span>
+			<span class="c1"># ignored by float() (thank you Python!)</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="c1"># see if current line contains relevant data</span>
+				<span class="k">try</span><span class="p">:</span>
+					<span class="c1"># split by tab</span>
+					<span class="n">l</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+					<span class="c1"># if first entry is a timestamp, this should work</span>
+					<span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+				<span class="k">except</span><span class="p">:</span>
+					<span class="n">message</span><span class="p">(</span><span class="s2">&quot;line &#39;</span><span class="si">%s</span><span class="s2">&#39; could not be parsed&quot;</span> <span class="o">%</span> <span class="n">line</span><span class="p">)</span>
+					<span class="k">continue</span> <span class="c1"># skip this line</span>
+				
+				<span class="k">try</span><span class="p">:</span>
+					<span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+				<span class="k">except</span><span class="p">:</span>
+					<span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">missing</span>
+					<span class="n">l</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">missing</span>
+					<span class="n">l</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">missing</span>
+					<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+						<span class="n">l</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">missing</span>
+						<span class="n">l</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">missing</span>
+						<span class="n">l</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="n">missing</span>	
+
+				<span class="c1"># extract data</span>
+				<span class="n">x_l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+				<span class="n">y_l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+				<span class="n">size_l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+
+				<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+					<span class="n">x_r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">4</span><span class="p">]))</span>
+					<span class="n">y_r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">5</span><span class="p">]))</span>
+					<span class="n">size_r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">6</span><span class="p">]))</span>
+
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">x_r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+					<span class="n">y_r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+					<span class="n">size_r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+				
+				<span class="n">time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">-</span><span class="n">starttime</span><span class="p">)</span>
+				<span class="n">trackertime</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+	
+	
+	<span class="c1"># # # # #</span>
+	<span class="c1"># return</span>
+	
+	<span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="read_tobii"><a class="viewcode-back" href="../../PyTrack.html#PyTrack.etDataReader.read_tobii">[docs]</a><span class="k">def</span> <span class="nf">read_tobii</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">missing</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Returns a list with dicts for every trial.</span>
+<span class="sd">		</span>
+<span class="sd">	Parameters</span>
+<span class="sd">	----------</span>
+<span class="sd">	filename : str</span>
+<span class="sd">		Path to the file that has to be read</span>
+<span class="sd">	start : str</span>
+<span class="sd">		Trial start string</span>
+<span class="sd">	stop : str</span>
+<span class="sd">		Trial ending string (default = None)</span>
+<span class="sd">	missing : float</span>
+<span class="sd">		Value to be used for missing data (default = 0.0)</span>
+<span class="sd">	debug : bool</span>
+<span class="sd">		Indicating if DEBUG mode should be on or off; if DEBUG mode is on, information on what the script currently is doing will be printed to the console (default = False)</span>
+<span class="sd">	</span>
+<span class="sd">	Returns</span>
+<span class="sd">	-------</span>
+<span class="sd">	data : list</span>
+<span class="sd">		With a dict for every trial. Following is the dictionary</span>
+<span class="sd">		0. x -array of Gaze x positions,</span>
+<span class="sd">		1. y -array of Gaze y positions,</span>
+<span class="sd">		2. size -array of pupil size,</span>
+<span class="sd">		3. time -array of timestamps, t=0 at trialstart,</span>
+<span class="sd">		4. trackertime -array of timestamps, according to the tracker,</span>
+<span class="sd">		5. events -dict {Sfix, Ssac, Sblk, Efix, Esac, Eblk, msg}</span>
+<span class="sd">			</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">return</span> </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">PyTrack 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Upamanyu Ghose, Arvind Srinivasan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.0.1.
+    </div>
+  </body>
+</html>

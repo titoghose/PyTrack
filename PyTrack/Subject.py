@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import json
 import pandas as pd
 import numpy as np
@@ -89,9 +91,10 @@ class SubjectVisualize:
 
 class Subject:
 
-	def __init__(self, name, subj_type, stimuli_names, columns, json_file, sensors, database):
+	def __init__(self, path, name, subj_type, stimuli_names, columns, json_file, sensors, database):
 		print(name)
 		a = datetime.now()
+		self.path = path
 		self.sensors = sensors
 		self.stimuli_names = stimuli_names
 		self.name = name
@@ -186,13 +189,13 @@ class Subject:
 		1.	stimulus_object_dict: [dictionary] dictionary of objects of class stimulus ordered by category
 		"""	
 
-		if not os.path.isdir('./question_indices/'):
-			os.makedirs('./question_indices/')
+		if not os.path.isdir(self.path + '/question_indices/'):
+			os.makedirs(self.path + '/question_indices/')
 
-		if os.path.isfile('question_indices/' + self.name + '.pickle') == True:
+		if os.path.isfile(self.path + '/question_indices/' + self.name + '.pickle') == True:
 			flag = 1
 
-			pickle_in = open('question_indices/' + self.name + '.pickle',"rb")
+			pickle_in = open(self.path + '/question_indices/' + self.name + '.pickle',"rb")
 			question_indices_dict = pickle.load(pickle_in)
 
 		else:
@@ -220,7 +223,7 @@ class Subject:
 
 				stimuli_data = data[start_time : end_time+1]
 
-				stimulus_object = Stimulus(stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file, self.name)
+				stimulus_object = Stimulus(self.path, stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file, self.name)
 
 				stimulus_object_list.append(stimulus_object)
 
@@ -229,7 +232,7 @@ class Subject:
 		del data
 
 		if flag == 0:	
-			pickle_out = open('question_indices/' + self.name + '.pickle',"wb")
+			pickle_out = open(self.path + 'question_indices/' + self.name + '.pickle',"wb")
 			pickle.dump(question_indices_dict, pickle_out)
 			pickle_out.close()
 	
@@ -251,11 +254,11 @@ class Subject:
 			json_data = json.load(json_f)
 
 		if "Control_Questions" in json_data:
-			if not os.path.isdir('./control_values/'):
-				os.makedirs('./control_values/')
+			if not os.path.isdir(self.path + '/control_values/'):
+				os.makedirs(self.path + '/control_values/')
 			
-			if os.path.isfile('control_values/' + self.name + '.pickle') == True:
-				pickle_in = open('control_values/' + self.name + '.pickle',"rb")
+			if os.path.isfile(self.path + '/control_values/' + self.name + '.pickle') == True:
+				pickle_in = open(self.path + '/control_values/' + self.name + '.pickle',"rb")
 				control = pickle.load(pickle_in)
 
 			else:
@@ -276,7 +279,7 @@ class Subject:
 						control[sen][c] = np.mean(control[sen][c])
 
 				control.update({"response_time" : 0})
-				pickle_out = open('control_values/' + self.name + '.pickle',"wb")
+				pickle_out = open(self.path + '/control_values/' + self.name + '.pickle',"wb")
 				pickle.dump(control, pickle_out)
 				pickle_out.close()
 		

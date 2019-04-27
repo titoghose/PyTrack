@@ -1,4 +1,4 @@
-#Experiment class
+# -*- coding: utf-8 -*-
 
 from Sensor import Sensor
 from Subject import Subject
@@ -110,6 +110,7 @@ class Experiment:
 		with open(json_file, "r") as json_f:
 			json_data = json.load(json_f)
 
+		self.path = json_data["Path"]
 		self.name = json_data["Experiment_name"]
 		self.json_file = json_file #string
 		self.sensors = sensors
@@ -117,6 +118,7 @@ class Experiment:
 		self.stimuli = self.stimuliArrayInitialisation() #dict of names of stimuli demarcated by category
 		self.subjects = self.subjectArrayInitialisation() #list of subject objects
 		self.meta_matrix_dict = (np.ndarray(len(self.subjects), dtype=str), dict())
+		
 
 		if not os.path.isdir('./Subjects/'):
 			os.makedirs('./Subjects/')
@@ -175,7 +177,7 @@ class Experiment:
 
 			for subject_name in subject_data[k]:
 
-				subject_object = Subject(subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database)
+				subject_object = Subject(self.path, subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database)
 
 				subject_list.append(subject_object)
 

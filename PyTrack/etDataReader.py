@@ -1,54 +1,32 @@
 # -*- coding: utf-8 -*-
-#
-# This file is part of PyGaze - the open-source toolbox for eye tracking
-#
-#	PyGazeAnalyser is a Python module for easily analysing eye-tracking data
-#	Copyright (C) 2014  Edwin S. Dalmaijer
-#
-#	This program is free software: you can redistribute it and/or modify
-#	it under the terms of the GNU General Public License as published by
-#	the Free Software Foundation, either version 3 of the License, or
-#	(at your option) any later version.
-#
-#	This program is distributed in the hope that it will be useful,
-#	but WITHOUT ANY WARRANTY; without even the implied warranty of
-#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#	GNU General Public License for more details.
-#
-#	You should have received a copy of the GNU General Public License
-#	along with this program.  If not, see <http://www.gnu.org/licenses/>
-
-# (C) Edwin Dalmaijer, 2014-2015
-# edwin.dalmaijer@psy.ox.ax.uk
-#
-# version 1 (10-Jan-2015)
 
 import copy
 import os.path
-
 import numpy
 
 def blink_detection(x, y, time, missing=0.0, minlen=10):
+	"""Detects blinks, defined as a period of missing data that lasts for at least a minimal amount of samples
 	
-	"""Detects blinks, defined as a period of missing data that lasts for at
-	least a minimal amount of samples
+	Parameters
+	----------
+	x : array
+		Gaze x positions
+	y :	array
+		Gaze y positions
+	time : array
+		Timestamps
+	missing	: float
+		Value to be used for missing data (default = 0.0)
+	minlen : int 
+		Minimal amount of consecutive missing samples
 	
-	arguments
+	Returns
+	-------
+	Sblk : list of lists
+		Each containing [starttime]
+	Eblk : list of lists
+		Each containing [starttime, endtime, duration]
 
-	x		-	numpy array of x positions
-	y		-	numpy array of y positions
-	time		-	numpy array of EyeTribe timestamps
-
-	keyword arguments
-
-	missing	-	value to be used for missing data (default = 0.0)
-	minlen	-	integer indicating the minimal amount of consecutive
-				missing samples
-	
-	returns
-	Sblk, Eblk
-				Sblk	-	list of lists, each containing [starttime]
-				Eblk	-	list of lists, each containing [starttime, endtime, duration]
 	"""
 	
 	# empty list to contain data
@@ -88,28 +66,30 @@ def blink_detection(x, y, time, missing=0.0, minlen=10):
 
 
 def fixation_detection(x, y, time, missing=0.0, maxdist=25, mindur=50):
+	"""Detects fixations, defined as consecutive samples with an inter-sample distance of less than a set amount of pixels (disregarding missing data)
 	
-	"""Detects fixations, defined as consecutive samples with an inter-sample
-	distance of less than a set amount of pixels (disregarding missing data)
+	Parameters
+	----------
+	x : array
+		Gaze x positions
+	y :	array
+		Gaze y positions
+	time : array
+		Timestamps
+	missing	: float
+		Value to be used for missing data (default = 0.0)
+	maxdist : int
+		Maximal inter sample distance in pixels (default = 25)
+	mindur : int
+		Minimal duration of a fixation in milliseconds; detected fixation cadidates will be disregarded if they are below this duration (default = 100)
 	
-	arguments
+	Returns
+	-------
+	Sfix : list of lists
+		Each containing [starttime]
+	Efix : list of lists
+		Each containing [starttime, endtime, duration, endx, endy]
 
-	x		-	numpy array of x positions
-	y		-	numpy array of y positions
-	time		-	numpy array of EyeTribe timestamps
-
-	keyword arguments
-
-	missing	-	value to be used for missing data (default = 0.0)
-	maxdist	-	maximal inter sample distance in pixels (default = 25)
-	mindur	-	minimal duration of a fixation in milliseconds; detected
-				fixation cadidates will be disregarded if they are below
-				this duration (default = 100)
-	
-	returns
-	Sfix, Efix
-				Sfix	-	list of lists, each containing [starttime]
-				Efix	-	list of lists, each containing [starttime, endtime, duration, endx, endy]
 	"""
 	
 	# empty list to contain data
@@ -146,30 +126,32 @@ def fixation_detection(x, y, time, missing=0.0, maxdist=25, mindur=50):
 
 
 def saccade_detection(x, y, time, missing=0.0, minlen=5, maxvel=40, maxacc=340):
+	"""Detects saccades, defined as consecutive samples with an inter-sample velocity of over a velocity threshold or an acceleration threshold
 	
-	"""Detects saccades, defined as consecutive samples with an inter-sample
-	velocity of over a velocity threshold or an acceleration threshold
+	Parameters
+	----------
+	x : array
+		Gaze x positions
+	y :	array
+		Gaze y positions
+	time : array
+		Timestamps
+	missing	: float
+		Value to be used for missing data (default = 0.0)
+	minlen : int
+		Minimal length of saccades in milliseconds; all detected saccades with len(sac) < minlen will be ignored (default = 5)
+	maxvel : int
+		Velocity threshold in pixels/second (default = 40)
+	maxacc : int
+		Acceleration threshold in pixels / second**2 (default = 340)
 	
-	arguments
+	Returns
+	-------
+	Ssac : list of lists
+		Each containing [starttime]
+	Esac : list of lists
+		Each containing [starttime, endtime, duration, startx, starty, endx, endy]
 
-	x		-	numpy array of x positions
-	y		-	numpy array of y positions
-	time		-	numpy array of tracker timestamps in milliseconds
-
-	keyword arguments
-
-	missing	-	value to be used for missing data (default = 0.0)
-	minlen	-	minimal length of saccades in milliseconds; all detected
-				saccades with len(sac) < minlen will be ignored
-				(default = 5)
-	maxvel	-	velocity threshold in pixels/second (default = 40)
-	maxacc	-	acceleration threshold in pixels / second**2
-				(default = 340)
-	
-	returns
-	Ssac, Esac
-			Ssac	-	list of lists, each containing [starttime]
-			Esac	-	list of lists, each containing [starttime, endtime, duration, startx, starty, endx, endy]
 	"""
 	
 	# CONTAINERS
@@ -242,41 +224,32 @@ def saccade_detection(x, y, time, missing=0.0, minlen=5, maxvel=40, maxacc=340):
 
 
 def read_idf(filename, start, stop=None, missing=0.0, debug=False):
+	"""Returns a list with dicts for every trial.
+		
+	Parameters
+	----------
+	filename : str
+		Path to the file that has to be read
+	start : str
+		Trial start string
+	stop : str
+		Trial ending string (default = None)
+	missing : float
+		Value to be used for missing data (default = 0.0)
+	debug : bool
+		Indicating if DEBUG mode should be on or off; if DEBUG mode is on, information on what the script currently is doing will be printed to the console (default = False)
 	
-	"""Returns a list with dicts for every trial. A trial dict contains the
-	following keys:
-		x		-	numpy array of x positions
-		y		-	numpy array of y positions
-		size		-	numpy array of pupil size
-		time		-	numpy array of timestamps, t=0 at trialstart
-		trackertime-	numpy array of timestamps, according to the tracker
-		events	-	dict with the following keys:
-						Sfix	-	list of lists, each containing [starttime]
-						Ssac	-	EMPTY! list of lists, each containing [starttime]
-						Sblk	-	list of lists, each containing [starttime]
-						Efix	-	list of lists, each containing [starttime, endtime, duration, endx, endy]
-						Esac	-	EMPTY! list of lists, each containing [starttime, endtime, duration, startx, starty, endx, endy]
-						Eblk	-	list of lists, each containing [starttime, endtime, duration]
-						msg	-	list of lists, each containing [time, message]
-						NOTE: timing is in EyeTribe time!
-	
-	arguments
+	Returns
+	-------
+	data : list
+		With a dict for every trial. Following is the dictionary
+		0. x -array of Gaze x positions,
+		1. y -array of Gaze y positions,
+		2. size -array of pupil size,
+		3. time -array of timestamps, t=0 at trialstart,
+		4. trackertime -array of timestamps, according to the tracker,
+		5. events -dict {Sfix, Ssac, Sblk, Efix, Esac, Eblk, msg}
 
-	filename		-	path to the file that has to be read
-	start		-	trial start string
-	
-	keyword arguments
-
-	stop		-	trial ending string (default = None)
-	missing	-	value to be used for missing data (default = 0.0)
-	debug	-	Boolean indicating if DEBUG mode should be on or off;
-				if DEBUG mode is on, information on what the script
-				currently is doing will be printed to the console
-				(default = False)
-	
-	returns
-
-	data		-	a list with a dict for every trial (see above)
 	"""
 
 	# # # # #
@@ -507,23 +480,20 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 
 
 def replace_missing(value, missing=0.0):
+	"""Returns missing code if passed value is missing, or the passed value if it is not missing; a missing value in the EDF contains only a period, no numbers; NOTE: this function is for gaze position values only, NOT for pupil size, as missing pupil size data is coded '0.0'
 	
-	"""Returns missing code if passed value is missing, or the passed value
-	if it is not missing; a missing value in the EDF contains only a
-	period, no numbers; NOTE: this function is for gaze position values
-	only, NOT for pupil size, as missing pupil size data is coded '0.0'
+	Parameters
+	----------
+	value : str
+		Either an X or a Y gaze position value (NOT pupil size! This is coded '0.0')
+	missing : float
+		The missing code to replace missing data with (default = 0.0)
 	
-	arguments
-	value		-	either an X or a Y gaze position value (NOT pupil
-					size! This is coded '0.0')
+	Returns
+	-------
+	float
+		Either a missing code, or a float value of the gaze position
 	
-	keyword arguments
-	missing		-	the missing code to replace missing data with
-					(default = 0.0)
-	
-	returns
-	value		-	either a missing code, or a float value of the
-					gaze position
 	"""
 	
 	if value.replace(' ','') == '.':
@@ -533,38 +503,32 @@ def replace_missing(value, missing=0.0):
 
 
 def read_edf(filename, start, stop=None, missing=0.0, debug=False):
+	"""Returns a list with dicts for every trial.
+		
+	Parameters
+	----------
+	filename : str
+		Path to the file that has to be read
+	start : str
+		Trial start string
+	stop : str
+		Trial ending string (default = None)
+	missing : float
+		Value to be used for missing data (default = 0.0)
+	debug : bool
+		Indicating if DEBUG mode should be on or off; if DEBUG mode is on, information on what the script currently is doing will be printed to the console (default = False)
 	
-	"""Returns a list with dicts for every trial. A trial dict contains the
-	following keys:
-		x		-	numpy array of x positions
-		y		-	numpy array of y positions
-		size		-	numpy array of pupil size
-		time		-	numpy array of timestamps, t=0 at trialstart
-		trackertime	-	numpy array of timestamps, according to EDF
-		events	-	dict with the following keys:
-						Sfix	-	list of lists, each containing [starttime]
-						Ssac	-	list of lists, each containing [starttime]
-						Sblk	-	list of lists, each containing [starttime]
-						Efix	-	list of lists, each containing [starttime, endtime, duration, endx, endy]
-						Esac	-	list of lists, each containing [starttime, endtime, duration, startx, starty, endx, endy]
-						Eblk	-	list of lists, each containing [starttime, endtime, duration]
-						msg	-	list of lists, each containing [time, message]
-						NOTE: timing is in EDF time!
-	
-	arguments
-	filename		-	path to the file that has to be read
-	start		-	trial start string
-	
-	keyword arguments
-	stop			-	trial ending string (default = None)
-	missing		-	value to be used for missing data (default = 0.0)
-	debug		-	Boolean indicating if DEBUG mode should be on or off;
-				if DEBUG mode is on, information on what the script
-				currently is doing will be printed to the console
-				(default = False)
-	
-	returns
-	data			-	a list with a dict for every trial (see above)
+	Returns
+	-------
+	data : list
+		With a dict for every trial. Following is the dictionary
+		0. x -array of Gaze x positions,
+		1. y -array of Gaze y positions,
+		2. size -array of pupil size,
+		3. time -array of timestamps, t=0 at trialstart,
+		4. trackertime -array of timestamps, according to the tracker,
+		5. events -dict {Sfix, Ssac, Sblk, Efix, Esac, Eblk, msg}
+				
 	"""
 
 	# # # # #
@@ -794,4 +758,31 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False):
 
 
 def read_tobii(filename, start, stop=None, missing=0.0, debug=False):
+	"""Returns a list with dicts for every trial.
+		
+	Parameters
+	----------
+	filename : str
+		Path to the file that has to be read
+	start : str
+		Trial start string
+	stop : str
+		Trial ending string (default = None)
+	missing : float
+		Value to be used for missing data (default = 0.0)
+	debug : bool
+		Indicating if DEBUG mode should be on or off; if DEBUG mode is on, information on what the script currently is doing will be printed to the console (default = False)
+	
+	Returns
+	-------
+	data : list
+		With a dict for every trial. Following is the dictionary
+		0. x -array of Gaze x positions,
+		1. y -array of Gaze y positions,
+		2. size -array of pupil size,
+		3. time -array of timestamps, t=0 at trialstart,
+		4. trackertime -array of timestamps, according to the tracker,
+		5. events -dict {Sfix, Ssac, Sblk, Efix, Esac, Eblk, msg}
+			
+	"""
 	return 

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from etDataReader import read_edf, read_idf, read_tobii
 from sqlalchemy import create_engine
 from datetime import datetime
@@ -336,4 +338,4 @@ def generateCompatibleFormat(exp_info, device, data_path, stim_list_mode="NA", s
         df = convertToBase(data_path, sensor_type='EyeTracker', device=device, stim_list=stim, start=start, stop=stop)
         df.to_csv(data_path.split(".")[0] + ".csv")
 
-generateCompatibleFormat("test_formats.json", device='smi', data_path="/home/upamanyu/Documents/NTU_Creton/Data/EyeTracking/smi_eyetracker_freeviewing.txt", start="103", stop="203")
+# generateCompatibleFormat("test_formats.json", device='smi', data_path="/home/upamanyu/Documents/NTU_Creton/Data/EyeTracking/smi_eyetracker_freeviewing.txt", start="103", stop="203")
