@@ -4,6 +4,7 @@ import os
 import json
 import numpy as np
 import pandas as pd
+import matplotlib as mpl
 from scipy import signal, io, stats, misc
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
@@ -12,9 +13,6 @@ import matplotlib.animation as animation
 from Sensor import Sensor
 import matplotlib.cm as cm
 from scipy.ndimage.filters import gaussian_filter
-
-import matplotlib as mpl
-mpl.use("TkAgg")
 
 
 class Stimulus:
@@ -61,7 +59,8 @@ class Stimulus:
 		self.sensors = dict()
 		self.subject_name = subject_name
 		
-		
+		mpl.use("TkAgg")
+
 		if not os.path.isdir(self.path + '/Subjects/' + self.subject_name + '/'):
 			os.makedirs(self.path + '/Subjects/' + self.subject_name + '/')
 
@@ -1515,6 +1514,8 @@ def groupHeatMap(sub_list, stim_name, json_file):
 			Name of json file containing details of the experiment.
 		
 	"""
+
+	mpl.use("TkAgg")
 
 	fig = plt.figure()
 	fig.canvas.set_window_title("Aggregate Gaze Heat Map")
