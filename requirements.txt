@@ -3,5 +3,4 @@ scipy
 pingouin
 sqlalchemy
 pandas
-tkinter
 matplotlib
