@@ -1,7 +1,7 @@
 Modules
 ===============
 
-Experiment module
+Experiment
 -------------------------
 
 .. automodule:: Experiment
@@ -9,7 +9,7 @@ Experiment module
     :undoc-members:
     :show-inheritance:
 
-Sensor module
+Sensor
 ---------------------
 
 .. automodule:: Sensor
@@ -17,7 +17,7 @@ Sensor module
     :undoc-members:
     :show-inheritance:
 
-Stimulus module
+Stimulus
 -----------------------
 
 .. automodule:: Stimulus
@@ -25,7 +25,7 @@ Stimulus module
     :undoc-members:
     :show-inheritance:
 
-Subject module
+Subject
 ----------------------
 
 .. automodule:: Subject
@@ -33,7 +33,7 @@ Subject module
     :undoc-members:
     :show-inheritance:
 
-etDataReader module
+etDataReader
 ---------------------------
 
 .. automodule:: etDataReader
@@ -41,7 +41,7 @@ etDataReader module
     :undoc-members:
     :show-inheritance:
 
-formatBridge module
+formatBridge
 ---------------------------
 
 .. automodule:: formatBridge
