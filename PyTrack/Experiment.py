@@ -364,3 +364,12 @@ class Experiment:
 
 					p_value_table.to_csv("p_values"+ str(i) + ".csv" , index = False)
 
+
+	def getMetaData(self, sub, stim):
+		"""
+		"""
+		if stim == None:
+			None
+		else:
+			None
+		return

@@ -1434,13 +1434,13 @@ class Stimulus:
 		-------
 		extracted_data : dict 
 			Dictionary of extracted data to be used by the functions of the class.
-				- "ETRows" : list,
-				- "FixationSeq" : list,
-				- "Gaze" : dict,
-				- "InterpPupilSize" : list,
-				- "InterpGaze" : dict,
-				- "BlinksLeft" : dict,
-				- "BlinksRight" : dict
+			- "ETRows" : list,
+			- "FixationSeq" : list,
+			- "Gaze" : dict,
+			- "InterpPupilSize" : list,
+			- "InterpGaze" : dict,
+			- "BlinksLeft" : dict,
+			- "BlinksRight" : dict
 		
 		"""
 

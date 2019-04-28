@@ -277,14 +277,17 @@ def db_create(source_folder, database_name, dtype_dictionary=None, na_strings=No
             j = df.index[-1] + 1
 
 
-def generateCompatibleFormat(exp_info, device, data_path, stim_list_mode="NA", start='START', stop=None):
+def generateCompatibleFormat(exp_path, device="eyelink", stim_list_mode="NA", start='START', stop=None):
     """
     """
     
-    if os.path.isdir(data_path):
-        
+    if os.path.isdir(exp_path):
+
+        exp_info = exp_path + "/" + exp_path.split("/")[-1] + ".json"
+        data_path = exp_path + "/Data/"    
         if not os.path.isdir(data_path + "/csv_files/"):
             os.makedirs(data_path + "/csv_files/")
+
 
         stim = None
 
@@ -328,7 +331,7 @@ def generateCompatibleFormat(exp_info, device, data_path, stim_list_mode="NA", s
         db_create(source_folder, json_data["Experiment_name"])
 
     else:
-
+        data_path = exp_path    
         print("Converting to base csv formate: ", data_path.split("/")[-1])
 
         stim = None

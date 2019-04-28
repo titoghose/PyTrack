@@ -1,53 +1,53 @@
-PyTrack package
+Modules
 ===============
 
 Submodules
 ----------
 
-PyTrack.Experiment module
+Experiment module
 -------------------------
 
-.. automodule:: PyTrack.Experiment
+.. automodule:: Experiment
     :members:
     :undoc-members:
     :show-inheritance:
 
-PyTrack.Sensor module
+Sensor module
 ---------------------
 
-.. automodule:: PyTrack.Sensor
+.. automodule:: Sensor
     :members:
     :undoc-members:
     :show-inheritance:
 
-PyTrack.Stimulus module
+Stimulus module
 -----------------------
 
-.. automodule:: PyTrack.Stimulus
+.. automodule:: Stimulus
     :members:
     :undoc-members:
     :show-inheritance:
 
-PyTrack.Subject module
+Subject module
 ----------------------
 
-.. automodule:: PyTrack.Subject
+.. automodule:: Subject
     :members:
     :undoc-members:
     :show-inheritance:
 
-PyTrack.etDataReader module
+etDataReader module
 ---------------------------
 
-.. automodule:: PyTrack.etDataReader
+.. automodule:: etDataReader
     :members:
     :undoc-members:
     :show-inheritance:
 
-PyTrack.formatBridge module
+formatBridge module
 ---------------------------
 
-.. automodule:: PyTrack.formatBridge
+.. automodule:: formatBridge
     :members:
     :undoc-members:
     :show-inheritance:
