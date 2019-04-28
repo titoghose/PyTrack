@@ -1,9 +1,6 @@
 Modules
 ===============
 
-Submodules
-----------
-
 Experiment module
 -------------------------
 
@@ -48,15 +45,6 @@ formatBridge module
 ---------------------------
 
 .. automodule:: formatBridge
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: PyTrack
     :members:
     :undoc-members:
     :show-inheritance:

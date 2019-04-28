@@ -1,5 +1,5 @@
-PyTrack
-=======
+Introduction to the framework
+=============================
 
 This is a framework to analyse and visualize eye tracking data. It
 offers 2 designs of analysis:
@@ -41,7 +41,7 @@ Running the tests
 -----------------
 
 In order to test **PyTrack**, some sample data files can be found
-`here <>`__. To get started, first you need to choose which design you
+`here <https://www.google.com>`__. To get started, first you need to choose which design you
 want to run the framework in. If you wish to use the *Experiment
 Design*, see `this <#experiment-design>`_. If you wish to use the *Stand-alone Design* see
 `this <#stand-alone-design>`__.
