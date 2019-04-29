@@ -5,4 +5,5 @@ PyTrack
    :maxdepth: 4
 
    Introduction
+   License
    PyTrack

@@ -31,3 +31,4 @@ PyTrack/Stimuli/
 PyTrack/control_values/
 PyTrack/question_indices/
 PyTrack/__pycache__/
+docs/_build/*

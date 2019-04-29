@@ -22,18 +22,8 @@ setuptools.setup(
           'numpy',
           'scipy',
           'pingouin',
-          'json',
           'sqlalchemy',
           'pandas',
-          'os',
-          'time',
-          'random',
-          'functools',
-          'tkinter',
-          'matplotlib',
-          'subprocess',
-          'pickle',
-          'sys',
-          'datetime'
+          'matplotlib'
       ]
 )
