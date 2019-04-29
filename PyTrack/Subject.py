@@ -101,7 +101,7 @@ class Subject:
 		self.subj_type = subj_type
 		self.json_file = json_file
 		self.stimulus = self.stimulusDictInitialisation(stimuli_names, columns, json_file, sensors, database) 
-		self.control_data = self.getControlData(columns, json_file, sensors, database)
+		self.control_data = self.getControlData()
 		self.aggregate_meta = {}
 		b = datetime.now()
 		print("Total time for subject: ", (b-a).seconds, "\n")
@@ -109,14 +109,6 @@ class Subject:
 
 	def dataExtraction(self, columns, json_file, database):
 		"""
-		Extracts the required columns from the data base and returns a pandas datastructure
-
-		Input:
-		1.	name_of_database: [string] name of the database
-		2.	columns: [list] list of the names of the columns of interest
-
-		Output:
-		1.	df: [pandas datastructure] contains the data of columns of our interest
 		"""
 		string = 'SELECT '
 
@@ -145,18 +137,7 @@ class Subject:
 		
 
 	def timeIndexInitialisation(self, stimulus_column_name, stimulus_name, df):
-
 		"""
-		This function that will retireve the index of the start, end and roi of a question
-
-		Input:
-		1.	stimulus_column_name: [string] Name of the column where the stimuli names are present 
-		2.	stimulus_name: [string] Name of the stimulus 
-
-		Output:
-		1.	start:[integer] the index of the start of a queation
-		2.	end:[integer] the index of the end of a question
-		3.	roi:[integer] the index when the eye lands on the region of interest
 		"""
 
 		index = df[df[stimulus_column_name] == stimulus_name].index
@@ -179,14 +160,6 @@ class Subject:
 	def stimulusDictInitialisation(self, stimuli_names, columns, json_file, sensors, database):
 
 		"""
-		Creates  a list of objects of class Stimuli
-
-		Input:
-		1.	stimuli_names:[list] list of names of different stimulus
-		2.	columns: [list] list of names of the columns of interest
-
-		Output:
-		1.	stimulus_object_dict: [dictionary] dictionary of objects of class stimulus ordered by category
 		"""	
 
 		if not os.path.isdir(self.path + '/question_indices/'):
@@ -239,9 +212,16 @@ class Subject:
 		return stimulus_object_dict
 
 
-	def getControlData(self, columns, json_file, sensors, database):
-		"""
-		This function returns the average value of control data (alpha questions) for the purpose of standardisation
+	def getControlData(self):
+		"""Function to find the values for standardization/normalization of the features extracte from the different stimuli. 
+
+		The method is invoked implicitly by the `__init__` method. It extracts the features/metadata for the stimuli mentioned in the json file under the "*Control_Questions*" field. If it is blank the values in the control data structure will be all 0s. During analysis, these control values will be subtracted from the values found for each stimulus. 
+
+		Returns
+		-------
+		control : dict
+			Dictionary containing the standardised values for all the metadata/features. The keys of the dictionary are the different meta columns for a given sensor type. It can be found under meta_cols in `Sensor <#module-Sensor>`_.
+		
 		"""
 
 		control = dict()
@@ -250,7 +230,7 @@ class Subject:
 			for meta in Sensor.meta_cols[sen]:
 				control[sen].update({meta: 0})
 
-		with open(json_file) as json_f:
+		with open(self.json_file) as json_f:
 			json_data = json.load(json_f)
 
 		if "Control_Questions" in json_data:
@@ -287,13 +267,26 @@ class Subject:
 
 
 	def subjectVisualize(self, master, viz_type="individual", sub_list=None):
-		"""
+		"""Visualization function to open the window for stimulus and plot type selection.
+
+		It is invoked internally by the `visualizaData <#Experiment.Experiment.visualizeData>`_ function.
+
 		"""
 		sub_viz = SubjectVisualize(master, self.name, self.stimulus, json_file=self.json_file, viz_type=viz_type, sub_list=sub_list)
 
 
-	def subjectAnalysis(self,average_flag,standardise_flag):
-		"""
+	def subjectAnalysis(self, average_flag, standardise_flag):
+		"""Function to find features for all stimuli for a given subject. 
+
+		Does not return any value. It stores the calculated features/metadata in its `aggregate_meta` member variable. Can be accessed by an object of the class. For structure of this variable see `Subject <#module-Subject>.
+
+		Parameters
+		----------
+		average_flag : bool
+			If ``True``, average values for a given meta variable under each stimulus type for a given stimulus.
+		standardise_flag : bool
+			If ``True``, subtract `control_data` values for a given meta variable for each stimulus. See `getControlData <#Subject.Subject.getControlData>`_ for more details on `control_data`.
+
 		"""
 		
 		for st in self.stimulus:
@@ -309,14 +302,12 @@ class Subject:
 					for sen in self.sensors:
 						# Normalizing by subtracting control data
 						for cd in Sensor.meta_cols[sen]:
-							if(standardise_flag):
+							if standardise_flag:
 								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors["EyeTracker"].metadata[cd] - self.control_data[sen][cd])))
 							else:
 								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors["EyeTracker"].metadata[cd]))
 
-						# temp_pup_size.append(stim.sensors["EyeTracker"].metadata["pupil_size"])
-
-		if(average_flag):	
+		if average_flag:	
 			for s in self.stimulus:
 				for sen in self.sensors:
 					for cd in Sensor.meta_cols[sen]:

@@ -10,14 +10,14 @@ import os
 
 
 def getColHeaders():
-    """
+    """Function to return the column headers for the *PyTrack* base format data representation.
+
     """
     return ["Timestamp", "StimulusName", "EventSource", "GazeLeftx", "GazeRightx", "GazeLefty", "GazeRighty", "PupilLeft", "PupilRight", "FixationSeq", "SaccadeSeq", "Blink"]
 
 
 def eyeLinkToBase(filename, stim_list=None, start='START', stop=None):
-    """
-    Bridge function that converts ASCII (asc) EyeLink eye tracking data files to the base CSV format that the framework uses.
+    """Bridge function that converts ASCII (asc) EyeLink eye tracking data files to the base CSV format that the framework uses.
 
     Parameters
     ----------
@@ -103,8 +103,7 @@ def eyeLinkToBase(filename, stim_list=None, start='START', stop=None):
 
 
 def smiToBase(filename, stim_list=None, start='START', stop=None):
-    """
-    Bridge function that converts SMI (text ascii generated from idf) raw eye tracking data files to the base CSV format that the framework uses.
+    """Bridge function that converts SMI (text ascii generated from idf) raw eye tracking data files to the base CSV format that the framework uses.
 
     Parameters
     ----------
@@ -187,8 +186,7 @@ def smiToBase(filename, stim_list=None, start='START', stop=None):
 
 
 def tobiiToBase(filename, stim_list=None, start='START', stop=None):
-    """
-    Bridge function that converts Tobii eye tracking data files to the base CSV format that the framework uses.
+    """Bridge function that converts Tobii eye tracking data files to the base CSV format that the framework uses.
 
     Parameters
     ----------
@@ -212,10 +210,31 @@ def tobiiToBase(filename, stim_list=None, start='START', stop=None):
 
 
 def convertToBase(filename, sensor_type, device, stim_list=None, start='START', stop=None):
-    """
-    """
+    """Master function that calls the different converter functions to convert to bas data format.
 
-    file_type = filename.split('.')[1]
+    Internally invoked by `generateCompatibleFormats <#formatBridge.generateCompatibleFormat>`_. 
+
+    Parameters
+    ----------
+    filename : str
+        Full path of the data file.
+    sensor_type : str {'EyeTracker'}
+        Type of sensor. Supports only 'EyeTracker' for now.
+    device : str {'eyelink', 'smi', 'tobii'}
+        Make of the sensor. Must be a type of eye tracker.
+    stim_list : list (str) | None
+        If ``None`` (default) the name of stimuli for a data file wil be generated sequentially as ["stim1", "stim2", "stim2", ...]. If it is a list of str, then the stimulus names will be taken from this list in the given order. Hence, the length of stim_list and number of events/trials/simuli markers in the data should be the same.
+    start : str
+        The start of event marker in the data (Defaults to 'START').
+    stop : str
+        The end of event marker in the data (Defaults to ``None``). If ``None``, start of new event will be considered as end of previous event. 
+
+    Returns
+    -------
+    pandas DataFrame
+        The extracted data in the base format.
+
+    """
 
     if sensor_type == 'EyeTracker':
         if device == 'eyelink':
@@ -235,7 +254,7 @@ def convertToBase(filename, sensor_type, device, stim_list=None, start='START', 
         print("Sorry " + sensor_type + " not supported!\n")
 
 
-def db_create(source_folder, database_name, dtype_dictionary=None, na_strings=None):
+def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na_strings=None):
     """
     """
     
@@ -246,7 +265,7 @@ def db_create(source_folder, database_name, dtype_dictionary=None, na_strings=No
         if names.endswith(".csv"):
             newlist.append(names)
 
-    database = "sqlite:///" + database_name + ".db"
+    database = data_path + "sqlite:///" + database_name + ".db"
     csv_database = create_engine(database)
 
     for file in newlist:
@@ -262,7 +281,7 @@ def db_create(source_folder, database_name, dtype_dictionary=None, na_strings=No
         chunksize = 100000
         i = 0
         j = 1
-        for df in pd.read_csv(file_name, chunksize=chunksize, iterator=True,na_values = na_strings, dtype=dtype_dictionary):
+        for df in pd.read_csv(file_name, chunksize=chunksize, iterator=True, na_values = na_strings, dtype=dtype_dictionary):
             
             #SQL columns ideally should not have ' ', '/', '(', ')'
 
@@ -277,8 +296,26 @@ def db_create(source_folder, database_name, dtype_dictionary=None, na_strings=No
             j = df.index[-1] + 1
 
 
-def generateCompatibleFormat(exp_path, device="eyelink", stim_list_mode="NA", start='START', stop=None):
-    """
+def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START', stop=None, reading_method="SQL"):
+    """Function to convert data into the base format before starting analysis and visualization. 
+    
+    The function creates a directory called 'csv_files' inside the `Data` folder and stores the converted csv files in it. If `reading_method` is specified as 'SQL' then an SQL database is created inside the 'Data' folder but the user need not worry about it.
+
+    Parameters
+    ----------
+    exp_path : str
+        Absolute path to the experiment folder. If the path is a folder, the framework will assume its being run in the *Experiment Design* mode. If it is a path to a single data file, then the *Stand-alone Design* mode is assumed. 
+    device : str {'eyelink', 'smi', 'tobii'}
+        Make of the sensor.
+    stim_list_mode : str {'NA', 'common', 'diff'}
+        See the `Using PyTrack <https://pytrack-ntu.readthedocs.io/en/latest/Introduction.html#using-pytrack>`_ in the `Introduction <https://pytrack-ntu.readthedocs.io/en/latest/Introduction.html#>`_ for details on which of the three to suply. 
+    start : str
+        The start of event marker in the data (Defaults to 'START').
+    stop : str
+        The end of event marker in the data (Defaults to ``None``). If ``None``, start of new event will be considered as end of previous event. 
+    reading_method : str {'CSV', 'SQL'}
+        'SQL' (default) reading method is faster but will need extra space. This affects the internal functioning of he framework and the user can leave it as is.
+
     """
     
     if os.path.isdir(exp_path):
@@ -328,7 +365,8 @@ def generateCompatibleFormat(exp_path, device="eyelink", stim_list_mode="NA", st
         with open(exp_info, "r") as json_f:
             json_data = json.load(json_f)
 
-        db_create(source_folder, json_data["Experiment_name"])
+        if reading_method == "SQL":
+            db_create(data_path, source_folder, json_data["Experiment_name"])
 
     else:
         data_path = exp_path    
@@ -340,5 +378,3 @@ def generateCompatibleFormat(exp_path, device="eyelink", stim_list_mode="NA", st
         
         df = convertToBase(data_path, sensor_type='EyeTracker', device=device, stim_list=stim, start=start, stop=stop)
         df.to_csv(data_path.split(".")[0] + ".csv")
-
-# generateCompatibleFormat("test_formats.json", device='smi', data_path="/home/upamanyu/Documents/NTU_Creton/Data/EyeTracking/smi_eyetracker_freeviewing.txt", start="103", stop="203")

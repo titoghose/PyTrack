@@ -264,7 +264,7 @@ See `documentation <https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html>`_
 
 
 Stand-alone Design
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 [In progress]
 
 

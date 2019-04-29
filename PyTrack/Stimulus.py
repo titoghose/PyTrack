@@ -358,7 +358,7 @@ class Stimulus:
 	def position2Velocity(self, gaze, sampling_freq):
 		"""Function to calculate velocity for a gaze point based on a 6 sample window.
 		
-		Serves as a helper function. See `findMicrosaccades`
+		Serves as a helper function. See `findMicrosaccades <#Stimulus.Stimulus.findMicrosaccades>`_.
 
 		Parameters
 		----------
@@ -387,7 +387,7 @@ class Stimulus:
 	def smoothGaze(self, vel, gaze, sampling_freq):
 		"""Function to smoothen gaze positions using running average method.
 		
-		Serves as a helper function. See `findMicrosaccades`
+		Serves as a helper function. See `findMicrosaccades <#Stimulus.Stimulus.findMicrosaccades>`_
  
 		Parameters
 		----------
@@ -417,7 +417,7 @@ class Stimulus:
 	def calculateMSThreshold(self, vel, sampling_freq, VFAC=5.0):
 		"""Function to calculate velocity threshold value for X and Y directions to classify point as a microsaccade point.
 	
-		Serves as a helper function. See `findMicrosaccades`
+		Serves as a helper function. See `findMicrosaccades <#Stimulus.Stimulus.findMicrosaccades>`_
 
 		Parameters
 		---------
@@ -448,7 +448,7 @@ class Stimulus:
 	def findBinocularMS(self, msl, msr):
 		"""Function to find binocular microsaccades from monocular microsaccades.
 
-		Serves as helper function. See `findMicrosaccades`
+		Serves as helper function. See `findMicrosaccades <#Stimulus.Stimulus.findMicrosaccades>`_
 
 		Parameters
 		----------
@@ -554,7 +554,7 @@ class Stimulus:
 	def findMonocularMS(self, gaze, vel, sampling_freq=1000):
 		"""Function to find binocular microsaccades from monocular microsaccades.
 
-		Serves as helper function. See `findMicrosaccades`
+		Serves as helper function. See `findMicrosaccades <#Stimulus.Stimulus.findMicrosaccades>`_
 
 		Parameters
 		----------
@@ -845,7 +845,7 @@ class Stimulus:
 	def findSaccadeParams(self, sampling_freq=1000):
 		"""Function to find saccade parameters like peak velocity, amplitude, count and duration.
 
-		Internal function of class that uses its `data` member variable. Serves as a helper function. See `findEyeMetaData`
+		Internal function of class that uses its `data` member variable. Serves as a helper function. See `findEyeMetaData <#Stimulus.Stimulus.findEyeMetaData>`_
 
 		Parameters
 		----------
@@ -901,7 +901,7 @@ class Stimulus:
 	def findResponseTime(self, sampling_freq=1000):
 		"""Function to find the response time in milliseconds based on the sampling frequency of the eye tracker.
 
-		Internal function of class that uses its `data` member variable. Serves as a helper function. See `findEyeMetaData`
+		Internal function of class that uses its `data` member variable. Serves as a helper function. See `findEyeMetaData <#Stimulus.Stimulus.findEyeMetaData>`_
 
 		Parameters
 		----------
@@ -920,7 +920,7 @@ class Stimulus:
 	def findFixationParams(self):
 		"""Function to find fixation parameters like count, max duration and average duration.
 
-		Internal function of class that uses its `data` member variable. Does not take any input and can be invoked by an object of the class. Serves as a helper function. See `findEyeMetaData`
+		Internal function of class that uses its `data` member variable. Does not take any input and can be invoked by an object of the class. Serves as a helper function. See `findEyeMetaData <#Stimulus.Stimulus.findEyeMetaData>`_
 
 		Returns
 		-------
@@ -945,7 +945,7 @@ class Stimulus:
 	def findPupilParams(self):
 		"""Function to find pupil parameters like size, peak size, time to peak size, area under curve, slope, mean size, downsampled pupil size
 
-		Internal function of class that uses its `data` member variable. Does not take any input and can be invoked by an object of the class. Serves as a helper function. See `findEyeMetaData`
+		Internal function of class that uses its `data` member variable. Does not take any input and can be invoked by an object of the class. Serves as a helper function. See `findEyeMetaData <#Stimulus.Stimulus.findEyeMetaData>`_
 
 		Returns
 		-------
@@ -990,7 +990,7 @@ class Stimulus:
 	def findBlinkParams(self):
 		"""Function to find blink parameters like count, duration and average duration
 
-		Internal function of class that uses its `data` member variable. Does not take any input and can be invoked by an object of the class. Serves as a helper function. See `findEyeMetaData`
+		Internal function of class that uses its `data` member variable. Does not take any input and can be invoked by an object of the class. Serves as a helper function. See `findEyeMetaData <#Stimulus.Stimulus.findEyeMetaData>`_
 
 		Returns
 		-------
@@ -1284,12 +1284,12 @@ class Stimulus:
 		# Finding word and character count in text stimulus
 		num_chars = 1
 		num_words = 1
-		if self.stim_type in ["alpha", "relevant", "general", "general_lie"]:
-			with open("questions.json") as q_file:
-				data = json.load(q_file)
+		# if self.stim_type in ["alpha", "relevant", "general", "general_lie"]:
+		# 	with open("questions.json") as q_file:
+		# 		data = json.load(q_file)
 
-			num_chars = len(data[self.name])
-			num_words = len(data[self.name].split())
+		# 	num_chars = len(data[self.name])
+		# 	num_words = len(data[self.name].split())
 
 		# Finding response time based on number of  samples 
 		self.response_time = self.findResponseTime()
@@ -1335,7 +1335,7 @@ class Stimulus:
 	def getData(self, data, sensor_names):
 		"""Function to extract data and store in local format.
 		
-		It is invoked by `init__` when the object of the class is created. This function is used in the *Experiment Design*.
+		It is invoked by `__init__` when the object of the class is created. This function is used in the *Experiment Design*.
 
 		Parameters
 		----------
@@ -1421,7 +1421,7 @@ class Stimulus:
 	def getDataStandAlone(self, data, sensor_names):
 		"""Function to extract data and store in local format.
 		
-		It is invoked by `init__` when the object of the class is created. This function is used in the *Stand-alone Design*.
+		It is invoked by `__init__` when the object of the class is created. This function is used in the *Stand-alone Design*.
 
 		Parameters
 		----------
@@ -1502,7 +1502,7 @@ class Stimulus:
 def groupHeatMap(sub_list, stim_name, json_file):
 	"""Function to plot aggregate heat map of gaze for a list if subjects.
 
-		Invoked by the `subjectVisualize` function of the `Subject` class.
+		Invoked by the `subjectVisualize <#Subject.Subject.subjectVisualize>`_ function of the `Subject <#module-Subject>`_ class.
 
 		Parameters
 		----------

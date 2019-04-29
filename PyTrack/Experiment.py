@@ -215,7 +215,10 @@ class Experiment:
 
 
 	def visualizeData(self):
-		"""
+		"""Function to open up the GUI for visualizing the data of the experiment.
+
+		This function can be invoked by an `Experiment <#module-Experiment>`_ object. It opens up a window and allows the usee to visualize data such as dynamic gaze and pupil plots, fixation plots and gaze heat maps for individual subjects or aggregate heat maps for a group of subjects on a given stimulus.
+		
 		"""
 
 		root = tk.Tk()
@@ -365,11 +368,44 @@ class Experiment:
 					p_value_table.to_csv("p_values"+ str(i) + ".csv" , index = False)
 
 
-	def getMetaData(self, sub, stim):
-		"""
+	def getMetaData(self, sub, stim=None, sensor="EyeTracker"):
+		"""Function to return the extracted features for a given subject/participant.
+
+		Parameters
+		----------
+		sub : str
+			Name of the subject/participant.
+		stim : str | ``None``
+			Name of the stimulus. If 'str', the features of the given stimulus will be returned. If ``None``, the features of all stimuli averaged for the different stimuli types (as mentoned in json file) is wanted. 
+		sensor : str
+			Name of the sensor for which the features is wanted.
+		
+		Returns
+		-------
+		dict
+			
+		Note
+		----
+		- If the `stim` is ``None``, the returned dictionary is organised as follows 
+			{"Stim_TypeA": {"meta1":[], "meta2":[], ...}, "Stim_TypeB": {"meta1":[], "meta2":[], ...}, ...}
+		- If the `stim` is ``str``, the returned dictionary is organised as follows 
+			{"meta1":[], "meta2":[], ...}
+			
+		To get the names of all the metadata/features extracted, look at the `Sensor <#module-Sensor>`_ class
+
 		"""
 		if stim == None:
-			None
+			sub_ind = self.subjects.index(sub)
+			return self.subjects[sub_ind].aggregate_meta
+		
 		else:
-			None
-		return
+			sub_ind = self.subjects.index(sub)
+			stim_cat = ""
+			stim_ind = -1
+			for cat in self.stimuli:
+				stim_ind = self.stimuli[cat].index(stim)
+				if stim_ind != -1:
+					stim_cat = cat
+					break
+			
+			return self.subjects[sub_ind].stimulus[stim_cat][stim_ind].sensors[sensor].metadata

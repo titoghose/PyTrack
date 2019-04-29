@@ -137,7 +137,7 @@ Using *formatBridge* majorly has 3 cases.:
 
    eg. If subject data file is *subject_001.asc*, the file in the stim folder should be *subject_001.txt*
 
-   *Note: Yes we undertsand this is a tedious task, but this is the only way we can understand the order of the stimulus which is needed for conclusive analysis and visualization. **However, in case you are using EyeLink data, you can pass a message called "Stim Key: [stim_name]" during each stimulus and we can extract it automatically. See [documentation](https://pytrack-ntu.readthedocs.io/en/latest/).***
+   *Note: Yes we undertsand this is a tedious task, but this is the only way we can understand the order of the stimulus which is needed for conclusive analysis and visualization. **However, in case you are using EyeLink data, you can pass a message called "Stim Key: [stim_name]" during each stimulus and we can extract it automatically. See [documentation](https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html#formatBridge.generateCompatibleFormat).***
 
 2. **Explicitly specify the stimulus order for the entire experiment**. This is for the case where the same order of stimuli are presented to all the participants. Just create a file called *stim_file.txt* and place it inside the *Data* folder. Finally, the *stim_list_mode* parameter in the *generateCompatibleFormat* function needs to be set as "common" (See [Example](#example-use)).
 
@@ -146,7 +146,7 @@ Using *formatBridge* majorly has 3 cases.:
 
 #### Example Use 
 
-See [documentation](https://pytrack-ntu.readthedocs.io/en/latest/) for a detailed understanding of each function.
+See [documentation](https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html) for a detailed understanding of each function.
 
 ```python
 from PyTrack.formatBridge import generateCompatibleFormat
