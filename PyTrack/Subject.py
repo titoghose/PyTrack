@@ -90,8 +90,32 @@ class SubjectVisualize:
 
 
 class Subject:
+	"""This class deals with the extraction of data from the databases and the creation of the stimuli objects
+ 		
+	Parameters
+	---------
+	name: str
+		Name of the Subject
+	subj_type: str
+		Type of the Subject
+	stimuli_names: 
+		List of stimuli that are to be considered for extraction
+	columns: list of str
+		List of columns that need to be extracted from the database 
+	json_file: str
+		Name of json file that contains information regarding the experiment/database
+	sensors: List of str
+		Contains the names of the different sensors whose indicators are being analysed
+	database: str | SQL object
+		is the SQL object for the SQL database | name of the folder that contains the name csv files
+	manual_eeg: bool {False| True}
+		Indicates whether artifact removal is manually done or not
+	reading_method: str
+		Mentions the format in which the data is being stored
+	
+	"""
 
-	def __init__(self, path, name, subj_type, stimuli_names, columns, json_file, sensors, database):
+	def __init__(self, path, name, subj_type, stimuli_names, columns, json_file, sensors, database, reading_method):
 		print(name)
 		a = datetime.now()
 		self.path = path
@@ -100,44 +124,134 @@ class Subject:
 		self.name = name
 		self.subj_type = subj_type
 		self.json_file = json_file
-		self.stimulus = self.stimulusDictInitialisation(stimuli_names, columns, json_file, sensors, database) 
+		self.stimulus = self.stimulusDictInitialisation(stimuli_names, columns, json_file, sensors, database, reading_method) 
 		self.control_data = self.getControlData()
 		self.aggregate_meta = {}
 		b = datetime.now()
 		print("Total time for subject: ", (b-a).seconds, "\n")
 
 
-	def dataExtraction(self, columns, json_file, database):
+	def dataExtraction(self, columns, json_file, database, reading_method, stimuli_names):
+		"""Extracts the required columns from the data base and the required stimuli_column and returns a pandas datastructure 
+
+		Parameters
+		----------
+		columns: list of strings
+			list of the names of the columns of interest
+		json_file: string
+			Name of the json file that contains information about the experiment
+		database: SQL object| string
+			is the SQL object for the SQL database | name of the folder that contains the name csv files
+		reading_method: {"SQL","CSV"}
+			Describes which type of databse is to be used for data extraction
+		stimuli_names: List of str
+			List of stimuli that are to be considered for extraction
+	
+		Returns
+		-------
+		df: pandas DataFrame
+			contains the data of columns of our interest
+
 		"""
-		"""
-		string = 'SELECT '
-
-		index = 0
-
-		a = datetime.now()
-
-		for name in columns:
-
-			if index == 0:
-				string = string + name
-				index = index + 1
-
-			else:   
-				string = string + ',' + name
-				index = index + 1
-
-		string = string + ' FROM "' + self.name + '"'
-		df = pd.read_sql_query(string, database)
-		df = df.replace(to_replace=r'Unnamed:*', value=float(-1), regex=True)
-
-		b = datetime.now()
-		print("Query: ", (b-a).seconds)
 		
-		return df
+		if reading_method == "SQL":
+
+			string = 'SELECT '
+
+			index = 0
+
+			a = datetime.now()
+
+			for name in columns:
+
+				if index == 0:
+					string = string + name
+					index = index + 1
+
+				else:   
+					string = string + ',' + name
+					index = index + 1
+
+			#NTBD: Change StimulusName from being Hardcoded		
+			query = string + ' FROM "' + self.name + '" WHERE StimulusName in ('
+
+			flag = -1
+
+			for k in stimuli_names:
+				for name in stimuli_names[k]:
+
+					if flag == -1:
+
+						flag = 0
+						selected_stimuli = "'" + name + "'"
+
+					else:
+
+						selected_stimuli = selected_stimuli + ", '" + name + "'"
+
+			query = query + selected_stimuli + ")"
+
+			#connection = database.raw_connection()
+			c = datetime.now()
+			dummy = database.execute(query)
+			d = datetime.now()
+			print("execute: ", (d-c).seconds)
+
+			conversion = pd.DataFrame(dummy.fetchall())
+			conversion.columns = dummy.keys()
+
+			e = datetime.now()
+			print("Convert result proxy to pandas: ", (e-d).seconds)
+			
+			return conversion
+
+		elif reading_method == "CSV":
+
+			a = datetime.now()
+
+			column_names = []
+
+			for name in columns:
+
+				column_names.append(name)
+
+			csv_file = database + "/" + self.name + ".csv"
+
+			df = pd.read_csv(csv_file, usecols = column_names)
+			df = df.replace(to_replace=r'Unnamed:*', value=float(-1), regex=True)
+	
+			b = datetime.now()
+
+			print("Query: ", (b-a).seconds)
+			
+			return df
+
+		else:
+			print("Neither of the 2 options have been chosen")
+			return None
 		
 
 	def timeIndexInitialisation(self, stimulus_column_name, stimulus_name, df):
-		"""
+		"""This function that will retireve the index of the start, end and roi of a question
+
+		Parameters
+		----------
+		stimulus_column_name: str 
+			Name of the column where the stimuli names are present 
+		stimulus_name: str
+			Name of the stimulus
+		df: pandas dataframe
+			Contains the data from which `start`, `end` and `roi` will be extracted from 
+
+		Returns
+		-------
+		start: int
+			The index of the start of a queation
+		end: int
+			The index of the end of a question
+		roi: int
+			The index when the eye lands on the region of interest
+
 		"""
 
 		index = df[df[stimulus_column_name] == stimulus_name].index
@@ -154,61 +268,55 @@ class Subject:
 			end = -1
 			roi = -1
 
-		return start, end, roi
+		return start,end,roi
 
 	
-	def stimulusDictInitialisation(self, stimuli_names, columns, json_file, sensors, database):
+	def stimulusDictInitialisation(self, stimuli_names, columns, json_file, sensors, database, reading_method):
+		"""Creates a list of objects of class Stimuli
 
-		"""
+		Parameter
+		---------
+		stimuli_names: list 
+			list of names of different stimulus
+		columns: list 
+			list of names of the columns of interest
+		json_file: str
+			Name of json file that contains information about the experiment/database
+		sensors: object of class Sensor
+			Is an object of class sensor and is used to see if EEG extraction is required
+		database: SQL object | string 
+			Is the SQL object that is created for accessing the SQL database | Name of the folder containing the CSV files  
+		reading_method: {"SQL","CSV"}
+			Describes which type of databse is to be used for data extraction
+		
+		Returns
+		-------
+		stimulus_object_dict: dict 
+			dictionary of objects of class stimulus ordered by category
+		
 		"""	
 
-		if not os.path.isdir(self.path + '/question_indices/'):
-			os.makedirs(self.path + '/question_indices/')
-
-		if os.path.isfile(self.path + '/question_indices/' + self.name + '.pickle') == True:
-			flag = 1
-
-			pickle_in = open(self.path + '/question_indices/' + self.name + '.pickle',"rb")
-			question_indices_dict = pickle.load(pickle_in)
-
-		else:
-			flag = 0
-
-			question_indices_dict = {}
-			stimulus_column = self.dataExtraction(["StimulusName"],json_file, database)
-
-
-		data = self.dataExtraction(columns, json_file, database)
+		data = self.dataExtraction(columns,json_file, database, reading_method, stimuli_names)
 
 		stimulus_object_dict = {}
 
 		for category in stimuli_names:
-			columns
+	
 			stimulus_object_list = []
 
-			for stimulus_name in stimuli_names[category]: 
-				if flag == 1:
-					[start_time, end_time, roi_time] = question_indices_dict[stimulus_name]  
-				else:
-					start_time, end_time, roi_time = self.timeIndexInitialisation("StimulusName",stimulus_name, stimulus_column)
+			for stimulus_name in stimuli_names[category]:
 
-					question_indices_dict[stimulus_name] = [start_time, end_time, roi_time]	
+				#NTBD change the harcoding of the stimulusName 
+				start_time, end_time, roi_time = self.timeIndexInitialisation("StimulusName",stimulus_name, data)
 
 				stimuli_data = data[start_time : end_time+1]
 
-				stimulus_object = Stimulus(self.path, stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file, self.name)
+				stimulus_object = Stimulus(stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file)
 
 				stimulus_object_list.append(stimulus_object)
 
 			stimulus_object_dict[category] = stimulus_object_list
 		
-		del data
-
-		if flag == 0:	
-			pickle_out = open(self.path + 'question_indices/' + self.name + '.pickle',"wb")
-			pickle.dump(question_indices_dict, pickle_out)
-			pickle_out.close()
-	
 		return stimulus_object_dict
 
 

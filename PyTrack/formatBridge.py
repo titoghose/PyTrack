@@ -255,8 +255,20 @@ def convertToBase(filename, sensor_type, device, stim_list=None, start='START', 
 
 
 def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na_strings=None):
-    """
-    """
+    """Create a SQL database from a csv file
+
+	Parameter
+	---------
+
+	source_folder: string
+		Name of folder that contains the csv files
+	database_name: string
+		Name of the SQL database that is to be created
+	dtype_dictionary: dictionary
+		Dictionary mapping the names of the columns ot their data type 
+	na_strings: list 
+		Is a list of the strings that re to be considered as null value
+	"""
     
     all_files = os.listdir(source_folder) 
     
