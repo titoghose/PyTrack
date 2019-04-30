@@ -323,7 +323,7 @@ class Experiment:
 					if 'all' not in parameter_list:
 
 						if meta not in parameter_list:
-							print(meta)
+							print("The following parameter is not present in the parameter list: " meta)
 							continue
 
 					print("\n\n")
@@ -356,7 +356,6 @@ class Experiment:
 
 							#Value is an array (NTBC : Is it always an array or can it also be a single value?)	
 							value_array = self.meta_matrix_dict[1][meta][sub_index,stimuli_index]
-							print(len(value_array))
 
 							try:					
 								for value in value_array:
@@ -398,7 +397,7 @@ class Experiment:
 
 									#NTBC: Checking condition if value is nan for error checking
 									if(np.isnan(value)):
-										print(row)
+										print("The data being read for analysis contains null value: "row)
 
 									#Instantiate into the pandas dataframe
 									data.loc[len(data)] = row

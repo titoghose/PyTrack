@@ -98,17 +98,17 @@ class Subject:
 		Name of the Subject
 	subj_type: str
 		Type of the Subject
-	stimuli_names: 
+	stimuli_names: list(str)
 		List of stimuli that are to be considered for extraction
-	columns: list of str
+	columns: list(str)
 		List of columns that need to be extracted from the database 
 	json_file: str
 		Name of json file that contains information regarding the experiment/database
-	sensors: List of str
+	sensors: list(str)
 		Contains the names of the different sensors whose indicators are being analysed
 	database: str | SQL object
 		is the SQL object for the SQL database | name of the folder that contains the name csv files
-	manual_eeg: bool {False| True}
+	manual_eeg: bool {``False``| ``True``}
 		Indicates whether artifact removal is manually done or not
 	reading_method: str
 		Mentions the format in which the data is being stored
@@ -136,15 +136,15 @@ class Subject:
 
 		Parameters
 		----------
-		columns: list of strings
+		columns: list(str)
 			list of the names of the columns of interest
-		json_file: string
+		json_file: str
 			Name of the json file that contains information about the experiment
-		database: SQL object| string
+		database: SQL object| str
 			is the SQL object for the SQL database | name of the folder that contains the name csv files
-		reading_method: {"SQL","CSV"}
+		reading_method: str {"SQL","CSV"}
 			Describes which type of databse is to be used for data extraction
-		stimuli_names: List of str
+		stimuli_names: list(str)
 			List of stimuli that are to be considered for extraction
 	
 		Returns
@@ -276,17 +276,17 @@ class Subject:
 
 		Parameter
 		---------
-		stimuli_names: list 
+		stimuli_names: list(str) 
 			list of names of different stimulus
-		columns: list 
+		columns: list(str) 
 			list of names of the columns of interest
 		json_file: str
 			Name of json file that contains information about the experiment/database
 		sensors: object of class Sensor
 			Is an object of class sensor and is used to see if EEG extraction is required
-		database: SQL object | string 
+		database: SQL object | str 
 			Is the SQL object that is created for accessing the SQL database | Name of the folder containing the CSV files  
-		reading_method: {"SQL","CSV"}
+		reading_method: str {"SQL","CSV"}
 			Describes which type of databse is to be used for data extraction
 		
 		Returns

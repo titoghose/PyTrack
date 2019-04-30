@@ -499,7 +499,6 @@ class Stimulus:
 			onoff = np.where(self.diff(s) != 0)[0]
 			m = np.reshape(onoff, (-1, 2))
 			N = m.shape[0]
-			# print(m)
 
 			for i in range(N):
 				left = np.where((msl[:, 0] >= m[i, 0]) & (msl[:, 1] <= m[i, 1]))[0]
@@ -1272,10 +1271,10 @@ class Stimulus:
 
 		Returns
 		-------
-		no_q_roi: integer
+		no_q_roi: int
 			Number of times the eye revisit on the region of interest for question region
 
-		no_r_roi: integer
+		no_r_roi: int
 			Number of times the eye revisit on the region of interst for response region
 		
 		"""
@@ -1308,12 +1307,10 @@ class Stimulus:
 				if(len(np.unique(np.array(data_array[i : i+10], dtype = str))) == 1):
 
 					if(present_flag == 1):
-						#print("Q: ", i)
 						no_q_roi += 1
 
 
 					elif(present_flag == 2):
-						#print("Response: ", i)
 						no_r_roi +=  1
 
 			#change the value of the previous_flag only if the next 4 values are the same
@@ -1334,9 +1331,9 @@ class Stimulus:
 
 		Returns
 		-------
-		first_pass: integer
+		first_pass: int
 			time spent on first visit of the region of interest
-		second_pass: integer
+		second_pass: int
 			time spent on the second revisit of the region of interest
 
 		"""
