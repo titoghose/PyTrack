@@ -202,7 +202,7 @@ class Experiment:
 			database = create_engine(extended_name)
 		
 		elif reading_method == "CSV":
-			database = self.path + "/Data/csv_files/"
+			database = self.path + "/Data/csv_files"
 
 		for k in subject_data:
 
@@ -212,7 +212,8 @@ class Experiment:
 
 				subject_list.append(subject_object)
 
-		database.dispose()
+		if reading_method == "SQL":
+			database.dispose()
 
 		return subject_list
 

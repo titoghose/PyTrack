@@ -48,6 +48,7 @@ class Stimulus:
 
 
 	def __init__(self, path, name="id_rather_not", stim_type="doesnt_matter", sensor_names=["EyeTracker"], data=None, start_time=0, end_time=-1, roi_time=-1, json_file=None, subject_name="buttersnaps"):
+		# print(str(data))
 		print(name, " object creation start")
 		self.name = name
 		self.path = path
