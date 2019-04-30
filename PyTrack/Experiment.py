@@ -126,7 +126,7 @@ class Experiment:
 	"""
 
 
-	def __init__(self, json_file, reading_method, sensors=["EyeTracker"]):
+	def __init__(self, json_file, reading_method="SQL", sensors=["EyeTracker"]):
 
 		with open(json_file, "r") as json_f:
 			json_data = json.load(json_f)
@@ -197,7 +197,8 @@ class Experiment:
 
 		if reading_method == "SQL":
 			name_of_database = json_data["Experiment_name"]
-			extended_name = "sqlite:///" + name_of_database + ".db"
+			extended_name = "sqlite:////" + self.path + "/Data/" + name_of_database + ".db"
+			print(extended_name)
 			database = create_engine(extended_name)
 		
 		elif reading_method == "CSV":

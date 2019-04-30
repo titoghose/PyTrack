@@ -18,7 +18,6 @@ class Sensor:
 		Name of the sensor.
 	sampling_freq : int | float
 		Sampling frequency of the sensor.
-
 	
 	"""
 

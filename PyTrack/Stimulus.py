@@ -48,6 +48,7 @@ class Stimulus:
 
 
 	def __init__(self, path, name="id_rather_not", stim_type="doesnt_matter", sensor_names=["EyeTracker"], data=None, start_time=0, end_time=-1, roi_time=-1, json_file=None, subject_name="buttersnaps"):
+		print(name, " object creation start")
 		self.name = name
 		self.path = path
 		self.stim_type = stim_type
@@ -74,6 +75,8 @@ class Stimulus:
 		# Experiment json file does not exist so stimulus is being created as a stand alone object
 		else:
 			self.data = self.getDataStandAlone(data, sensor_names)
+	
+		print(name, " object creation done")
 
 
 	def diff(self, series):
@@ -1520,7 +1523,6 @@ class Stimulus:
 				et_sfreq = contents["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
 
 				self.sensors.update({col_class : Sensor(col_class, et_sfreq)})
-
 				l_gazex_df = np.array(data.GazeLeftx)
 				l_gazey_df = np.array(data.GazeLefty)
 				r_gazex_df = np.array(data.GazeRightx)

@@ -13,7 +13,7 @@ def getColHeaders():
     """Function to return the column headers for the *PyTrack* base format data representation.
 
     """
-    return ["Timestamp", "StimulusName", "EventSource", "GazeLeftx", "GazeRightx", "GazeLefty", "GazeRighty", "PupilLeft", "PupilRight", "FixationSeq", "SaccadeSeq", "Blink"]
+    return ["Timestamp", "StimulusName", "EventSource", "GazeLeftx", "GazeRightx", "GazeLefty", "GazeRighty", "PupilLeft", "PupilRight", "FixationSeq", "SaccadeSeq", "Blink", "GazeAOI"]
 
 
 def eyeLinkToBase(filename, stim_list=None, start='START', stop=None, eye='B'):
@@ -66,6 +66,7 @@ def eyeLinkToBase(filename, stim_list=None, start='START', stop=None, eye='B'):
         temp_dict['FixationSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['SaccadeSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['Blink'] = np.ones(len(temp_dict['Timestamp'])) * -1
+        temp_dict['GazeAOI'] = np.zeros(len(temp_dict['Timestamp']))
         
         cnt = 0
         for ind, e in enumerate(d['events']['Efix']):
@@ -152,6 +153,7 @@ def smiToBase(filename, stim_list=None, start='START', stop=None):
         temp_dict['FixationSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['SaccadeSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['Blink'] = np.ones(len(temp_dict['Timestamp'])) * -1
+        temp_dict['GazeAOI'] = np.zeros(len(temp_dict['Timestamp']))
         
         fix_cnt = 0
         sac_cnt = 0
@@ -177,10 +179,8 @@ def smiToBase(filename, stim_list=None, start='START', stop=None):
         del(temp_dict)
 
         i += 1
-
-    df.to_csv(filename.split('.')[0] + '.csv') 
+    
     return df
-    return
 
 
 def tobiiToBase(filename, stim_list=None, start='START', stop=None):
@@ -286,8 +286,7 @@ def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na
 
         file_name = source_folder + "/" + file
 
-        length = len(file)
-        file_name_no_extension = file[:length-4]
+        file_name_no_extension = file.split(".")[0]
         table_name = file_name_no_extension.replace(' ','_') #To ensure table names dont haves spaces
 
         chunksize = 100000
@@ -349,6 +348,9 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
 
         for f in os.listdir(data_path):
             if os.path.isdir(data_path + "/" + f):
+                continue
+            
+            if f.split(".")[-1] not in ["csv", "asc", "txt", "tsv"]:
                 continue
 
             print("Converting to base csv format    : ", f)
