@@ -116,13 +116,10 @@ class Experiment:
 		Name of the experiment
 	json_file: str
 		Name of the json file that contains information regarding the experiment or the database
-	sensors: List of str
+	sensors: list(str)
 		Contains the names of the different sensors whose indicators are being analysed
 	reading_method: str {"SQL"| "CSV"}
 		Mentions the format in which the data is being stored
-	manual_eeg: bool {False|True}
-		Indicates whether artifact removal is manually done or not
-	
 	"""
 
 
@@ -150,12 +147,12 @@ class Experiment:
 
 		Parameters
 		----------
-		json_file : string
+		json_file : str
 			Name of the json file which contains details of the experiment
 
 		Returns
 		-------
-		data_dict : dictionary
+		data_dict : dict
 			Dictionary containing the names of the different stimuli categorised by type
 
 		"""
@@ -178,12 +175,12 @@ class Experiment:
 
 		Parameters
 		----------
-		reading_method: {'SQL','CSV'}, optional
+		reading_method: str {'SQL','CSV'}, optional
 			Specifies the database from which data extraction is to be done from	
 
 		Returns
 		-------
-		subject_list : list 
+		subject_list : list(Subject objects)
 			list of objects of class Subject
 		
 		"""
@@ -197,7 +194,8 @@ class Experiment:
 
 		if reading_method == "SQL":
 			name_of_database = json_data["Experiment_name"]
-			extended_name = "sqlite:///" + name_of_database + ".db"
+			path = self.path + "/" + name_of_database
+			extended_name = "sqlite:///" + path + ".db"
 			database = create_engine(extended_name)
 		
 		elif reading_method == "CSV":
@@ -221,12 +219,12 @@ class Experiment:
 
 		Parameters
 		----------
-		json_file: string
+		json_file: str
 			Name of the json file which contains details of the experiment
 
 		Returns
 		-------
-		columns_list: list
+		columns_list: list(str)
 			List of names of columns of interest
 		
 		"""
@@ -264,17 +262,17 @@ class Experiment:
 
 		Parameters
 		----------
-		standardise_flag: Bool {``False``, ``True``}
+		standardise_flag: bool {``False``, ``True``}
 			Indicates whether the data being considered need to be standardised (by subtracting the control values/baseline value) 
-		average_flag: Bool {``False``, ``True``} 
+		average_flag: bool {``False``, ``True``} 
 			Indicates whether the data being considered should averaged across all stimuli of the same type
-		parameter_list: Set {{"all"}}
+		parameter_list: set {{"all"}}
 			Set of the different indicators/parameters (Pupil_size, Blink_rate) on which statistical analysis is to be performed 
-		between_factor_list: List of strings {["Subject_type"]} 
+		between_factor_list: list(str) {["Subject_type"]} 
 			List of between group factors
-		within_factor_list: List of strings {["Stimuli_type"]} 
+		within_factor_list: list(str) {["Stimuli_type"]} 
 			List of within group factors
-		statistical_test: string {"Mixed_anova","RM_anova","ttest"}
+		statistical_test: str {"Mixed_anova","RM_anova","ttest"}
 			Name of the statistical test that has to be performed
 		
 		"""

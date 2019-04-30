@@ -97,7 +97,7 @@ Now, follow these steps:
       "Type_2":[
          "Stim_3",
          "Stim_4"
-      ],
+      ]
    },
    "Control_Questions":[
          "Stim_1"
