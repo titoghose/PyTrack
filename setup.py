@@ -24,6 +24,7 @@ setuptools.setup(
           'pingouin',
           'sqlalchemy',
           'pandas',
-          'matplotlib'
+          'matplotlib',
+          'statsmodels'
       ]
 )

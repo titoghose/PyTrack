@@ -319,10 +319,11 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 		if '##' in line[0]:
 			# skip processing
 			continue
-		elif '##' not in line[0] and not filestarted:
+		elif '##' not in line[0]	 and not filestarted:
 			# check the indexes for several key things we want to extract
 			# (we need to do this, because ASCII outputs of the IDF reader
 			# are different, based on whatever the user wanted to extract)
+			
 			timei = line.index("Time")
 			typei = line.index("Type")
 			msgi = -1
@@ -502,7 +503,7 @@ def replace_missing(value, missing=0.0):
 		return float(value)
 
 
-def read_edf(filename, start, stop=None, missing=0.0, debug=False):
+def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 	"""Returns a list with dicts for every trial.
 		
 	Parameters
@@ -517,7 +518,9 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False):
 		Value to be used for missing data (default = 0.0)
 	debug : bool
 		Indicating if DEBUG mode should be on or off; if DEBUG mode is on, information on what the script currently is doing will be printed to the console (default = False)
-	
+	eye : str {'B','L','R'}
+		Which eye is being tracked? Deafults to 'B'-Both. ['L'-Left, 'R'-Right, 'B'-Both]
+
 	Returns
 	-------
 	data : list
@@ -581,6 +584,15 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False):
 	started = False
 	trialend = False
 	finalline = raw[-1]
+	fixation_flag = 0
+	saccade_flag = 0
+	blink_flag = 0
+	
+	which_eye = ''
+	if eye == 'B':
+		which_eye = 'L'
+	else:
+		which_eye = eye
 	
 	# loop through all lines
 	for line in raw:
@@ -597,6 +609,9 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False):
 				if (start in line) or (line == finalline):
 					started = True
 					trialend = True
+					fixation_flag = 0
+					saccade_flag = 0
+					blink_flag = 0
 			
 			# # # # #
 			# trial ending
@@ -636,6 +651,9 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False):
 				started = True
 				# find starting time
 				starttime = int(line[line.find('\t')+1:line.find(' ')])
+				fixation_flag = 0
+				saccade_flag = 0
+				blink_flag = 0
 		
 		# # # # #
 		# parse line
@@ -655,12 +673,17 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False):
 			# these spaces are ignored by float() (thank you Python!)
 					
 			# fixation start
-			elif line[0:4] == "SFIX":
+			elif line[0:6] == ("SFIX " + which_eye):
 				message("fixation start")
 				l = line[9:]
-				events['Sfix'].append(int(l))
+				if len(events['Sfix']) > len(events['Efix']):
+					events['Sfix'][-1] = int(l)
+				else:
+					events['Sfix'].append(int(l))
+				fixation_flag = 1
+
 			# fixation end
-			elif line[0:4] == "EFIX":
+			elif line[0:6] == ("EFIX " + which_eye) and fixation_flag:
 				message("fixation end")
 				l = line[9:]
 				l = l.split('\t')
@@ -670,13 +693,20 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False):
 				sx = replace_missing(l[3], missing=missing) # x position
 				sy = replace_missing(l[4], missing=missing) # y position
 				events['Efix'].append([st, et, dur, sx, sy])
+				fixation_flag = 0
+			
 			# saccade start
-			elif line[0:5] == 'SSACC':
+			elif line[0:7] == ("SSACC " + which_eye):
 				message("saccade start")
 				l = line[9:]
-				events['Ssac'].append(int(l))
+				if len(events['Ssac']) > len(events['Esac']):
+					events['Ssac'][-1] = int(l)
+				else:
+					events['Ssac'].append(int(l))
+				saccade_flag = 1
+
 			# saccade end
-			elif line[0:5] == "ESACC":
+			elif line[0:7] == ("ESACC " + which_eye) and saccade_flag:
 				message("saccade end")
 				l = line[9:]
 				l = l.split('\t')
@@ -688,13 +718,20 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False):
 				ex = replace_missing(l[5], missing=missing) # end x position
 				ey = replace_missing(l[6], missing=missing) # end y position
 				events['Esac'].append([st, et, dur, sx, sy, ex, ey])
+				saccade_flag = 0
+
 			# blink start
-			elif line[0:6] == "SBLINK":
+			elif line[0:8] == ("SBLINK " + which_eye):
 				message("blink start")
 				l = line[9:]
-				events['Sblk'].append(int(l))
+				if len(events['Sblk']) > len(events['Eblk']):
+					events['Sblk'][-1] = int(l)
+				else:
+					events['Sblk'].append(int(l))
+				blink_flag = 1
+
 			# blink end
-			elif line[0:6] == "EBLINK":
+			elif line[0:8] == ("EBLINK " + which_eye) and blink_flag:
 				message("blink end")
 				l = line[9:]
 				l = l.split('\t')
@@ -702,6 +739,7 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False):
 				et = int(l[1])
 				dur = int(l[2])
 				events['Eblk'].append([st,et,dur])
+				blink_flag = 0
 			
 			# regular lines will contain tab separated values, beginning with
 			# a timestamp, follwed by the values that were asked to be stored
@@ -738,9 +776,14 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False):
 				size_l.append(float(l[3]))
 
 				if len(l) > 5:
-					x_r.append(float(l[4]))
-					y_r.append(float(l[5]))
-					size_r.append(float(l[6]))
+					try:
+						x_r.append(float(l[4]))
+						y_r.append(float(l[5]))
+						size_r.append(float(l[6]))
+					except:
+						x_r.append(float(l[1]))
+						y_r.append(float(l[2]))
+						size_r.append(float(l[3]))
 
 				else:
 					x_r.append(float(l[1]))

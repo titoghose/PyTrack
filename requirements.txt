@@ -4,3 +4,4 @@ pingouin
 sqlalchemy
 pandas
 matplotlib
+statsmodels

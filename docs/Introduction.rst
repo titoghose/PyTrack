@@ -41,7 +41,7 @@ Running the tests
 -----------------
 
 In order to test **PyTrack**, some sample data files can be found
-`here <https://www.google.com>`__. To get started, first you need to choose which design you
+`here <https://drive.google.com/open?id=1N9ZrTO6Bikx3aI7BKivSFAp3vrLxSCM6>`__. To get started, first you need to choose which design you
 want to run the framework in. If you wish to use the *Experiment
 Design*, see `this <#experiment-design>`_. If you wish to use the *Stand-alone Design* see
 `this <#stand-alone-design>`__.
