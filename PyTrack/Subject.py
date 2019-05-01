@@ -157,9 +157,7 @@ class Subject:
 		if reading_method == "SQL":
 
 			string = 'SELECT '
-
 			index = 0
-
 			a = datetime.now()
 
 			for name in columns:
@@ -167,31 +165,25 @@ class Subject:
 				if index == 0:
 					string = string + name
 					index = index + 1
-
 				else:   
 					string = string + ',' + name
 					index = index + 1
 
 			#NTBD: Change StimulusName from being Hardcoded		
 			query = string + ' FROM "' + self.name + '" WHERE StimulusName in ('
-
 			flag = -1
 
 			for k in stimuli_names:
 				for name in stimuli_names[k]:
 
 					if flag == -1:
-
 						flag = 0
 						selected_stimuli = "'" + name + "'"
-
 					else:
-
 						selected_stimuli = selected_stimuli + ", '" + name + "'"
 
 			query = query + selected_stimuli + ")"
 
-			#connection = database.raw_connection()
 			c = datetime.now()
 			dummy = database.execute(query)
 			d = datetime.now()
@@ -208,20 +200,15 @@ class Subject:
 		elif reading_method == "CSV":
 
 			a = datetime.now()
-
 			column_names = []
 
 			for name in columns:
-
 				column_names.append(name)
 
 			csv_file = database + "/" + self.name + ".csv"
-
 			df = pd.read_csv(csv_file, usecols = column_names)
 			df = df.replace(to_replace=r'Unnamed:*', value=float(-1), regex=True)
-	
 			b = datetime.now()
-
 			print("Query: ", (b-a).seconds)
 			
 			return df
@@ -307,11 +294,19 @@ class Subject:
 			for stimulus_name in stimuli_names[category]:
 
 				#NTBD change the harcoding of the stimulusName 
+				a = datetime.now()
 				start_time, end_time, roi_time = self.timeIndexInitialisation("StimulusName",stimulus_name, data)
+				b = datetime.now()
+
+				#print("Time index initialisation: ", (b-a))
 
 				stimuli_data = data[start_time : end_time+1]
 
-				stimulus_object = Stimulus(stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file)
+				a = datetime.now()
+				stimulus_object = Stimulus(self.path, stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file)
+				b = datetime.now()
+
+				#print("Time taken to create an object: ", (b-a))
 
 				stimulus_object_list.append(stimulus_object)
 

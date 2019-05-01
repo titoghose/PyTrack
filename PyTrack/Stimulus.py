@@ -13,6 +13,7 @@ import matplotlib.animation as animation
 from Sensor import Sensor
 import matplotlib.cm as cm
 from scipy.ndimage.filters import gaussian_filter
+from datetime import datetime
 
 
 class Stimulus:
@@ -1457,19 +1458,20 @@ class Stimulus:
 		self.sensors["EyeTracker"].metadata["ms_amplitude"] = ms_amp
 
 		# ROI Features
-		no_q_roi, no_r_roi = self.number_roi(self.data["GazeAOI"])
-		first_pass,second_pass = self.pass_duration_calculation(self.data["GazeAOI"])
+		if(self.data["GazeAOI"]) != None:
+			no_q_roi, no_r_roi = self.number_roi(self.data["GazeAOI"])
+			first_pass,second_pass = self.pass_duration_calculation(self.data["GazeAOI"])
 
-		if first_pass == -1:
-			first_pass = 0
+			if first_pass == -1:
+				first_pass = 0
 
-		if second_pass == -1:
-			second_pass = 0
+			if second_pass == -1:
+				second_pass = 0
 
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["no_r_roi"] = no_r_roi
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["no_q_roi"] = no_q_roi
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["first_pass"] = first_pass
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["second_pass"] = second_pass
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["no_r_roi"] = no_r_roi
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["no_q_roi"] = no_q_roi
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["first_pass"] = first_pass
+			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["second_pass"] = second_pass
 
 
 	def getData(self, data, sensor_names):
@@ -1503,6 +1505,16 @@ class Stimulus:
 		with open(self.json_file) as jf:
 			contents = json.load(jf)
 
+		columns_of_interest = contents["Columns_of_interest"]["EyeTracker"]
+
+		if "GazeAOI" in columns_of_interest:
+			gaze_aoi_flag = 1
+		else:
+			gaze_aoi_flag = 0
+
+
+
+
 		extracted_data = {	"ETRows" : None,
 							"FixationSeq" : None,
 							"Gaze" : None,
@@ -1511,11 +1523,12 @@ class Stimulus:
 							"BlinksLeft" : None,
 							"BlinksRight" : None,
 							"GazeAOI" : None}
-
+							
 		for col_class in sensor_names:
 			if col_class == "EyeTracker":
 				et_sfreq = contents["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
 
+				a = datetime.now()
 				self.sensors.update({col_class : Sensor(col_class, et_sfreq)})
 
 				l_gazex_df = np.array(data.GazeLeftx)
@@ -1524,13 +1537,20 @@ class Stimulus:
 				r_gazey_df = np.array(data.GazeRighty)
 				pupil_size_l_df = np.array(data.PupilLeft)
 				pupil_size_r_df = np.array(data.PupilRight)
-				gaze_aoi_df = np.array(data.GazeAOI)
+				if gaze_aoi_flag == 1:
+					gaze_aoi_df = np.array(data.GazeAOI)
 
+				b = datetime.now()
+					
 				# Extracting fixation sequences
 				et_rows = np.where(data.EventSource.str.contains("ET"))[0]
+				g = datetime.now()
 				fixation_seq_df = np.array(data.FixationSeq.fillna(-1), dtype='float32')
+				h = datetime.now()
 				fixation_seq = np.squeeze(np.array([fixation_seq_df[i] for i in sorted(et_rows)], dtype="float32"))
-				
+				print(len(fixation_seq))
+				c = datetime.now()
+
 				# Extracting the eye gaze data
 				l_gaze_x = np.squeeze(np.array([l_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
 				l_gaze_y = np.squeeze(np.array([l_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
@@ -1539,16 +1559,24 @@ class Stimulus:
 				r_gaze_y = np.squeeze(np.array([r_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
 				r_gaze = {"x": r_gaze_x, "y": r_gaze_y}
 				gaze = {"left" : l_gaze, "right" : r_gaze}
-				gaze_aoi = np.squeeze(np.array([gaze_aoi_df[i] for i in sorted(et_rows)], dtype="float32"))
+
+				d = datetime.now()
+
+				if(gaze_aoi_flag == 1):
+					gaze_aoi = np.squeeze(np.array([gaze_aoi_df[i] for i in sorted(et_rows)], dtype="float32"))
 
 				# Extracting Pupil Size Data
 				pupil_size_r = np.squeeze(np.array([pupil_size_r_df[i] for i in sorted(et_rows)], dtype="float32"))
 				pupil_size_l = np.squeeze(np.array([pupil_size_l_df[i] for i in sorted(et_rows)], dtype="float32"))
 				
+				e = datetime.now()
+
 				# Fixing Blinks and interpolating pupil size and gaze data
 				blinks_l, interp_pupil_size_l, new_gaze_l = self.findBlinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
 				blinks_r, interp_pupil_size_r, new_gaze_r = self.findBlinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
 				interp_pupil_size = np.mean([interp_pupil_size_r, interp_pupil_size_l], axis=0)
+
+				f = datetime.now()
 
 				extracted_data["ETRows"] = et_rows
 				extracted_data["FixationSeq"] = fixation_seq
@@ -1557,7 +1585,17 @@ class Stimulus:
 				extracted_data["InterpGaze"] = new_gaze_l
 				extracted_data["BlinksLeft"] = blinks_l
 				extracted_data["BlinksRight"] = blinks_r
-				extracted_data["GazeAOI"] = gaze_aoi
+				
+				if(gaze_aoi_flag == 1):
+					extracted_data["GazeAOI"] = gaze_aoi
+
+				#print("beginning: ", (b-a))
+				#print("fixation: ", (c-b))
+				#print("eye gaze: ", (d-c))
+				#print("pupil size: ", (e-d))
+				#print("blinks: ", (f-e))
+
+				#print("fixation time taken: ", (g-b), " ", (h-g), " ", (c-h))
 
 		return extracted_data
 
@@ -1597,6 +1635,8 @@ class Stimulus:
 							"BlinksRight" : None,
 							"GazeAOI" : None}
 
+		gaze_aoi_flag = 1
+
 		for sen in sensor_names:
 			if sen == "EyeTracker":
 				et_sfreq = sensor_names[sen]["Sampling_Freq"]
@@ -1609,7 +1649,10 @@ class Stimulus:
 				r_gazey_df = np.array(data.GazeRighty)
 				pupil_size_l_df = np.array(data.PupilLeft)
 				pupil_size_r_df = np.array(data.PupilRight)
-				gaze_aoi_df = np.array(data.GazeAOI)
+				try:
+					gaze_aoi_df = np.array(data.GazeAOI)
+				except:
+					gaze_aoi_flag = 0
 
 				# Extracting fixation sequences
 				et_rows = np.where(data.EventSource.str.contains("ET"))[0]
@@ -1624,7 +1667,9 @@ class Stimulus:
 				r_gaze_y = np.squeeze(np.array([r_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
 				r_gaze = {"x": r_gaze_x, "y": r_gaze_y}
 				gaze = {"left" : l_gaze, "right" : r_gaze}
-				gaze_aoi = np.squeeze(np.array([gaze_aoi_df[i] for i in sorted(et_rows)], dtype="float32"))
+				
+				if(gaze_aoi_flag == 1):
+					gaze_aoi = np.squeeze(np.array([gaze_aoi_df[i] for i in sorted(et_rows)], dtype="float32"))
 
 				# Extracting Pupil Size Data
 				pupil_size_r = np.squeeze(np.array([pupil_size_r_df[i] for i in sorted(et_rows)], dtype="float32"))
@@ -1642,7 +1687,9 @@ class Stimulus:
 				extracted_data["InterpGaze"] = new_gaze_l
 				extracted_data["BlinksLeft"] = blinks_l
 				extracted_data["BlinksRight"] = blinks_r
-				extracted_data["GazeAOI"] = gaze_aoi
+				
+				if(gaze_aoi_flag == 1):
+					extracted_data["GazeAOI"] = gaze_aoi
 
 		return extracted_data
 
