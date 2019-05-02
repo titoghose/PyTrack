@@ -66,7 +66,7 @@ def eyeLinkToBase(filename, stim_list=None, start='START', stop=None, eye='B'):
         temp_dict['FixationSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['SaccadeSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['Blink'] = np.ones(len(temp_dict['Timestamp'])) * -1
-        temp_dict['GazeAOI'] = np.zeros(len(temp_dict['Timestamp']))
+        temp_dict['GazeAOI'] = np.ones(len(temp_dict['Timestamp'])) * -1
         
         cnt = 0
         for ind, e in enumerate(d['events']['Efix']):
@@ -153,7 +153,7 @@ def smiToBase(filename, stim_list=None, start='START', stop=None):
         temp_dict['FixationSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['SaccadeSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['Blink'] = np.ones(len(temp_dict['Timestamp'])) * -1
-        temp_dict['GazeAOI'] = np.zeros(len(temp_dict['Timestamp']))
+        temp_dict['GazeAOI'] = np.ones(len(temp_dict['Timestamp'])) * -1
         
         fix_cnt = 0
         sac_cnt = 0
