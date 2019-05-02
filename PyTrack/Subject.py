@@ -115,7 +115,7 @@ class Subject:
 	
 	"""
 
-	def __init__(self, path, name, subj_type, stimuli_names, columns, json_file, sensors, database, reading_method):
+	def __init__(self, path, name, subj_type, stimuli_names, columns, json_file, sensors, database, reading_method, aoi):
 		print(name)
 		a = datetime.now()
 		self.path = path
@@ -124,6 +124,7 @@ class Subject:
 		self.name = name
 		self.subj_type = subj_type
 		self.json_file = json_file
+		self.aoi = aoi
 		self.stimulus = self.stimulusDictInitialisation(stimuli_names, columns, json_file, sensors, database, reading_method) 
 		self.control_data = self.getControlData()
 		self.aggregate_meta = {}
@@ -305,16 +306,15 @@ class Subject:
 			stimulus_object_list = []
 
 			for stimulus_name in stimuli_names[category]:
-				print(stimulus_name, " start")
 				#NTBD change the harcoding of the stimulusName 
 				start_time, end_time, roi_time = self.timeIndexInitialisation("StimulusName",stimulus_name, data)
 
 				stimuli_data = data[start_time : end_time+1]
 
-				stimulus_object = Stimulus(self.path, stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file)
+				stimulus_object = Stimulus(self.path, stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file, self.name, self.aoi)
 
 				stimulus_object_list.append(stimulus_object)
-				print(stimulus_name, " done")
+				
 			stimulus_object_dict[category] = stimulus_object_list
 		
 		return stimulus_object_dict

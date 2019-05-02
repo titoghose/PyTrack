@@ -43,13 +43,14 @@ class Stimulus:
 		Desciption of experiment as JSON file. For the *Experiment Design*, this parameter is internally handled. In the *Stand-alone Design* it is not required (leave as ``None``).
 	subject_name : str (optional)
 		Name of the subject being analysed. For the *Experiment Design*, this parameter is internally handled. In the *Stand-alone Design* it is optional (Defaults to buttersnaps).
+	aoi : tuple
+		Coordinates of AOI in the following order (start_x, start_y, end_x, end_y). Here, x is the horizontal axis and y is the vertical axis.
 
 	"""
 
 
-	def __init__(self, path, name="id_rather_not", stim_type="doesnt_matter", sensor_names=["EyeTracker"], data=None, start_time=0, end_time=-1, roi_time=-1, json_file=None, subject_name="buttersnaps"):
-		# print(str(data))
-		print(name, " object creation start")
+	def __init__(self, path, name="id_rather_not", stim_type="doesnt_matter", sensor_names=["EyeTracker"], data=None, start_time=0, end_time=-1, roi_time=-1, json_file=None, subject_name="buttersnaps", aoi=None):
+
 		self.name = name
 		self.path = path
 		self.stim_type = stim_type
@@ -60,7 +61,7 @@ class Stimulus:
 		self.json_file = json_file
 		self.sensors = dict()
 		self.subject_name = subject_name
-		
+		self.aoi_coords = aoi
 		mpl.use("TkAgg")
 
 		if not os.path.isdir(self.path + '/Subjects/' + self.subject_name + '/'):
@@ -76,8 +77,6 @@ class Stimulus:
 		# Experiment json file does not exist so stimulus is being created as a stand alone object
 		else:
 			self.data = self.getDataStandAlone(data, sensor_names)
-	
-		print(name, " object creation done")
 
 
 	def diff(self, series):
@@ -803,40 +802,46 @@ class Stimulus:
 			# Net microsaccade count i.e binary + left +right
 			ms_count += ms["NB"] + ms["NL"] + ms["NR"]
 
-			if(ms["NB"] != 0):
-				# Appending peak velocity for binary microsaccade
-				vel_val = (ms["bin"][:, 2] + ms["bin"][:, 11]) / 2.
-				temp_vel = np.hstack((temp_vel, vel_val))
-			
-				# Appending amplitude for binary microsaccade
-				amp_val = (np.sqrt(ms["bin"][:, 5]**2 + ms["bin"][:, 6]**2) + np.sqrt(ms["bin"][:, 13]**2 + ms["bin"][:, 14]**2)) / 2.
-				temp_amp = np.hstack((temp_amp, amp_val))
+			if ms["NB"] != 0:
+				for m in ms["bin"]:
+					if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
+						# Appending peak velocity for binary microsaccade
+						vel_val = (m[2] + m[11]) / 2.
+						temp_vel = np.hstack((temp_vel, vel_val))
+					
+						# Appending amplitude for binary microsaccade
+						amp_val = (np.sqrt(m[5]**2 + m[6]**2) + np.sqrt(m[13]**2 + m[14]**2)) / 2.
+						temp_amp = np.hstack((temp_amp, amp_val))
 
-				# Appending durations for binary microsaccade
-				dur_val = ((ms["bin"][:, 1] - ms["bin"][:, 0]) + (ms["bin"][:, 10] - ms["bin"][:, 9])) / 2.
-				ms_duration = np.hstack((ms_duration, dur_val))	
+						# Appending durations for binary microsaccade
+						dur_val = ((m[1] - m[0]) + (m[10] - m[9])) / 2.
+						ms_duration = np.hstack((ms_duration, dur_val))	
 			
-			if(ms["NL"] != 0):
-				# Appending peak velocity for left eye microsaccade
-				temp_vel = np.hstack((temp_vel, ms["left"][:, 2]))
-				
-				# Appending amplitude for left eye microsaccade
-				temp_amp = np.hstack((temp_amp, np.sqrt(ms["left"][:, 5]**2 + ms["left"][:, 6]**2)))
+			if ms["NL"] != 0:
+				for m in ms["left"]:
+					if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
+						# Appending peak velocity for left eye microsaccade
+						temp_vel = np.hstack((temp_vel, m[2]))
+						
+						# Appending amplitude for left eye microsaccade
+						temp_amp = np.hstack((temp_amp, np.sqrt(m[5]**2 + m[6]**2)))
 
-				# Appending durations for left eye microsaccade
-				dur_val = ms["left"][:, 1] - ms["left"][:, 0]
-				ms_duration = np.hstack((ms_duration, dur_val))
+						# Appending durations for left eye microsaccade
+						dur_val = m[1] - m[0]
+						ms_duration = np.hstack((ms_duration, dur_val))
 			
-			if(ms["NR"] != 0):
-				# Appending peak velocity for right eye microsaccade
-				temp_vel = np.hstack((temp_vel, ms["right"][:, 2]))
-				
-				# Appending amplitude for right eye microsaccade
-				temp_amp = np.hstack((temp_amp, np.sqrt(ms["right"][:, 5]**2 + ms["right"][:, 6]**2)))
+			if ms["NR"] != 0:
+				for m in ms["right"]:
+					if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
+						# Appending peak velocity for left eye microsaccade
+						temp_vel = np.hstack((temp_vel, m[2]))
+						
+						# Appending amplitude for left eye microsaccade
+						temp_amp = np.hstack((temp_amp, np.sqrt(m[5]**2 + m[6]**2)))
 
-				# Appending durations for right eye microsaccade
-				dur_val = ms["right"][:, 1] - ms["right"][:, 0]
-				ms_duration = np.hstack((ms_duration, dur_val))
+						# Appending durations for left eye microsaccade
+						dur_val = m[1] - m[0]
+						ms_duration = np.hstack((ms_duration, dur_val))
 
 		if ms_count == 0:
 			ms_duration = [0, 0]
@@ -868,37 +873,47 @@ class Stimulus:
 		saccade_offset = saccade_indices["end"]
 
 		saccade_count = 0
-		saccade_duration = np.array(saccade_offset) - np.array(saccade_onset)
+		saccade_duration = []
 		
 		saccade_peak_vel = []
 		saccade_amplitude = []
 
 		for start, end in zip(saccade_onset, saccade_offset):
+			
 			if (end-start) < 6:
 				continue
+			
+			if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)):
+				
+				saccade_count += 1
 
-			saccade_count += 1
+				saccade_duration.append(end-start)
 
-			vel_x = self.position2Velocity(self.data["Gaze"]["left"]["x"][start:end], sampling_freq)
-			vel_y = self.position2Velocity(self.data["Gaze"]["left"]["y"][start:end], sampling_freq)
+				vel_x = self.position2Velocity(self.data["Gaze"]["left"]["x"][start:end], sampling_freq)
+				vel_y = self.position2Velocity(self.data["Gaze"]["left"]["y"][start:end], sampling_freq)
 
-			# Saccade peak velocity (vpeak)
-			vpeak = max(np.sqrt(vel_x**2 + vel_y**2))
-			saccade_peak_vel.append(vpeak)
+				# Saccade peak velocity (vpeak)
+				vpeak = max(np.sqrt(vel_x**2 + vel_y**2))
+				saccade_peak_vel.append(vpeak)
 
-			# Saccade amplitude (dX,dY)
-			minx = min(self.data["Gaze"]["left"]["x"][start:end])
-			maxx = max(self.data["Gaze"]["left"]["x"][start:end])
-			miny = min(self.data["Gaze"]["left"]["y"][start:end])
-			maxy = max(self.data["Gaze"]["left"]["y"][start:end])
-			ix1 = np.argmin(self.data["Gaze"]["left"]["x"][start:end])
-			ix2 = np.argmax(self.data["Gaze"]["left"]["x"][start:end])
-			iy1 = np.argmin(self.data["Gaze"]["left"]["y"][start:end])
-			iy2 = np.argmax(self.data["Gaze"]["left"]["y"][start:end])
-			dX = np.sign(ix2 - ix1) * (maxx - minx)
-			dY = np.sign(iy2 - iy1) * (maxy - miny)
-			saccade_amplitude.append(np.sqrt(dX**2 + dY**2))
+				# Saccade amplitude (dX,dY)
+				minx = min(self.data["Gaze"]["left"]["x"][start:end])
+				maxx = max(self.data["Gaze"]["left"]["x"][start:end])
+				miny = min(self.data["Gaze"]["left"]["y"][start:end])
+				maxy = max(self.data["Gaze"]["left"]["y"][start:end])
+				ix1 = np.argmin(self.data["Gaze"]["left"]["x"][start:end])
+				ix2 = np.argmax(self.data["Gaze"]["left"]["x"][start:end])
+				iy1 = np.argmin(self.data["Gaze"]["left"]["y"][start:end])
+				iy2 = np.argmax(self.data["Gaze"]["left"]["y"][start:end])
+				dX = np.sign(ix2 - ix1) * (maxx - minx)
+				dY = np.sign(iy2 - iy1) * (maxy - miny)
+				saccade_amplitude.append(np.sqrt(dX**2 + dY**2))
 		
+		if saccade_count == 0:
+			saccade_duration = [0]
+			saccade_peak_vel = [0]
+			saccade_amplitude = [0]
+
 		return (saccade_count, saccade_duration, saccade_peak_vel, saccade_amplitude)
 
 
@@ -932,18 +947,25 @@ class Stimulus:
 			Tuple consisting of (fixation_count, max_fixation_duration, avg_fixation_duration)
 
 		"""
-		fix_num, fix_cnt = np.unique(self.data["FixationSeq"], return_counts=True)
-		
+
+		inside_aoi = [0, 0, 0]
+
+		fix_num, fix_ind, fix_cnt = np.unique(self.data["FixationSeq"], return_index=True, return_counts=True)	
 		fixation_count = len(fix_num) - 1
 
 		if fixation_count != 0:
-			max_fixation_duration = np.max(fix_cnt[1:])
-			avg_fixation_duration = np.mean(fix_cnt[1:])
-		else:
-			max_fixation_duration = 0
-			avg_fixation_duration = 0
-		
-		return (fixation_count, max_fixation_duration, avg_fixation_duration)
+			temp1 = []
+			fix_ind_end = np.array(fix_ind[1:]) + np.array(fix_cnt[1:])
+			for start, end in zip(fix_ind[1:], fix_ind_end):
+				if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)):
+					inside_aoi[0] += 1
+					temp1.append(end - start)
+			
+			if len(temp1) != 0:
+				inside_aoi[1] = np.max(temp1)
+				inside_aoi[2] = np.mean(temp1)
+
+		return tuple(inside_aoi)
 
 
 	def findPupilParams(self):
@@ -998,20 +1020,26 @@ class Stimulus:
 
 		Returns
 		-------
-		tuple
+		list
 			Tuple consisting of (blink_cnt, peak_blink_duration, avg_blink_duration)
 
 		"""
 
+		inside_aoi = [0, 0, 0]
+
 		blink_cnt = len(self.data["BlinksLeft"]["blink_onset"])
 		if blink_cnt != 0:
-			peak_blink_duration = np.max((np.array(self.data["BlinksLeft"]["blink_offset"]) - np.array(self.data["BlinksLeft"]["blink_onset"])))
-			avg_blink_duration = np.mean((np.array(self.data["BlinksLeft"]["blink_offset"]) - np.array(self.data["BlinksLeft"]["blink_onset"])))
-		else:
-			peak_blink_duration = 0
-			avg_blink_duration = 0
+			temp1 = []
+			for start, end in zip(self.data["BlinksLeft"]["blink_onset"], self.data["BlinksLeft"]["blink_offset"]):
+				if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)):
+					inside_aoi[0] += 1
+					temp1.append(end - start)
+			
+			if len(temp1) != 0:
+				inside_aoi[1] = np.max(temp1)
+				inside_aoi[2] = np.mean(temp1)
 		
-		return (blink_cnt, peak_blink_duration, avg_blink_duration)
+		return tuple(inside_aoi)
 
 
 	def gazePlot(self, save_fig=False, show_fig=True):
@@ -1048,6 +1076,9 @@ class Stimulus:
 		
 		ax = plt.gca()
 		ax.imshow(img)
+		rect = mpl.patches.Rectangle((self.aoi_coords[0], self.aoi_coords[1]), self.aoi_coords[2]-self.aoi_coords[0], self.aoi_coords[3]-self.aoi_coords[1],
+										color='r', fill=False, linestyle='--')
+		ax.add_patch(rect)
 
 		fixation_dict = self.findFixations()
 		fixation_indices = np.vstack((fixation_dict["start"], fixation_dict["end"]))
@@ -1133,6 +1164,9 @@ class Stimulus:
 		mycmap._lut[:,-1] = np.linspace(0, 0.8, 255+4)
 		img = misc.imresize(img, size=downsample_fraction, interp='lanczos')
 		ax.imshow(img)
+		rect = mpl.patches.Rectangle((self.aoi_coords[0], self.aoi_coords[1]), self.aoi_coords[2]-self.aoi_coords[0], self.aoi_coords[3]-self.aoi_coords[1],
+										color='r', fill=False, linestyle='--')
+		ax.add_patch(rect)
 		ax.contourf(np.arange(0, int(row_shape*downsample_fraction), 1), np.arange(0, int(col_shape*downsample_fraction), 1), hist.T, cmap=mycmap)
 		ax.set_xlim(0, int(col_shape * downsample_fraction))
 		ax.set_ylim(int(row_shape * downsample_fraction), 0)
@@ -1175,6 +1209,9 @@ class Stimulus:
 				img = np.zeros((height, width))
 				
 		ax.imshow(img)
+		rect = mpl.patches.Rectangle((self.aoi_coords[0], self.aoi_coords[1]), self.aoi_coords[2]-self.aoi_coords[0], self.aoi_coords[3]-self.aoi_coords[1],
+										color='r', fill=False, linestyle='--')
+		ax.add_patch(rect)										
 
 		if self.data["InterpGaze"] != None:
 			total_range = range(len(self.data["ETRows"]))
@@ -1473,10 +1510,10 @@ class Stimulus:
 		if second_pass == -1:
 			second_pass = 0
 
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["no_r_roi"] = no_r_roi
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["no_q_roi"] = no_q_roi
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["first_pass"] = first_pass
-		self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["second_pass"] = second_pass
+		self.sensors["EyeTracker"].metadata["no_r_roi"] = no_r_roi
+		self.sensors["EyeTracker"].metadata["no_q_roi"] = no_q_roi
+		self.sensors["EyeTracker"].metadata["first_pass"] = first_pass
+		self.sensors["EyeTracker"].metadata["second_pass"] = second_pass
 
 
 	def getData(self, data, sensor_names):
@@ -1545,8 +1582,7 @@ class Stimulus:
 				r_gaze_y = np.squeeze(np.array([r_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
 				r_gaze = {"x": r_gaze_x, "y": r_gaze_y}
 				gaze = {"left" : l_gaze, "right" : r_gaze}
-				gaze_aoi = np.squeeze(np.array([gaze_aoi_df[i] for i in sorted(et_rows)], dtype="float32"))
-
+				
 				# Extracting Pupil Size Data
 				pupil_size_r = np.squeeze(np.array([pupil_size_r_df[i] for i in sorted(et_rows)], dtype="float32"))
 				pupil_size_l = np.squeeze(np.array([pupil_size_l_df[i] for i in sorted(et_rows)], dtype="float32"))
@@ -1555,6 +1591,8 @@ class Stimulus:
 				blinks_l, interp_pupil_size_l, new_gaze_l = self.findBlinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
 				blinks_r, interp_pupil_size_r, new_gaze_r = self.findBlinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
 				interp_pupil_size = np.mean([interp_pupil_size_r, interp_pupil_size_l], axis=0)
+
+				gaze_aoi = self.setAOICol([gaze_aoi_df, new_gaze_l["left"]["x"], new_gaze_l["left"]["y"]])
 
 				extracted_data["ETRows"] = et_rows
 				extracted_data["FixationSeq"] = fixation_seq
@@ -1651,6 +1689,31 @@ class Stimulus:
 				extracted_data["GazeAOI"] = gaze_aoi
 
 		return extracted_data
+
+
+	def setAOICol(self, data):
+		"""Function to set values based on a point being inside or outsode the AOI.
+
+		Paramters
+		---------
+		data : list
+			List of size 3 containing gaze_aoi, gaze_x and gaze_y column data.
+		
+		Returns
+		-------
+		gaze_aoi_new : list
+			Modified gaze_aoi column with the mask for points inside and outside the AOI.
+
+		"""
+
+		gaze_aoi = data[0]
+		x = data[1]
+		y = data[2]
+		
+		gaze_aoi_new = gaze_aoi
+		gaze_aoi_new[np.where((x >= self.aoi_coords[0]) & (y >= self.aoi_coords[1]) & (x <= self.aoi_coords[2]) & (y <= self.aoi_coords[3]))[0]] = 1
+
+		return gaze_aoi_new
 
 
 def groupHeatMap(sub_list, stim_name, json_file):

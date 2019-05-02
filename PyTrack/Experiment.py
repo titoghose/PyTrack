@@ -1,26 +1,29 @@
 # -*- coding: utf-8 -*-
 
-from Sensor import Sensor
-from Subject import Subject
-import numpy as np
 import os
 import time
-import csv
-from datetime import datetime
-from scipy import stats
 import json
 import random
-import pandas as pd
-from sqlalchemy import create_engine
-import pingouin as pg
-import matplotlib.pyplot as plt
-from matplotlib.widgets import RadioButtons
-import tkinter as tk
+import pickle
+from datetime import datetime
 from functools import partial
-from stat_functions import *
+
+
+import numpy as np
+import pandas as pd
+import tkinter as tk
+import pingouin as pg
+from scipy import stats
 from statistics import mean
 import statsmodels.api as sm
-import pickle
+import matplotlib.pyplot as plt
+from sqlalchemy import create_engine
+from matplotlib.widgets import RadioButtons, RectangleSelector
+from matplotlib.patches import Rectangle
+
+from Sensor import Sensor
+from Subject import Subject
+from stat_functions import *
 
 
 class Visualize:
@@ -120,13 +123,12 @@ class Experiment:
 		Contains the names of the different sensors whose indicators are being analysed
 	reading_method: str {"SQL"| "CSV"}
 		Mentions the format in which the data is being stored
-	manual_eeg: bool {False|True}
-		Indicates whether artifact removal is manually done or not
-	
+	aoi : str {'NA', 'draw'} | tuple
+		If 'NA' then AOI is the entire display size. If 'draw' then the user is prompted to draw an area of interest. If type is ``tuple``, user must specify the coordinates of AOI in the following order (start_x, start_y, end_x, end_y). Here, x is the horizontal axis and y is the vertical axis.
+
 	"""
 
-
-	def __init__(self, json_file, reading_method="SQL", sensors=["EyeTracker"]):
+	def __init__(self, json_file, reading_method="SQL", sensors=["EyeTracker"], aoi="NA"):
 
 		with open(json_file, "r") as json_f:
 			json_data = json.load(json_f)
@@ -135,12 +137,22 @@ class Experiment:
 		self.name = json_data["Experiment_name"]
 		self.json_file = json_file #string
 		self.sensors = sensors
+		
+		self.aoi_coords = None
+		# Setting AOI coordinates
+		if type(aoi) == str:
+			if aoi == "draw":
+				self.aoi_coords = self.drawAOI()
+			else:
+				self.aoi_coords = (0, 0, json_data["Analysis_Params"]["EyeTracker"]["Display_width"], json_data["Analysis_Params"]["EyeTracker"]["Display_height"])
+		else:
+			self.aoi_coords = aoi
+		
 		self.columns = self.columnsArrayInitialisation()
 		self.stimuli = self.stimuliArrayInitialisation() #dict of names of stimuli demarcated by category
 		self.subjects = self.subjectArrayInitialisation(reading_method) #list of subject objects
 		self.meta_matrix_dict = (np.ndarray(len(self.subjects), dtype=str), dict())
-		
-
+	
 		if not os.path.isdir(self.path + '/Subjects/'):
 			os.makedirs(self.path + '/Subjects/')
 		
@@ -208,7 +220,7 @@ class Experiment:
 
 			for subject_name in subject_data[k]:
 
-				subject_object = Subject(self.path, subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database, reading_method)
+				subject_object = Subject(self.path, subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database, reading_method, self.aoi_coords)
 
 				subject_list.append(subject_object)
 
@@ -621,3 +633,54 @@ class Experiment:
 					break
 			
 			return self.subjects[sub_ind].stimulus[stim_cat][stim_ind].sensors[sensor].metadata
+
+	
+	def drawAOI(self):
+		"""Function that allows speicification of area of interest (AOI) for analysis.
+
+		"""
+
+		with open(self.json_file, "r") as f:
+			json_data = json.load(f)
+		
+		aoi_left_x = 0
+		aoi_left_y = 0
+		aoi_right_x = 0
+		aoi_right_y = 0
+
+		display_width = json_data["Analysis_Params"]["EyeTracker"]["Display_width"]
+		display_height = json_data["Analysis_Params"]["EyeTracker"]["Display_height"]
+
+		cnt = 0
+		img = None
+		
+		if os.path.isdir(self.path + "/Stimuli/"):
+			for f in os.listdir(self.path + "/Stimuli/"):
+				if f.split(".")[-1] in ['jpg', 'jpeg', 'png']:
+					img = plt.imread(self.path + "/Stimuli/" + f)
+					cnt += 1
+					break
+
+		if cnt == 0:
+			img = np.zeros((display_height, display_width, 3))
+
+		fig, ax = plt.subplots()
+		fig.canvas.set_window_title("Draw AOI")
+		ax.imshow(img)
+
+		def line_select_callback(eclick, erelease):
+			nonlocal aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y
+
+			aoi_left_x, aoi_left_y = int(round(eclick.xdata)), int(round(eclick.ydata))
+			aoi_right_x, aoi_right_y = int(round(erelease.xdata)), int(round(erelease.ydata))
+			
+			print("Coordinates [(start_x, start_y), (end_x, end_y)]: ", "[(%6.2f, %6.2f), (%6.2f, %6.2f)]" % (aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y))
+			# rect = Rectangle((min(x1,x2),min(y1,y2)), np.abs(x1-x2), np.abs(y1-y2), color='r', fill=False)
+			# ax.add_patch(rect)
+
+		RS = RectangleSelector(ax, line_select_callback, drawtype='box', useblit=False, button=[1],  minspanx=5, minspany=5, spancoords='pixels',interactive=True)
+
+		RS.to_draw.set_visible(True)
+
+		plt.show()
+		return (aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y)
