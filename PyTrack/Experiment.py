@@ -17,7 +17,6 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import RadioButtons
 import tkinter as tk
 from functools import partial
-from stat_functions import *
 import statsmodels.api as sm
 import pickle
 
@@ -106,18 +105,20 @@ class Visualize:
 
 
 class Experiment:
-	""" This is the main class that performs statistical analysis of the data contained in a database
+	""" This is class responsible for the analysis of data of an entire experiment. The creation of a an object of this class will subsequently create create objects for each subject
+	involved in the experiment (which in turn would create object for each stimulus which is viewed by the subject). 
+
+	This class also contains analyse function which is used for the statistical analysis of the data (eg: Mixed ANOVA, RM ANOVA etc).
 
 	Parameters
 	-----------
-	name: str
-		Name of the experiment
 	json_file: str
 		Name of the json file that contains information regarding the experiment or the database
-	sensors: list(str)
-		Contains the names of the different sensors whose indicators are being analysed
 	reading_method: str {"SQL"| "CSV"}
 		Mentions the format in which the data is being stored
+	sensors: list(str)
+		Contains the names of the different sensors whose indicators are being analysed (currently only Eye Tracking can be done
+		However in future versions, analysis of ECG and EDA may be added)
 	"""
 
 
@@ -256,23 +257,53 @@ class Experiment:
 
 	
 	def analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova"):
-		"""This function carries out the required statistical analysis technique for the specified indicators/parameters
+		"""This function carries out the required statistical analysis technique for the specified indicators/parameters using the data extracted from all the subjects 
+		that were mentioned in the json file. There are 4 different tests that can be run, namely - Mixed ANOVA, Repeated Measures ANOVA, T Test and Simple ANOVA (both 1 and 2 way)
 
-		Parameters
-		----------
-		standardise_flag: bool {``False``, ``True``}
+		standardise_flag: book {``False``, ``True``}
 			Indicates whether the data being considered need to be standardised (by subtracting the control values/baseline value) 
 		average_flag: bool {``False``, ``True``} 
-			Indicates whether the data being considered should averaged across all stimuli of the same type
+			Indicates whether the data being considered should averaged across all stimuli of the same type 
+			NOTE: Averaging will reduce variability and noise in the data, but will also reduce the quantum of data being fed into the statistical test
 		parameter_list: set {{"all"}}
-			Set of the different indicators/parameters (Pupil_size, Blink_rate) on which statistical analysis is to be performed 
+			Set of the different indicators/parameters (Pupil_size, Blink_rate) on which statistical analysis is to be performed, by default it will be "all"
+			so that all the parameter are considered. 
 		between_factor_list: list(str) {["Subject_type"]} 
-			List of between group factors
+			List of between group factors, by default it will only contain "Subject_type"
+			If any additional parameter (eg: Gender) needs to be considered, then the list will be: between_factor_list = ["Subject_type", "Gender"]
+			DO NOT FORGET TO INCLUDE "Subject_type", if you wish to consider "Subject_type" as a between group factor.
+			Eg: between_factor_list = ["factor_x"] will no longer consider "Subject_type" as a factor. 
+			Please go through how the README FILE to understand how the JSON FILE is to be written for between group factors to be considered.
 		within_factor_list: list(str) {["Stimuli_type"]} 
-			List of within group factors
-		statistical_test: str {"Mixed_anova","RM_anova","ttest"}
-			Name of the statistical test that has to be performed
+			List of within group factors, by default it will only contain "Stimuli_type"
+			If any additional parameter, needs to be considered, then the list will be: between_factor_list = ["Subject_type", "factor_X"]
+			DO NOT FORGET TO INCLUDE "Stimuli_type", if you wish to consider "Stimuli_type" as a within group factor.
+			Eg: within_factor_list = ["factor_x"] will no longer consider "Stimuli_type" as a factor. 
+			Please go through how the README FILE to understand how the JSON FILE is to be written for within group factors to be considered.
+		statistical_test: str {"Mixed_anova","RM_anova","ttest","anova"}
+			Name of the statistical test that has to be performed.
+
+			Please NOTE:
+
+			ttest: Upto 2 between group factors and 2 within group factors can be considered at any point of time
+			Mixed_anova: Only 1 between group factor and 1 within group factor can be considered at any point of time
+			anova: Upto 2 between group factors can be considered at any point of time
+			RM_anova: Upto 2 within group factors can be considered at any point of time  
 		
+		Examples
+		--------
+		For calculating Mixed ANOVA, on all the parameters, with standardisation, NOT averaging across stimuli of the same type
+		and considering Subject_type and Stimuli_type as between and within group factors respectively
+
+		>>> analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova")
+		OR 
+		>>> analyse(self, standardise_flag=True) (as many of the option are present by default)
+
+		For calculating 2-way ANOVA, for "blink_rate" and "avg_blink_duration", without standardisation with averaging across stimuli of the same type
+		and considering Subject_type and Gender as the between group factors
+
+		>>> analyse(self, average_flag=True, parameter_list={"blink_rate", "avg_blink_duration"}, between_factor_list=["Subject_type", "Gender"], statistical_test="anova")
+
 		"""
 		
 		#Defining the meta_matrix_dict data structure
@@ -297,12 +328,12 @@ class Experiment:
 		meta_not_to_be_considered = ["pupil_size", "pupil_size_downsample"]
 
 		if "GazeAOI" not in json_data["Columns_of_interest"]["EyeTracker"]:
-			meta_not_to_be_considered.extend(["no_q_roi", "no_r_roi", "first_pass", "second_pass"])
+			meta_not_to_be_considered.extend(["no_revisits", "first_pass", "second_pass"])
 
 
 		for sen in self.sensors: #For each type of sensor
 
-			for meta in Sensor.meta_cols[Sensor.sensor_names.index(sen)]:
+			for meta in Sensor.meta_cols[sen]:
 				if meta in meta_not_to_be_considered:
 					continue
 
@@ -356,10 +387,6 @@ class Experiment:
 									except:
 										print("Between subject paramter: ", param, " not defined in the json file")	
 
-								#NTBD: Please change sub.name to required value
-								#DO NOT HAVE ACCESS TO THE NAME OF THE STIMULI, SO NEED TO FIGURE OUT HOW THE WITHIN GROUP 
-								#PARAMETERS NEED TO BE ACCESSED
-
 								row.append(stimuli_type)
 
 								for param in within_factor_list:
@@ -375,7 +402,6 @@ class Experiment:
 
 								row.append(sub.name)
 
-								#NTBC: Checking condition if value is nan for error checking
 								if(np.isnan(value)):
 									print("The data being read for analysis contains null value: ", row)
 
@@ -390,18 +416,14 @@ class Experiment:
 				if(statistical_test == "Mixed_anova"):
 
 					print(meta, ":\tMixed anova")
-					mixed_anova_calculation(meta, data, between_factor_list[0], within_factor_list[0])
-
 					aov = pg.mixed_anova(dv=meta, within=within_factor_list[0], between=between_factor_list[0], subject = 'subject', data=data)
 					pg.print_table(aov)
-
 					posthocs = pg.pairwise_ttests(dv=meta, within=within_factor_list[0], between=between_factor_list[0], subject='subject', data=data)
 					pg.print_table(posthocs)
 
 				elif(statistical_test == "RM_anova"):
 
 					print(meta, ":\tRM Anova")
-
 					aov = pg.rm_anova(dv=meta, within= within_factor_list, subject = 'subject', data=data)
 					pg.print_table(aov)
 
@@ -409,16 +431,15 @@ class Experiment:
 				elif(statistical_test == "ttest"):
 
 					print(meta, ":\tt test")
-					ttest_calculation(meta, data, between_factor_list, within_factor_list)
-
 					aov = pg.pairwise_ttests(dv=meta, within= within_factor_list, between= between_factor_list, subject='subject', data=data)
 					pg.print_table(aov)
 
 
-				efif(statistical_test == "ANOVA"):
+				elif(statistical_test == "anova")
 
 					print(meta, ":\tANOVA")
-					aov = pg.anova(dv = meta, between = between_factor_list, data = data)	
+					aov = pg.anova(dv = meta, between = between_factor_list, data = data)
+					pg.print_table(aov)	
 
 
 	def getMetaData(self, sub, stim=None, sensor="EyeTracker"):

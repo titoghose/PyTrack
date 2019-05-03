@@ -90,7 +90,9 @@ class SubjectVisualize:
 
 
 class Subject:
-	"""This class deals with the extraction of data from the databases and the creation of the stimuli objects
+	"""his class deals with encapsulating all the relevant information regarding a subject who participated in an experiment. The class contains
+	functions that help in the extraction of data from the databases (SQL or CSV) and the creation of the stimuli objects. The class also calculates the 
+	control data for the purpose of standardisation.
  		
 	Parameters
 	---------

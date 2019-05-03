@@ -277,8 +277,8 @@ def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na
         if names.endswith(".csv"):
             newlist.append(names)
 
-    database = data_path + "sqlite:///" + database_name + ".db"
-    csv_database = create_engine(database)
+    database_extension = "sqlite:///" + data_path +  database_name + ".db"
+    database = create_engine(database_extension)
 
     for file in newlist:
 
@@ -289,6 +289,22 @@ def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na
         length = len(file)
         file_name_no_extension = file[:length-4]
         table_name = file_name_no_extension.replace(' ','_') #To ensure table names dont haves spaces
+
+        try:
+            query = "SELECT name, sql FROM sqlite_master WHERE type='table' ORDER BY name"
+            dummy = database.execute(query)
+            conversion = pd.DataFrame(dummy.fetchall())
+            conversion.columns = dummy.keys()
+
+            for value in conversion.name:
+
+                if value == table_name:
+                    query = "DROP TABLE " + table_name
+                    dummy = database.execute(query)
+                    print("Dropped table as it existed previously and reinstantiated it: ", table_name)
+                    break
+        except ValueError:
+            note = "The database did not exist previously"
 
         chunksize = 100000
         i = 0
@@ -304,7 +320,7 @@ def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na
 
             df.index += j
             i+=1
-            df.to_sql(table_name, csv_database, if_exists='append',index = True, index_label = "Index")
+            df.to_sql(table_name, database, if_exists='append',index = True, index_label = "Index")
             j = df.index[-1] + 1
 
 

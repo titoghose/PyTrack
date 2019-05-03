@@ -14,6 +14,7 @@ from Sensor import Sensor
 import matplotlib.cm as cm
 from scipy.ndimage.filters import gaussian_filter
 from datetime import datetime
+import math
 
 
 class Stimulus:
@@ -1262,7 +1263,7 @@ class Stimulus:
 		plt.show()
 
 
-	def number_roi(self, data_array):
+	def numberRevisits(self, data_array):
 		"""Calculates the number of times the eye revisits within the region of interest, each instance should atleast be 4 milliseconds long
 
 		Parameters
@@ -1280,8 +1281,20 @@ class Stimulus:
 		
 		"""
 
-		no_q_roi = 0
-		no_r_roi = 0
+		with open(self.json_file) as jf:
+			contents = json.load(jf)
+
+		frequency = contents["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
+		
+		#To find number of rows that is equal to 4 ms, however if that is less than 4 rows then atleast 4 rows will be considered
+		no_rows = (frequency*4)/1000
+
+		no_rows = math.ceil(no_rows)	
+
+		if(no_rows < 4):
+			no_rows = 4
+
+		no_revisits = 0
 
 		previous_flag = -1
 		present_flag = -1
@@ -1298,31 +1311,28 @@ class Stimulus:
 				present_flag = -1
 			elif(s1 == 1): #1 stands for Question
 				present_flag = 1
-			elif(s1 == 2): #2 stands for response
-				present_flag = 2
-			else: #if 3 then it is an instruction
+			else:
 				present_flag = -1
 
 			if(present_flag != previous_flag):
 
-				if(len(np.unique(np.array(data_array[i : i+10], dtype = str))) == 1):
+				try:
+					if(len(np.unique(np.array(data_array[i : i + no_rows], dtype = str))) == 1):
 
-					if(present_flag == 1):
-						no_q_roi += 1
+						if(present_flag == 1):
+							no_revisits += 1
+				except TypeError:
+					print(data_array[i : i + no_rows])
 
+			#change the value of the previous_flag only if the next no_rows values are the same
 
-					elif(present_flag == 2):
-						no_r_roi +=  1
-
-			#change the value of the previous_flag only if the next 4 values are the same
-
-			if(len(np.unique(np.array(data_array[i : i+10], dtype = str))) == 1):
+			if(len(np.unique(np.array(data_array[i : i + no_rows], dtype = str))) == 1):
 				previous_flag = present_flag
 
-		return no_q_roi, no_r_roi
+		return no_revisits
 
 
-	def pass_duration_calculation(self, data_array):
+	def passDurationCalculation(self, data_array):
 		"""Calculates the amount of time spent during the first and second revisit in the region of interest
 
 		Parameters
@@ -1339,8 +1349,20 @@ class Stimulus:
 
 		"""
 
-		no_q_roi = 0
-		no_r_roi = 0
+		with open(self.json_file) as jf:
+			contents = json.load(jf)
+
+		frequency = contents["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
+		
+		#To find number of rows that is equal to 4 ms, however if that is less than 4 rows then atleast 4 rows will be considered
+		no_rows = (frequency*4)/1000
+
+		no_rows = math.ceil(no_rows)	
+
+		if(no_rows < 4):
+			no_rows = 4
+
+		no_revisits = 0
 
 		previous_flag = -1
 		present_flag = -1
@@ -1358,32 +1380,36 @@ class Stimulus:
 
 			if(s1 == -1): # -1 is nan
 				present_flag = -1
-			elif(s1 == 1): # 1 is a question
+			elif(s1 == 1): # 1 is inside Region of interest
 				present_flag = 1
 			else: 
 				present_flag = -1
 
 			if(present_flag != previous_flag and present_flag == 1):
 
-				if(len(np.unique(np.array(data_array[i : i+10], dtype = str))) == 1):
+				if(len(np.unique(np.array(data_array[i : i+no_rows], dtype = str))) == 1):
 
-					no_q_roi += 1
+					no_revisits += 1
 
-					if(no_q_roi == 1):
+					if(no_revisits == 1):
 						first_pass = i
-					elif(no_q_roi == 2):
+					elif(no_revisits == 2):
 						second_pass = i
 
 			if(present_flag != previous_flag and previous_flag == 1):
 
-					if(no_q_roi == 1):
+					if(no_revisits == 1):
 						first_pass = i - first_pass
-					elif(no_q_roi == 2):
+					elif(no_revisits == 2):
 						second_pass = i - second_pass
 						break
 
-			if(len(np.unique(np.array(data_array[i : i+10], dtype = str))) == 1):			
+			if(len(np.unique(np.array(data_array[i : i+no_rows], dtype = str))) == 1):			
 				previous_flag = present_flag
+
+		#converting rows into milliseconds
+		first_pass = (1000/frequency)*first_pass
+		second_pass = (1000/frequency)*second_pass
 
 		return first_pass, second_pass
 
@@ -1458,20 +1484,19 @@ class Stimulus:
 		self.sensors["EyeTracker"].metadata["ms_amplitude"] = ms_amp
 
 		# ROI Features
-		if(self.data["GazeAOI"]) != None:
-			no_q_roi, no_r_roi = self.number_roi(self.data["GazeAOI"])
-			first_pass,second_pass = self.pass_duration_calculation(self.data["GazeAOI"])
+		
+		no_revisits = self.numberRevisits(self.data["GazeAOI"])
+		first_pass,second_pass = self.passDurationCalculation(self.data["GazeAOI"])
 
-			if first_pass == -1:
-				first_pass = 0
+		if first_pass == -1:
+			first_pass = 0
 
-			if second_pass == -1:
-				second_pass = 0
+		if second_pass == -1:
+			second_pass = 0
 
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["no_r_roi"] = no_r_roi
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["no_q_roi"] = no_q_roi
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["first_pass"] = first_pass
-			self.sensors[Sensor.sensor_names.index("EyeTracker")].metadata["second_pass"] = second_pass
+		self.sensors["EyeTracker"].metadata["no_revisits"] = no_revisits
+		self.sensors["EyeTracker"].metadata["first_pass"] = first_pass
+		self.sensors["EyeTracker"].metadata["second_pass"] = second_pass
 
 
 	def getData(self, data, sensor_names):
@@ -1539,17 +1564,11 @@ class Stimulus:
 				pupil_size_r_df = np.array(data.PupilRight)
 				if gaze_aoi_flag == 1:
 					gaze_aoi_df = np.array(data.GazeAOI)
-
-				b = datetime.now()
 					
 				# Extracting fixation sequences
 				et_rows = np.where(data.EventSource.str.contains("ET"))[0]
-				g = datetime.now()
 				fixation_seq_df = np.array(data.FixationSeq.fillna(-1), dtype='float32')
-				h = datetime.now()
 				fixation_seq = np.squeeze(np.array([fixation_seq_df[i] for i in sorted(et_rows)], dtype="float32"))
-				print(len(fixation_seq))
-				c = datetime.now()
 
 				# Extracting the eye gaze data
 				l_gaze_x = np.squeeze(np.array([l_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
@@ -1560,7 +1579,6 @@ class Stimulus:
 				r_gaze = {"x": r_gaze_x, "y": r_gaze_y}
 				gaze = {"left" : l_gaze, "right" : r_gaze}
 
-				d = datetime.now()
 
 				if(gaze_aoi_flag == 1):
 					gaze_aoi = np.squeeze(np.array([gaze_aoi_df[i] for i in sorted(et_rows)], dtype="float32"))
@@ -1569,14 +1587,10 @@ class Stimulus:
 				pupil_size_r = np.squeeze(np.array([pupil_size_r_df[i] for i in sorted(et_rows)], dtype="float32"))
 				pupil_size_l = np.squeeze(np.array([pupil_size_l_df[i] for i in sorted(et_rows)], dtype="float32"))
 				
-				e = datetime.now()
-
 				# Fixing Blinks and interpolating pupil size and gaze data
 				blinks_l, interp_pupil_size_l, new_gaze_l = self.findBlinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
 				blinks_r, interp_pupil_size_r, new_gaze_r = self.findBlinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
 				interp_pupil_size = np.mean([interp_pupil_size_r, interp_pupil_size_l], axis=0)
-
-				f = datetime.now()
 
 				extracted_data["ETRows"] = et_rows
 				extracted_data["FixationSeq"] = fixation_seq
@@ -1588,14 +1602,6 @@ class Stimulus:
 				
 				if(gaze_aoi_flag == 1):
 					extracted_data["GazeAOI"] = gaze_aoi
-
-				#print("beginning: ", (b-a))
-				#print("fixation: ", (c-b))
-				#print("eye gaze: ", (d-c))
-				#print("pupil size: ", (e-d))
-				#print("blinks: ", (f-e))
-
-				#print("fixation time taken: ", (g-b), " ", (h-g), " ", (c-h))
 
 		return extracted_data
 
