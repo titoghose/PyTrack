@@ -68,7 +68,7 @@ Now, follow these steps:
     
     * "*Experiment_name*" should be the same name as the json file without the extension and "*Path*" should be the absolute path to your experiment directory without the final "/" at the end.
     * The subjects should be added under the "*Subjects*" field. You may specify one or more groups of division for your subjects (recommended for aggregate between group statistical analysis). **There must be atleast 1 group**.
-    * The stimuli names shpuld be added under the "*Stimuli*" field and again you may specify one or more types (recommended for aggregate between stimulus type statistical analysis). **There must be atleast 1 type**.
+    * The stimuli names should be added under the "*Stimuli*" field and again you may specify one or more types (recommended for aggregate between stimulus type statistical analysis). **There must be atleast 1 type**.
     * The "*Control_Questions*" field is optional. In case you have some stimuli that should be used to standardise/normalise features extracted from all stimuli, sepcify the names here. **These stimuli must be present under the "*Stimuli*" field under one of the types**. 
     * **The field marked "*Columns_of_interest*" should not be altered**. 
     * Under "*Analysis_Params*", just change the values of "Sampling_Freq", "Display_height" and "Display_width" to match the values of your experiment. 
@@ -97,7 +97,7 @@ Now, follow these steps:
       "Type_2":[
          "Stim_3",
          "Stim_4"
-      ]
+      ],
    },
    "Control_Questions":[
          "Stim_1"
@@ -110,7 +110,8 @@ Now, follow these steps:
          "GazeRighty",
          "PupilLeft",
          "PupilRight",
-         "FixationSeq"   
+         "FixationSeq",
+         "GazeAOI"
       ],
       "Extra":[
          "EventSource"
@@ -126,7 +127,35 @@ Now, follow these steps:
 }
 
 ```
+NOTE: The Experiment class contains a function called analyse() which is used to perform statistical analysis (eg: ANOVA or T test), by default there is only 1 between group factor ("Subject_type") and 1 within group factor ("Stimuli_type") that is considered. If additional factors need to be considered they need to added to the json file.
 
+* For example if Gender is to be considered as an additional between group factor then in the json file, under "Subjects", for each subject, a corresponding dicitionary must be created where you mention the factor name and the corresponding value (eg: Subject_name: {"Gender" : "M"}). Please also note that the square brackets ('[', ']') after group type need to be changed to curly brackets ('{', '}').
+* This must be similarly done for Stimuli, if any additional within group factor that describes the stimuli needs to be added. For example, if you are showing WORDS and PICTURES to elicit different responses from a user and you additonally have 2 different brightness levels ("High" and "Low") of the stimuli, you could consider Type1 and Type2 to be the PICTuRE and WORD gropus and mention Brightness as an additional within group factor. 
+
+```json
+"Subjects":{
+      "group1":{
+         "Subject_01": {"Gender": "M"},
+         "Subject_02": {"Gender": "F"}
+      },
+      "group2":{
+         "Subject_03": {"Gender": "F"},
+         "Subject_04": {"Gender": "M"}
+      }
+   },
+   "Stimuli":{
+      "Type_1":{
+         "Stim_1": {"Brightness": "High"},
+         "Stim_2": {"Brightness": "Low"}
+      },
+      "Type_2":{
+         "Stim_3": {"Brightness": "Low"},
+         "Stim_4": {"Brightness": "High"}
+      },
+   },
+
+
+```
 #### Using ***PyTrack***
 
 This involves less than 10 lines of python code. However, in case you want to do more detailed analysis, it may involve a few more lines. 
@@ -137,7 +166,7 @@ Using *formatBridge* majorly has 3 cases.:
 
    eg. If subject data file is *subject_001.asc*, the file in the stim folder should be *subject_001.txt*
 
-   *Note: Yes we undertsand this is a tedious task, but this is the only way we can understand the order of the stimulus which is needed for conclusive analysis and visualization. **However, in case you are using EyeLink data, you can pass a message called "Stim Key: [stim_name]" during each stimulus and we can extract it automatically. See [documentation](https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html#formatBridge.generateCompatibleFormat).***
+   *Note: Yes we undertsand this is a tedious task, but this is the only way we can understand the order of the stimulus which is needed for conclusive analysis and visualization. **However, in case you are using EyeLink data, you can pass a message called "Stim Key: [stim_name]" during each stimulus and we can extract it automatically. See [documentation](https://pytrack-ntu.readthedocs.io/en/latest/).***
 
 2. **Explicitly specify the stimulus order for the entire experiment**. This is for the case where the same order of stimuli are presented to all the participants. Just create a file called *stim_file.txt* and place it inside the *Data* folder. Finally, the *stim_list_mode* parameter in the *generateCompatibleFormat* function needs to be set as "common" (See [Example](#example-use)).
 
@@ -146,7 +175,7 @@ Using *formatBridge* majorly has 3 cases.:
 
 #### Example Use 
 
-See [documentation](https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html) for a detailed understanding of each function.
+See [documentation](https://pytrack-ntu.readthedocs.io/en/latest/) for a detailed understanding of each function.
 
 ```python
 from PyTrack.formatBridge import generateCompatibleFormat
@@ -159,9 +188,11 @@ generateCompatibleFormat(exp_path="abcd/efgh/NTU_Experiment/", device="eyelink",
 # Creating an object of the Experiment class
 exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
 
+# Instantiate the meta_matrix_dict of a Experiment
+exp.metaMatrixInitialisation(standardise_flag=False, average_flag=False)
 
-# Arvind has to add the function call for analysis
-## CODE GOES HERE
+# Calling the function for the statistical analysis of the data
+exp.analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova")
 
 
 subject_name = "Sub_001"
@@ -188,7 +219,7 @@ Give an example
 ## Authors
 
 * **Upamanyu Ghose** ([github](https://github.com/titoghose) | [email](titoghose@gmail.com))
-* **Arvind Srinivasan** ([github](https://github.com/arvindas) | [email](arvind96@gmail.com))
+* **Arvind A S** ([github](https://github.com/arvindas) | [email](96arvind@gmail.com))
 
 See also the list of [contributors](https://github.com/titoghose/PyTrack/contributors) who participated in this project.
 

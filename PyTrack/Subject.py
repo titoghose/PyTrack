@@ -90,9 +90,7 @@ class SubjectVisualize:
 
 
 class Subject:
-	"""his class deals with encapsulating all the relevant information regarding a subject who participated in an experiment. The class contains
-	functions that help in the extraction of data from the databases (SQL or CSV) and the creation of the stimuli objects. The class also calculates the 
-	control data for the purpose of standardisation.
+	"""This class deals with encapsulating all the relevant information regarding a subject who participated in an experiment. The class contains functions that help in the extraction of data from the databases (SQL or CSV) and the creation of the `Stimuli <#module-Stimulus>` _ objects. The class also calculates the control data for the purpose of standardisation.
  		
 	Parameters
 	---------
@@ -261,7 +259,7 @@ class Subject:
 
 	
 	def stimulusDictInitialisation(self, stimuli_names, columns, json_file, sensors, database, reading_method):
-		"""Creates a list of objects of class Stimuli
+		"""Creates a list of objects of class `Stimuli <#module-Stimulus>` _.
 
 		Parameter
 		---------
@@ -383,7 +381,7 @@ class Subject:
 	def subjectAnalysis(self, average_flag, standardise_flag):
 		"""Function to find features for all stimuli for a given subject. 
 
-		Does not return any value. It stores the calculated features/metadata in its `aggregate_meta` member variable. Can be accessed by an object of the class. For structure of this variable see `Subject <#module-Subject>.
+		Does not return any value. It stores the calculated features/metadata in its `aggregate_meta` member variable. Can be accessed by an object of the class. For structure of this variable see `Subject <#module-Subject> _.
 
 		Parameters
 		----------

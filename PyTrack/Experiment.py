@@ -105,10 +105,10 @@ class Visualize:
 
 
 class Experiment:
-	""" This is class responsible for the analysis of data of an entire experiment. The creation of a an object of this class will subsequently create create objects for each subject
-	involved in the experiment (which in turn would create object for each stimulus which is viewed by the subject). 
+	""" This is class responsible for the analysis of data of an entire experiment. The creation of a an object of this class will subsequently create create objects for each 
+	`Subject <#id11>` _. involved in the experiment (which in turn would create object for each `Stimulus <#module-Stimulus>` _ which is viewed by the subject). 
 
-	This class also contains analyse function which is used for the statistical analysis of the data (eg: Mixed ANOVA, RM ANOVA etc).
+	This class also contains the `analyse <#Experiment.Experiment.analyse>` _ function which is used for the statistical analysis of the data (eg: Mixed ANOVA, RM ANOVA etc).
 
 	Parameters
 	-----------
@@ -142,7 +142,7 @@ class Experiment:
 		
 
 	def stimuliArrayInitialisation(self):
-		"""This functions instantiates the dictionary 'stimuli' with the list of names of the different stimuli by category
+		"""This functions instantiates the dictionary `stimuli` with the list of names of the different stimuli by category
 
 		Parameters
 		----------
@@ -170,7 +170,7 @@ class Experiment:
 
 
 	def subjectArrayInitialisation(self, reading_method):
-		"""This function initialises an list of objects of class Subject
+		"""This function initialises an list of objects of class `Subject <#id11>` _.
 
 		Parameters
 		----------
@@ -214,7 +214,7 @@ class Experiment:
 
 
 	def columnsArrayInitialisation(self):
-		"""The functions extracts the names of the columns that are to analysed
+		"""The functions extracts the names of the columns that are to be analysed 
 
 		Parameters
 		----------
@@ -256,15 +256,43 @@ class Experiment:
 		root.mainloop()
 
 	
-	def analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova"):
-		"""This function carries out the required statistical analysis technique for the specified indicators/parameters using the data extracted from all the subjects 
-		that were mentioned in the json file. There are 4 different tests that can be run, namely - Mixed ANOVA, Repeated Measures ANOVA, T Test and Simple ANOVA (both 1 and 2 way)
+	def metaMatrixInitialisation(self, standardise_flag=False, average_flag=False):
+		"""This function instantiates the ``meta_matrix_dict`` with values that it extracts from the ``aggregate_meta`` variable of each Subject object.
 
-		standardise_flag: book {``False``, ``True``}
+		Parameters
+		----------
+
+		standardise_flag: bool {``False``, ``True``}
 			Indicates whether the data being considered need to be standardised (by subtracting the control values/baseline value) 
 		average_flag: bool {``False``, ``True``} 
 			Indicates whether the data being considered should averaged across all stimuli of the same type 
 			NOTE: Averaging will reduce variability and noise in the data, but will also reduce the quantum of data being fed into the statistical test
+		"""
+
+		for sensor_type in Sensor.meta_cols:
+			for meta_col in Sensor.meta_cols[sensor_type]:
+				self.meta_matrix_dict[1].update({meta_col : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object)})
+
+		#Instantiation of the meta_matrix_dict database		
+		for sub_index, sub in enumerate(self.subjects):
+			sub.subjectAnalysis(average_flag, standardise_flag)
+
+			self.meta_matrix_dict[0][sub_index] = sub.subj_type
+
+			for stim_index, stimuli_type in enumerate(sub.aggregate_meta):
+
+				for meta in sub.aggregate_meta[stimuli_type]:
+					self.meta_matrix_dict[1][meta][sub_index, stim_index] = sub.aggregate_meta[stimuli_type][meta]
+
+
+
+	def analyse(self, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova"):
+		"""This function carries out the required statistical analysis technique for the specified indicators/parameters using the data extracted from all the subjects 
+		that were mentioned in the json file. There are 4 different tests that can be run, namely - Mixed ANOVA, Repeated Measures ANOVA, T Test and Simple ANOVA (both 1 and 2 way)
+
+		Parameters
+		----------
+		
 		parameter_list: set {{"all"}}
 			Set of the different indicators/parameters (Pupil_size, Blink_rate) on which statistical analysis is to be performed, by default it will be "all"
 			so that all the parameter are considered. 
@@ -282,13 +310,12 @@ class Experiment:
 			Please go through how the README FILE to understand how the JSON FILE is to be written for within group factors to be considered.
 		statistical_test: str {"Mixed_anova","RM_anova","ttest","anova"}
 			Name of the statistical test that has to be performed.
+			NOTE:
+			-ttest: Upto 2 between group factors and 2 within group factors can be considered at any point of time
+			-Mixed_anova: Only 1 between group factor and 1 within group factor can be considered at any point of time
+			-anova: Upto 2 between group factors can be considered at any point of time
 
-			Please NOTE:
-
-			ttest: Upto 2 between group factors and 2 within group factors can be considered at any point of time
-			Mixed_anova: Only 1 between group factor and 1 within group factor can be considered at any point of time
-			anova: Upto 2 between group factors can be considered at any point of time
-			RM_anova: Upto 2 within group factors can be considered at any point of time  
+			-RM_anova: Upto 2 within group factors can be considered at any point of time  
 		
 		Examples
 		--------
@@ -307,21 +334,7 @@ class Experiment:
 		"""
 		
 		#Defining the meta_matrix_dict data structure
-		for sensor_type in Sensor.meta_cols:
-			for meta_col in Sensor.meta_cols[sensor_type]:
-				self.meta_matrix_dict[1].update({meta_col : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object)})
-
-		#Instantiation of the meta_matrix_dict database		
-		for sub_index, sub in enumerate(self.subjects):
-			sub.subjectAnalysis(average_flag, standardise_flag)
-
-			self.meta_matrix_dict[0][sub_index] = sub.subj_type
-
-			for stim_index, stimuli_type in enumerate(sub.aggregate_meta):
-
-				for meta in sub.aggregate_meta[stimuli_type]:
-					self.meta_matrix_dict[1][meta][sub_index, stim_index] = sub.aggregate_meta[stimuli_type][meta]
-
+		
 		with open(self.json_file, "r") as json_f:
 			json_data = json.load(json_f)
 
