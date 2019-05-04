@@ -262,9 +262,9 @@ class Experiment:
 		Parameters
 		----------
 
-		standardise_flag: bool {``False``, ``True``}
+		standardise_flag: bool
 			Indicates whether the data being considered need to be standardised (by subtracting the control values/baseline value) 
-		average_flag: bool {``False``, ``True``} 
+		average_flag: bool 
 			Indicates whether the data being considered should averaged across all stimuli of the same type 
 			NOTE: Averaging will reduce variability and noise in the data, but will also reduce the quantum of data being fed into the statistical test
 		"""
@@ -293,16 +293,16 @@ class Experiment:
 		Parameters
 		----------
 		
-		parameter_list: set {{"all"}}
+		parameter_list: set
 			Set of the different indicators/parameters (Pupil_size, Blink_rate) on which statistical analysis is to be performed, by default it will be "all"
 			so that all the parameter are considered. 
-		between_factor_list: list(str) {["Subject_type"]} 
+		between_factor_list: list(str) 
 			List of between group factors, by default it will only contain "Subject_type"
 			If any additional parameter (eg: Gender) needs to be considered, then the list will be: between_factor_list = ["Subject_type", "Gender"]
 			DO NOT FORGET TO INCLUDE "Subject_type", if you wish to consider "Subject_type" as a between group factor.
 			Eg: between_factor_list = ["factor_x"] will no longer consider "Subject_type" as a factor. 
 			Please go through how the README FILE to understand how the JSON FILE is to be written for between group factors to be considered.
-		within_factor_list: list(str) {["Stimuli_type"]} 
+		within_factor_list: list(str)
 			List of within group factors, by default it will only contain "Stimuli_type"
 			If any additional parameter, needs to be considered, then the list will be: between_factor_list = ["Subject_type", "factor_X"]
 			DO NOT FORGET TO INCLUDE "Stimuli_type", if you wish to consider "Stimuli_type" as a within group factor.
@@ -373,7 +373,7 @@ class Experiment:
 
 
 				#For each subject
-				for sub in self.subjects:
+				for sub_index, sub in enumerate(self.subjects):
 
 					#For each Question Type (NTBC: FIND OUT WHAT THE AGGREGATE_META CONTAINS)
 					for stimuli_index, stimuli_type in enumerate(sub.aggregate_meta):
@@ -448,7 +448,7 @@ class Experiment:
 					pg.print_table(aov)
 
 
-				elif(statistical_test == "anova")
+				elif(statistical_test == "anova"):
 
 					print(meta, ":\tANOVA")
 					aov = pg.anova(dv = meta, between = between_factor_list, data = data)

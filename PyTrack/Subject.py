@@ -108,7 +108,7 @@ class Subject:
 		Contains the names of the different sensors whose indicators are being analysed
 	database: str | SQL object
 		is the SQL object for the SQL database | name of the folder that contains the name csv files
-	manual_eeg: bool {``False``| ``True``}
+	manual_eeg: bool
 		Indicates whether artifact removal is manually done or not
 	reading_method: str
 		Mentions the format in which the data is being stored
