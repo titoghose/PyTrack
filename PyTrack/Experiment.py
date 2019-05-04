@@ -5,16 +5,14 @@ import time
 import json
 import random
 import pickle
+import tkinter as tk
 from datetime import datetime
 from functools import partial
 
 
 import numpy as np
 import pandas as pd
-import tkinter as tk
 import pingouin as pg
-from scipy import stats
-from statistics import mean
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
@@ -33,7 +31,6 @@ class Visualize:
 		master.title("PyTrack Visualization")
 		self.root = master
 		self.v = tk.IntVar()
-		# self.v.set(1)
 		self.subjects = subjects
 
 		self.master_frame = tk.Frame(self.root, height=30, width=70)
@@ -111,18 +108,20 @@ class Visualize:
 
 
 class Experiment:
-	""" This is the main class that performs statistical analysis of the data contained in a database
+	""" This is class responsible for the analysis of data of an entire experiment. The creation of a an object of this class will subsequently create create objects for each 
+	`Subject <#id11>`_. involved in the experiment (which in turn would create object for each `Stimulus <#module-Stimulus>`_ which is viewed by the subject). 
+
+	This class also contains the `analyse <#Experiment.Experiment.analyse>`_ function which is used for the statistical analysis of the data (eg: Mixed ANOVA, RM ANOVA etc).
 
 	Parameters
 	-----------
-	name: str
-		Name of the experiment
 	json_file: str
 		Name of the json file that contains information regarding the experiment or the database
-	sensors: List of str
-		Contains the names of the different sensors whose indicators are being analysed
 	reading_method: str {"SQL"| "CSV"}
 		Mentions the format in which the data is being stored
+	sensors: list(str)
+		Contains the names of the different sensors whose indicators are being analysed (currently only Eye Tracking can be done
+		However in future versions, analysis of ECG and EDA may be added)
 	aoi : str {'NA', 'draw'} | tuple
 		If 'NA' then AOI is the entire display size. If 'draw' then the user is prompted to draw an area of interest. If type is ``tuple``, user must specify the coordinates of AOI in the following order (start_x, start_y, end_x, end_y). Here, x is the horizontal axis and y is the vertical axis.
 
@@ -158,16 +157,16 @@ class Experiment:
 		
 
 	def stimuliArrayInitialisation(self):
-		"""This functions instantiates the dictionary 'stimuli' with the list of names of the different stimuli by category
+		"""This functions instantiates the dictionary `stimuli` with the list of names of the different stimuli by category
 
 		Parameters
 		----------
-		json_file : string
+		json_file : str
 			Name of the json file which contains details of the experiment
 
 		Returns
 		-------
-		data_dict : dictionary
+		data_dict : dict
 			Dictionary containing the names of the different stimuli categorised by type
 
 		"""
@@ -186,16 +185,16 @@ class Experiment:
 
 
 	def subjectArrayInitialisation(self, reading_method):
-		"""This function initialises an list of objects of class Subject
+		"""This function initialises an list of objects of class `Subject <#id11>`_.
 
 		Parameters
 		----------
-		reading_method: {'SQL','CSV'}, optional
+		reading_method: str {'SQL','CSV'}, optional
 			Specifies the database from which data extraction is to be done from	
 
 		Returns
 		-------
-		subject_list : list 
+		subject_list : list(Subject objects)
 			list of objects of class Subject
 		
 		"""
@@ -209,8 +208,7 @@ class Experiment:
 
 		if reading_method == "SQL":
 			name_of_database = json_data["Experiment_name"]
-			extended_name = "sqlite:////" + self.path + "/Data/" + name_of_database + ".db"
-			print(extended_name)
+			extended_name = "sqlite:///" + self.path + "/Data/" + name_of_database + ".db"
 			database = create_engine(extended_name)
 		
 		elif reading_method == "CSV":
@@ -224,23 +222,23 @@ class Experiment:
 
 				subject_list.append(subject_object)
 
-		if reading_method == "SQL":
+		if reading_method == "SQL":	
 			database.dispose()
 
 		return subject_list
 
 
 	def columnsArrayInitialisation(self):
-		"""The functions extracts the names of the columns that are to analysed
+		"""The functions extracts the names of the columns that are to be analysed 
 
 		Parameters
 		----------
-		json_file: string
+		json_file: str
 			Name of the json file which contains details of the experiment
 
 		Returns
 		-------
-		columns_list: list
+		columns_list: list(str)
 			List of names of columns of interest
 		
 		"""
@@ -273,27 +271,19 @@ class Experiment:
 		root.mainloop()
 
 	
-	def analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova"):
-		"""This function carries out the required statistical analysis technique for the specified indicators/parameters
+	def metaMatrixInitialisation(self, standardise_flag=False, average_flag=False):
+		"""This function instantiates the ``meta_matrix_dict`` with values that it extracts from the ``aggregate_meta`` variable of each Subject object.
 
 		Parameters
 		----------
-		standardise_flag: Bool {``False``, ``True``}
+		standardise_flag: bool
 			Indicates whether the data being considered need to be standardised (by subtracting the control values/baseline value) 
-		average_flag: Bool {``False``, ``True``} 
-			Indicates whether the data being considered should averaged across all stimuli of the same type
-		parameter_list: Set {{"all"}}
-			Set of the different indicators/parameters (Pupil_size, Blink_rate) on which statistical analysis is to be performed 
-		between_factor_list: List of strings {["Subject_type"]} 
-			List of between group factors
-		within_factor_list: List of strings {["Stimuli_type"]} 
-			List of within group factors
-		statistical_test: string {"Mixed_anova","RM_anova","ttest"}
-			Name of the statistical test that has to be performed
-		
+		average_flag: bool
+			Indicates whether the data being considered should averaged across all stimuli of the same type 
+			NOTE: Averaging will reduce variability and noise in the data, but will also reduce the quantum of data being fed into the statistical test
+
 		"""
-		
-		#Defining the meta_matrix_dict data structure
+
 		for sensor_type in Sensor.meta_cols:
 			for meta_col in Sensor.meta_cols[sensor_type]:
 				self.meta_matrix_dict[1].update({meta_col : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object)})
@@ -309,289 +299,170 @@ class Experiment:
 				for meta in sub.aggregate_meta[stimuli_type]:
 					self.meta_matrix_dict[1][meta][sub_index, stim_index] = sub.aggregate_meta[stimuli_type][meta]
 
-		#To find the number of subjects in Group 1 (Innocent) and Group 2 (Guilty)
-		with open(self.json_file, "r") as json_f:
-			json_data = json.load(json_f)
-			num_inn = len(json_data["Subjects"]["innocent"])
-			num_guil = len(json_data["Subjects"]["guilty"])
+
+	def analyse(self, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova"):
+		"""This function carries out the required statistical analysis.
 		
-		num_samples = 2 #Number of participants randomly picked from each group
-		num_runs = 1 #Number of times the experiment anlaysis is run (Results may differ in each run as the participants chosen will be different)
-
-
-		for sen in self.sensors: #For each type of sensor
-			for i in range(num_runs): #For each run
-
-				#sub_indices is a list of indices, where each index refers to a subject
-				sub_indices = np.hstack((random.sample(range(0, num_inn), num_samples), random.sample(range(num_inn, num_inn + num_guil), num_samples)))
-				print("The indices chosen are:", sub_indices)
-
-				head_row = ["Indices"]
-				csv_row = [str(sub_indices)]
-
-				with open(self.json_file) as json_f:
-					json_data = json.load(json_f)
-
-				for meta in Sensor.meta_cols[Sensor.sensor_names.index(sen)]:
-					if meta == "pupil_size" or meta == "pupil_size_downsample" or meta == "sacc_count" or meta == "sacc_duration" or meta == "sacc_vel" or meta == "sacc_amplitude":
-						continue
-
-					if 'all' not in parameter_list:
-
-						if meta not in parameter_list:
-							print(meta)
-							continue
-
-					print("\n\n")
-					print("\t\t\t\tAnalysis for ",meta)	
-
-					#For the purpose of statistical analysis, a pandas dataframe needs to be created that can be fed into the statistical functions
-					#The columns required are - meta (indicator), the between factors (eg: Subject type or Gender), the within group factor (eg: Stimuli Type), Subject name/id
-
-					#Defining the list of columns required for the statistical analysis
-					column_list = [meta]
-
-					column_list.extend(between_factor_list)
-					column_list.extend(within_factor_list)
-					column_list.append("subject")
-
-					data =  pd.DataFrame(columns=column_list)
-
-
-					#For each subject
-					for sub_index in sub_indices:
-						
-						sub = self.subjects[sub_index] #sub refers to the object of the respective subject whose data is being extracted
-
-						#For each Question Type (NTBC: FIND OUT WHAT THE AGGREGATE_META CONTAINS)
-						for stimuli_index, stimuli_type in enumerate(sub.aggregate_meta):
-
-							#NTBC: Ignore the picture stimuli for the time being
-							if stimuli_type not in ['alpha', 'general', 'general_lie', 'relevant']:
-								continue
-
-							#Value is an array (NTBC : Is it always an array or can it also be a single value?)	
-							value_array = self.meta_matrix_dict[1][meta][sub_index,stimuli_index]
-							print(len(value_array))
-
-							try:					
-								for value in value_array:
-
-									row = []
-
-									row.append(value)
-									row.append(sub.subj_type)
-
-									#Add the between group factors (need to be defined in the json file)
-									for param in between_factor_list:
-
-										if param == "Subject_type":
-											continue
-
-										try:
-											row.append(json_data["Subjects"][sub.subj_type][sub.name][param])
-										except:
-											print("Between subject paramter: ", param, " not defined in the json file")	
-
-									#NTBD: Please change sub.name to required value
-									#DO NOT HAVE ACCESS TO THE NAME OF THE STIMULI, SO NEED TO FIGURE OUT HOW THE WITHIN GROUP 
-									#PARAMETERS NEED TO BE ACCESSED
-
-									row.append(stimuli_type)
-
-									for param in within_factor_list:
-										
-										if param == "Stimuli_type":
-											continue
-
-										try:
-											stimulus_name = self.stimuli[stimuli_type][stimuli_index]
-											row.append(json_data["Stimuli"][stimuli_type][stimuli_name][param])
-										except:
-											print("Within stimuli parameter: ", param, " not defined in the json file")
-
-									row.append(sub.name)
-
-									#NTBC: Checking condition if value is nan for error checking
-									if(np.isnan(value)):
-										print(row)
-
-									#Instantiate into the pandas dataframe
-									data.loc[len(data)] = row
-
-							except:
-								print("Error in data instantiation")
-
-					#Depending on the parameter, choose the statistical test to be done
-
-					if(statistical_test == "Mixed_anova"):
-
-						print(meta, "Mixed anova")
-						mixed_anova_calculation(meta, data, between_factor_list[0], within_factor_list[0])
-
-					elif(statistical_test == "RM_anova"):
-
-						print(meta, "RM Anova")
-						rm_anova_calculation(meta, data, within_factor_list)
-
-					elif(statistical_test == "ttest"):
-
-						print(meta, "t test")
-						ttest_calculation(meta, data, between_factor_list, within_factor_list)
-
-					#4. NTBD : Genlie vs Relevant comparison to be done	
-
-
-	def logistic_regression_analysis(self, average_flag=False, standardise_flag=False,  independent_parameter_list=["all"]):
-		"""Run a logistic regression on the data from several parameters
+		 The analysis is carried out on the specified indicators/parameters using the data extracted from all the subjects that were mentioned in the json file. There are 4 different tests that can be run, namely - Mixed ANOVA, Repeated Measures ANOVA, T Test and Simple ANOVA (both 1 and 2 way)
 
 		Parameters
 		----------
-		standardise_flag: bool {``False``, ``True``}
-			Indicates whether the data being considered need to be standardised (by subtracting the control values/baseline value) 		
-		average_flag: bool {``False``, ``True``} 
-			Indicates whether the data being considered should averaged across all stimuli of the same type
-		independent_parameter_list = list of strings {["all"]}
-			Is a list of the independent variables in the logistic regression equation
+		parameter_list: set
+			Set of the different indicators/parameters (Pupil_size, Blink_rate) on which statistical analysis is to be performed, by default it will be "all" so that all the parameter are considered. 
+		between_factor_list: list(str)
+			List of between group factors, by default it will only contain "Subject_type"
+			If any additional parameter (eg: Gender) needs to be considered, then the list will be: between_factor_list = ["Subject_type", "Gender"]
+			DO NOT FORGET TO INCLUDE "Subject_type", if you wish to consider "Subject_type" as a between group factor.
+			Eg: between_factor_list = ["factor_x"] will no longer consider "Subject_type" as a factor. 
+			Please go through the README FILE to understand how the JSON FILE is to be written for between group factors to be considered.
+		within_factor_list: list(str)
+			List of within group factors, by default it will only contain "Stimuli_type"
+			If any additional parameter, needs to be considered, then the list will be: between_factor_list = ["Subject_type", "factor_X"]
+			DO NOT FORGET TO INCLUDE "Stimuli_type", if you wish to consider "Stimuli_type" as a within group factor.
+			Eg: within_factor_list = ["factor_x"] will no longer consider "Stimuli_type" as a factor. 
+			Please go through how the README FILE to understand how the JSON FILE is to be written for within group factors to be considered.
+		statistical_test: str {"Mixed_anova","RM_anova","ttest","anova"}
+			Name of the statistical test that has to be performed.
+			NOTE:
+			-ttest: Upto 2 between group factors and 2 within group factors can be considered at any point of time
+			-Mixed_anova: Only 1 between group factor and 1 within group factor can be considered at any point of time
+			-anova: Upto 2 between group factors can be considered at any point of time
+			-RM_anova: Upto 2 within group factors can be considered at any point of time  
+		
+		Examples
+		--------
+		For calculating Mixed ANOVA, on all the parameters, with standardisation, NOT averaging across stimuli of the same type
+		and considering Subject_type and Stimuli_type as between and within group factors respectively
+
+		>>> analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova")
+		OR 
+		>>> analyse(self, standardise_flag=True) (as many of the option are present by default)
+
+		For calculating 2-way ANOVA, for "blink_rate" and "avg_blink_duration", without standardisation with averaging across stimuli of the same type
+		and considering Subject_type and Gender as the between group factors
+
+		>>> analyse(self, average_flag=True, parameter_list={"blink_rate", "avg_blink_duration"}, between_factor_list=["Subject_type", "Gender"], statistical_test="anova")
 
 		"""
-
+		
 		#Defining the meta_matrix_dict data structure
-		for sensor_type in Sensor.meta_cols:
-			for meta_col in sensor_type:
-				self.meta_matrix_dict[1].update({meta_col : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object)})
-
-		#Instantiation of the meta_matrix_dict database		
-		for sub_index, sub in enumerate(self.subjects):
-			sub.subjectAnalysis(average_flag, standardise_flag)
-
-			self.meta_matrix_dict[0][sub_index] = sub.subj_type
-
-			for stim_index, stimuli_type in enumerate(sub.aggregate_meta):
-				for meta in sub.aggregate_meta[stimuli_type]:
-					self.meta_matrix_dict[1][meta][sub_index, stim_index] = sub.aggregate_meta[stimuli_type][meta]
-
-		#Define a pandas dataframe with the required column names
-		#NTBD add stimuli_type as a value as well 
-		#(see if pingouin takes nominal factors as well, if not search for a package that does take nominal values for independent factors)
-
-		if independent_parameter_list.count("all") == 1:
-
-			independent_parameter_list = []
-
-			for sen in self.sensors:
-				for meta in Sensor.meta_cols[Sensor.sensor_names.index(sen)]:
-					independent_parameter_list.append(meta)
-
-
-		dataframe_columns = ["Subject_type"]
-
-		dataframe_columns.extend(independent_parameter_list)
-
-		dataframe_columns.append("Stimuli_type")
-
-		data =  pd.DataFrame(columns=dataframe_columns)
-
-
-		#To find the number of subjects in Group 1 (Innocent) and Group 2 (Guilty)
+		
 		with open(self.json_file, "r") as json_f:
 			json_data = json.load(json_f)
-			num_inn = len(json_data["Subjects"]["innocent"])
-			num_guil = len(json_data["Subjects"]["guilty"])
-		
-		num_samples = 5 #Number of participants randomly picked from each group
-		num_runs = 1 #Number of times the experiment anlaysis is run (Results may differ in each run as the participants chosen will be different)
 
-		sub_indices = np.hstack((random.sample(range(0, num_inn), num_samples), random.sample(range(num_inn, num_inn + num_guil), num_samples)))
-		
-		for sub_index in sub_indices:
-							
-			sub = self.subjects[sub_index] #sub refers to the object of the respective subject whose data is being extracted
+		meta_not_to_be_considered = ["pupil_size", "pupil_size_downsample"]
 
-			#For each Question Type
-			for stimuli_index, stimuli_type in enumerate(sub.aggregate_meta):
+		if "GazeAOI" not in json_data["Columns_of_interest"]["EyeTracker"]:
+			meta_not_to_be_considered.extend(["no_revisits", "first_pass", "second_pass"])
 
-				if stimuli_type not in ['alpha', 'general', 'general_lie', 'relevant']:
+
+		for sen in self.sensors: #For each type of sensor
+
+			for meta in Sensor.meta_cols[sen]:
+				if meta in meta_not_to_be_considered:
 					continue
 
-				row = []
+				if 'all' not in parameter_list:
 
-				if(sub.subj_type == "guilty"):
-					row.append(1)
-				elif(sub.subj_type == "innocent"):
-					row.append(0)
-				else:
-					print("Unrecognized Subject type: ", sub.subj_type)		
+					if meta not in parameter_list:
+						print("The following parameter is not present in the parameter list: ", meta)
+						continue
 
-				#NTBD: how to handle if all the parameters are required?
-				
-				for meta in independent_parameter_list:
+				print("\n\n")
+				print("\t\t\t\tAnalysis for ",meta)	
 
-					#NTBD: Lets assumes that value_array is always a single value and not a list
+				#For the purpose of statistical analysis, a pandas dataframe needs to be created that can be fed into the statistical functions
+				#The columns required are - meta (indicator), the between factors (eg: Subject type or Gender), the within group factor (eg: Stimuli Type), Subject name/id
 
-					value_array = self.meta_matrix_dict[1][meta][sub_index,stimuli_index]
-					
-					row.append(mean(value_array))
+				#Defining the list of columns required for the statistical analysis
+				column_list = [meta]
 
-				row.append(stimuli_index)
+				column_list.extend(between_factor_list)
+				column_list.extend(within_factor_list)
+				column_list.append("subject")
 
-				data.loc[len(data)] = row	
-
-		#Convert the Stimuli_type into dummy variables
-
-		stimuli_dummy_data = pd.get_dummies(data["Stimuli_type"])
-
-		stimuli_columns = ['alpha', 'general', 'general_lie', 'relevant']
-		stimuli_dummy_data.columns = stimuli_columns
-
-		data = data.join(stimuli_dummy_data)
-
-		print(independent_parameter_list)
-
-		independent_parameter_list.extend(stimuli_columns)
-
-		#Instantiate X and y values of the linear regression
-
-		print(independent_parameter_list)
-
-		X = data[independent_parameter_list]
-		y = data["Subject_type"]
-
-		dependent_column = []
-
-		for i in range(len(y)):
-
-			if(y[i] == 0.0):
-				 dependent_column.append(0)
-			elif(y[i] == 1.0):
-				dependent_column.append(1)
-
-		print(dependent_column)
-
-		#Logistic regression through pingoiun
-
-		'''
-
-		print("\t\t\t\tPingouin logistic regression")
+				data =  pd.DataFrame(columns=column_list)
 
 
-		results = pg.logistic_regression(X, dependent_column)
+				#For each subject
+				for sub in self.subjects:
 
-		print(results.round(2))
+					#For each Question Type (NTBC: FIND OUT WHAT THE AGGREGATE_META CONTAINS)
+					for stimuli_index, stimuli_type in enumerate(sub.aggregate_meta):
 
-		'''
+						#Value is an array (NTBC : Is it always an array or can it also be a single value?)	
+						value_array = self.meta_matrix_dict[1][meta][sub_index,stimuli_index]
 
-		#Logistic regression through statsmodel
+						try:					
+							for value in value_array:
 
-		print("\t\t\t\tStatmodels logistic regression")
+								row = []
 
-		logit = sm.Logit(dependent_column, X, fit_intercept = False)
+								row.append(value)
+								row.append(sub.subj_type)
 
-		result = logit.fit()
+								#Add the between group factors (need to be defined in the json file)
+								for param in between_factor_list:
 
-		print(result.summary2())
-	
-	
+									if param == "Subject_type":
+										continue
+
+									try:
+										row.append(json_data["Subjects"][sub.subj_type][sub.name][param])
+									except:
+										print("Between subject paramter: ", param, " not defined in the json file")	
+
+								row.append(stimuli_type)
+
+								for param in within_factor_list:
+									
+									if param == "Stimuli_type":
+										continue
+
+									try:
+										stimulus_name = self.stimuli[stimuli_type][stimuli_index]
+										row.append(json_data["Stimuli"][stimuli_type][stimuli_name][param])
+									except:
+										print("Within stimuli parameter: ", param, " not defined in the json file")
+
+								row.append(sub.name)
+
+								if(np.isnan(value)):
+									print("The data being read for analysis contains null value: ", row)
+
+								#Instantiate into the pandas dataframe
+								data.loc[len(data)] = row
+
+						except:
+							print("Error in data instantiation")
+
+				#Depending on the parameter, choose the statistical test to be done
+
+				if statistical_test == "Mixed_anova":
+					print(meta, ":\tMixed anova")
+					aov = pg.mixed_anova(dv=meta, within=within_factor_list[0], between=between_factor_list[0], subject = 'subject', data=data)
+					pg.print_table(aov)
+					posthocs = pg.pairwise_ttests(dv=meta, within=within_factor_list[0], between=between_factor_list[0], subject='subject', data=data)
+					pg.print_table(posthocs)
+
+				elif statistical_test == "RM_anova":
+					print(meta, ":\tRM Anova")
+					aov = pg.rm_anova(dv=meta, within= within_factor_list, subject = 'subject', data=data)
+					pg.print_table(aov)
+
+
+				elif statistical_test == "ttest":
+					print(meta, ":\tt test")
+					aov = pg.pairwise_ttests(dv=meta, within= within_factor_list, between= between_factor_list, subject='subject', data=data)
+					pg.print_table(aov)
+
+
+				elif statistical_test == "anova"
+					print(meta, ":\tANOVA")
+					aov = pg.anova(dv = meta, between = between_factor_list, data = data)
+					pg.print_table(aov)	
+
+
 	def getMetaData(self, sub, stim=None, sensor="EyeTracker"):
 		"""Function to return the extracted features for a given subject/participant.
 

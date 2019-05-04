@@ -90,7 +90,7 @@ class SubjectVisualize:
 
 
 class Subject:
-	"""This class deals with the extraction of data from the databases and the creation of the stimuli objects
+	"""This class deals with encapsulating all the relevant information regarding a subject who participated in an experiment. The class contains functions that help in the extraction of data from the databases (SQL or CSV) and the creation of the `Stimuli <#module-Stimulus>` _ objects. The class also calculates the control data for the purpose of standardisation.
  		
 	Parameters
 	---------
@@ -98,17 +98,17 @@ class Subject:
 		Name of the Subject
 	subj_type: str
 		Type of the Subject
-	stimuli_names: 
+	stimuli_names: list(str)
 		List of stimuli that are to be considered for extraction
-	columns: list of str
+	columns: list(str)
 		List of columns that need to be extracted from the database 
 	json_file: str
 		Name of json file that contains information regarding the experiment/database
-	sensors: List of str
+	sensors: list(str)
 		Contains the names of the different sensors whose indicators are being analysed
 	database: str | SQL object
 		is the SQL object for the SQL database | name of the folder that contains the name csv files
-	manual_eeg: bool {False| True}
+	manual_eeg: bool {``False``| ``True``}
 		Indicates whether artifact removal is manually done or not
 	reading_method: str
 		Mentions the format in which the data is being stored
@@ -137,15 +137,15 @@ class Subject:
 
 		Parameters
 		----------
-		columns: list of strings
+		columns: list(str)
 			list of the names of the columns of interest
-		json_file: string
+		json_file: str
 			Name of the json file that contains information about the experiment
-		database: SQL object| string
+		database: SQL object| str
 			is the SQL object for the SQL database | name of the folder that contains the name csv files
-		reading_method: {"SQL","CSV"}
+		reading_method: str {"SQL","CSV"}
 			Describes which type of databse is to be used for data extraction
-		stimuli_names: List of str
+		stimuli_names: list(str)
 			List of stimuli that are to be considered for extraction
 	
 		Returns
@@ -158,9 +158,7 @@ class Subject:
 		if reading_method == "SQL":
 
 			string = 'SELECT '
-
 			index = 0
-
 			a = datetime.now()
 
 			for name in columns:
@@ -168,31 +166,25 @@ class Subject:
 				if index == 0:
 					string = string + name
 					index = index + 1
-
 				else:   
 					string = string + ',' + name
 					index = index + 1
 
 			#NTBD: Change StimulusName from being Hardcoded		
 			query = string + ' FROM "' + self.name + '" WHERE StimulusName in ('
-
 			flag = -1
 
 			for k in stimuli_names:
 				for name in stimuli_names[k]:
 
 					if flag == -1:
-
 						flag = 0
 						selected_stimuli = "'" + name + "'"
-
 					else:
-
 						selected_stimuli = selected_stimuli + ", '" + name + "'"
 
 			query = query + selected_stimuli + ")"
 
-			#connection = database.raw_connection()
 			c = datetime.now()
 			dummy = database.execute(query)
 			d = datetime.now()
@@ -209,20 +201,15 @@ class Subject:
 		elif reading_method == "CSV":
 
 			a = datetime.now()
-
 			column_names = []
 
 			for name in columns:
-
 				column_names.append(name)
 
 			csv_file = database + "/" + self.name + ".csv"
-
 			df = pd.read_csv(csv_file, usecols = column_names)
 			df = df.replace(to_replace=r'Unnamed:*', value=float(-1), regex=True)
-	
 			b = datetime.now()
-
 			print("Query: ", (b-a).seconds)
 			
 			return df
@@ -273,21 +260,21 @@ class Subject:
 
 	
 	def stimulusDictInitialisation(self, stimuli_names, columns, json_file, sensors, database, reading_method):
-		"""Creates a list of objects of class Stimuli
+		"""Creates a list of objects of class `Stimuli <#module-Stimulus>` _.
 
 		Parameter
 		---------
-		stimuli_names: list 
+		stimuli_names: list(str) 
 			list of names of different stimulus
-		columns: list 
+		columns: list(str) 
 			list of names of the columns of interest
 		json_file: str
 			Name of json file that contains information about the experiment/database
 		sensors: object of class Sensor
 			Is an object of class sensor and is used to see if EEG extraction is required
-		database: SQL object | string 
+		database: SQL object | str 
 			Is the SQL object that is created for accessing the SQL database | Name of the folder containing the CSV files  
-		reading_method: {"SQL","CSV"}
+		reading_method: str {"SQL","CSV"}
 			Describes which type of databse is to be used for data extraction
 		
 		Returns
@@ -307,7 +294,11 @@ class Subject:
 
 			for stimulus_name in stimuli_names[category]:
 				#NTBD change the harcoding of the stimulusName 
+				a = datetime.now()
 				start_time, end_time, roi_time = self.timeIndexInitialisation("StimulusName",stimulus_name, data)
+				b = datetime.now()
+
+				#print("Time index initialisation: ", (b-a))
 
 				stimuli_data = data[start_time : end_time+1]
 
@@ -386,7 +377,7 @@ class Subject:
 	def subjectAnalysis(self, average_flag, standardise_flag):
 		"""Function to find features for all stimuli for a given subject. 
 
-		Does not return any value. It stores the calculated features/metadata in its `aggregate_meta` member variable. Can be accessed by an object of the class. For structure of this variable see `Subject <#module-Subject>.
+		Does not return any value. It stores the calculated features/metadata in its `aggregate_meta` member variable. Can be accessed by an object of the class. For structure of this variable see `Subject <#module-Subject> _.
 
 		Parameters
 		----------

@@ -23,6 +23,7 @@
 .DS_Store?
 .Trashes
 test.py
+main.py
 .icaRejectionLog.p
 .vscode
 PyTrack/Results/

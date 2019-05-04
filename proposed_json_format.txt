@@ -1,0 +1,48 @@
+{
+   "Experiment_name":"NTU_Experiment",
+   "Path":"abcd/efgh/NTU_Experiment",
+   "Subjects":{
+      "group1":{
+         "Subject_01":{},
+         "Subject_02":{}
+      },
+      "group2":{
+         "Subject_03":{},
+         "Subject_04":{}
+      }
+   },
+   "Stimuli":{
+      "Type_1":
+         "Stim_1":{},
+         "Stim_2":{}
+      ,
+      "Type_2":{
+         "Stim_3":{},
+         "Stim_4":{}
+      }
+   },
+   "Control_Questions":[
+         "Stim_1"
+    ],
+   "Columns_of_interest":{
+      "EyeTracker":[
+         "GazeLeftx",
+         "GazeLefty",
+         "GazeRightx",
+         "GazeRighty",
+         "PupilLeft",
+         "PupilRight",
+         "FixationSeq"   
+      ],
+      "Extra":[
+         "EventSource"
+      ]
+   },
+   "Analysis_Params":{
+      "EyeTracker":{
+        "Sampling_Freq": 1000,
+        "Display_width": 1920,
+        "Display_height": 1280
+      }
+   }
+}
