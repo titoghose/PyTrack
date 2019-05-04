@@ -381,7 +381,7 @@ class Subject:
 	def subjectAnalysis(self, average_flag, standardise_flag):
 		"""Function to find features for all stimuli for a given subject. 
 
-		Does not return any value. It stores the calculated features/metadata in its `aggregate_meta` member variable. Can be accessed by an object of the class. For structure of this variable see `Subject <#module-Subject> _.
+		Does not return any value. It stores the calculated features/metadata in its `aggregate_meta` member variable. Can be accessed by an object of the class. For structure of this variable see `Subject <#module-Subject>_.
 
 		Parameters
 		----------

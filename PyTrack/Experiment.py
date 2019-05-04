@@ -106,9 +106,9 @@ class Visualize:
 
 class Experiment:
 	""" This is class responsible for the analysis of data of an entire experiment. The creation of a an object of this class will subsequently create create objects for each 
-	`Subject <#id11>` _. involved in the experiment (which in turn would create object for each `Stimulus <#module-Stimulus>` _ which is viewed by the subject). 
+	`Subject <#id11>`_. involved in the experiment (which in turn would create object for each `Stimulus <#module-Stimulus>`_ which is viewed by the subject). 
 
-	This class also contains the `analyse <#Experiment.Experiment.analyse>` _ function which is used for the statistical analysis of the data (eg: Mixed ANOVA, RM ANOVA etc).
+	This class also contains the `analyse <#Experiment.Experiment.analyse>`_ function which is used for the statistical analysis of the data (eg: Mixed ANOVA, RM ANOVA etc).
 
 	Parameters
 	-----------
@@ -170,7 +170,7 @@ class Experiment:
 
 
 	def subjectArrayInitialisation(self, reading_method):
-		"""This function initialises an list of objects of class `Subject <#id11>` _.
+		"""This function initialises an list of objects of class `Subject <#id11>`_.
 
 		Parameters
 		----------
@@ -409,7 +409,7 @@ class Experiment:
 
 									try:
 										stimulus_name = self.stimuli[stimuli_type][stimuli_index]
-										row.append(json_data["Stimuli"][stimuli_type][stimuli_name][param])
+										row.append(json_data["Stimuli"][stimuli_type][stimulus_name][param])
 									except:
 										print("Within stimuli parameter: ", param, " not defined in the json file")
 
