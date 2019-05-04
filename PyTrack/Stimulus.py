@@ -1725,7 +1725,7 @@ class Stimulus:
 	def setAOICol(self, data):
 		"""Function to set values based on a point being inside or outsode the AOI.
 
-		Paramters
+		Parameters
 		---------
 		data : list
 			List of size 3 containing gaze_aoi, gaze_x and gaze_y column data.

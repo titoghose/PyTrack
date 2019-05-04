@@ -21,7 +21,6 @@ from matplotlib.patches import Rectangle
 
 from Sensor import Sensor
 from Subject import Subject
-from stat_functions import *
 
 
 class Visualize:
@@ -109,7 +108,7 @@ class Visualize:
 
 class Experiment:
 	""" This is class responsible for the analysis of data of an entire experiment. The creation of a an object of this class will subsequently create create objects for each 
-	`Subject <#id11>`_. involved in the experiment (which in turn would create object for each `Stimulus <#module-Stimulus>`_ which is viewed by the subject). 
+	`Subject <#module-Subject>`_. involved in the experiment (which in turn would create object for each `Stimulus <#module-Stimulus>`_ which is viewed by the subject). 
 
 	This class also contains the `analyse <#Experiment.Experiment.analyse>`_ function which is used for the statistical analysis of the data (eg: Mixed ANOVA, RM ANOVA etc).
 
@@ -185,7 +184,7 @@ class Experiment:
 
 
 	def subjectArrayInitialisation(self, reading_method):
-		"""This function initialises an list of objects of class `Subject <#id11>`_.
+		"""This function initialises an list of objects of class `Subject <#module-Subject>`_.
 
 		Parameters
 		----------

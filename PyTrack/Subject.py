@@ -262,7 +262,7 @@ class Subject:
 	def stimulusDictInitialisation(self, stimuli_names, columns, json_file, sensors, database, reading_method):
 		"""Creates a list of objects of class `Stimuli <#module-Stimulus>` _.
 
-		Parameter
+		Parameters
 		---------
 		stimuli_names: list(str) 
 			list of names of different stimulus
