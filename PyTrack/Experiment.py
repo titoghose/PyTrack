@@ -385,7 +385,7 @@ class Experiment:
 
 
 				#For each subject
-				for sub in self.subjects:
+				for sub_index, sub in enumerate(self.subjects):
 
 					#For each Question Type (NTBC: FIND OUT WHAT THE AGGREGATE_META CONTAINS)
 					for stimuli_index, stimuli_type in enumerate(sub.aggregate_meta):
@@ -421,7 +421,7 @@ class Experiment:
 
 									try:
 										stimulus_name = self.stimuli[stimuli_type][stimuli_index]
-										row.append(json_data["Stimuli"][stimuli_type][stimuli_name][param])
+										row.append(json_data["Stimuli"][stimuli_type][stimulus_name][param])
 									except:
 										print("Within stimuli parameter: ", param, " not defined in the json file")
 
@@ -457,7 +457,7 @@ class Experiment:
 					pg.print_table(aov)
 
 
-				elif statistical_test == "anova"
+				elif statistical_test == "anova":
 					print(meta, ":\tANOVA")
 					aov = pg.anova(dv = meta, between = between_factor_list, data = data)
 					pg.print_table(aov)	

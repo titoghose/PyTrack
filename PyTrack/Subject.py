@@ -108,7 +108,7 @@ class Subject:
 		Contains the names of the different sensors whose indicators are being analysed
 	database: str | SQL object
 		is the SQL object for the SQL database | name of the folder that contains the name csv files
-	manual_eeg: bool {``False``| ``True``}
+	manual_eeg: bool
 		Indicates whether artifact removal is manually done or not
 	reading_method: str
 		Mentions the format in which the data is being stored
@@ -377,7 +377,7 @@ class Subject:
 	def subjectAnalysis(self, average_flag, standardise_flag):
 		"""Function to find features for all stimuli for a given subject. 
 
-		Does not return any value. It stores the calculated features/metadata in its `aggregate_meta` member variable. Can be accessed by an object of the class. For structure of this variable see `Subject <#module-Subject> _.
+		Does not return any value. It stores the calculated features/metadata in its `aggregate_meta` member variable. Can be accessed by an object of the class. For structure of this variable see `Subject <#module-Subject>`_.
 
 		Parameters
 		----------
