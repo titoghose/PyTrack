@@ -130,7 +130,9 @@ Now, follow these steps:
 NOTE: The Experiment class contains a function called analyse() which is used to perform statistical analysis (eg: ANOVA or T test), by default there is only 1 between group factor ("Subject_type") and 1 within group factor ("Stimuli_type") that is considered. If additional factors need to be considered they need to added to the json file.
 
 * For example if Gender is to be considered as an additional between group factor then in the json file, under "Subjects", for each subject, a corresponding dicitionary must be created where you mention the factor name and the corresponding value (eg: Subject_name: {"Gender" : "M"}). Please also note that the square brackets ('[', ']') after group type need to be changed to curly brackets ('{', '}').
-* This must be similarly done for Stimuli, if any additional within group factor that describes the stimuli needs to be added. For example, if you are showing WORDS and PICTURES to elicit different responses from a user and you additonally have 2 different brightness levels ("High" and "Low") of the stimuli, you could consider Type1 and Type2 to be the PICTuRE and WORD gropus and mention Brightness as an additional within group factor. 
+* This must be similarly done for Stimuli, if any additional within group factor that describes the stimuli needs to be added. For example, if you are showing WORDS and PICTURES to elicit different responses from a user and you additonally have 2 different brightness levels ("High" and "Low") of the stimuli, you could consider Type1 and Type2 to be the PICTuRE and WORD gropus and mention Brightness as an additional within group factor.
+
+The below code snippet just shows the changes that are to be done for Subject and Stimuli sections of the json file, the other sections remain the same. 
 
 ```json
 "Subjects":{
@@ -192,7 +194,7 @@ exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
 exp.metaMatrixInitialisation(standardise_flag=False, average_flag=False)
 
 # Calling the function for the statistical analysis of the data
-exp.analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova")
+exp.analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation=True)
 
 
 subject_name = "Sub_001"

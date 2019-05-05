@@ -8,6 +8,7 @@ import pickle
 import tkinter as tk
 from datetime import datetime
 from functools import partial
+import csv
 
 
 import numpy as np
@@ -20,7 +21,7 @@ import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
 from matplotlib.widgets import RadioButtons, RectangleSelector
 from matplotlib.patches import Rectangle
-import csv
+
 
 from Sensor import Sensor
 from Subject import Subject
@@ -321,7 +322,7 @@ class Experiment:
 					self.meta_matrix_dict[1][meta][sub_index, stim_index] = sub.aggregate_meta[stimuli_type][meta]
 
 
-	def analyse(self, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation = True):
+	def analyse(self, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation = True, ttest_type = 1):
 		"""This function carries out the required statistical analysis.
 		
 		 The analysis is carried out on the specified indicators/parameters using the data extracted from all the subjects that were mentioned in the json file. There are 4 different tests that can be run, namely - Mixed ANOVA, Repeated Measures ANOVA, T Test and Simple ANOVA (both 1 and 2 way)
@@ -345,12 +346,18 @@ class Experiment:
 		statistical_test: str {"Mixed_anova","RM_anova","ttest","anova"} (optional)
 			Name of the statistical test that has to be performed.
 			NOTE:
-			-ttest: Upto 2 between group factors and 2 within group factors can be considered at any point of time
+			-ttest: There are 3 options for ttest, and your choice of factors must comply with one of those options, for more information, please see description of `ttest` variable
 			-Mixed_anova: Only 1 between group factor and 1 within group factor can be considered at any point of time
-			-anova: Upto 2 between group factors can be considered at any point of time
+			-anova: Any number of between group factors can be considered for analysis
 			-RM_anova: Upto 2 within group factors can be considered at any point of time  
 		file_creation: bool (optional)
 			Indicates whether a csv file containing the statistical results should be created
+		ttest: int {1|2|3} (optional)
+			Indicates what type of parameters will be considered for the ttest
+			NOTE:
+			-1: Upto 2 between group factors will be considered for ttest
+			-2: 1 within group factor will be considered for ttest
+			-3: 1 within group and 1 between group factor will be considered for ttest
 
 		Examples
 		--------
@@ -567,9 +574,20 @@ class Experiment:
 				elif(statistical_test == "ttest"):
 
 					print(meta, ":\tt test")
-					aov = pg.pairwise_ttests(dv=meta, between= between_factor_list,within=within_factor_list, subject='subject', data=data)
-					pg.print_table(aov)
+					
+					if ttest_type==1:
+						aov = pg.pairwise_ttests(dv=meta, between=between_factor_list, subject='subject', data=data)
+						pg.print_table(aov)
+					elif ttest_type==2:
+						aov = pg.pairwise_ttests(dv=meta, within=within_factor_list, subject='subject', data=data)
+						pg.print_table(aov)
+					elif ttest_type==3:
+						aov = pg.pairwise_ttests(dv=meta, between=between_factor_list, within=within_factor_list, subject='subject', data=data)
+						pg.print_table(aov)
+					else:
+						print("The value given to ttest_type is not acceptable, it must be either 1 or 2 or 3")
 
+					
 					if file_creation:
 						
 						values_list = ["Pairwise ttest: "]
