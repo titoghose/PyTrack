@@ -246,8 +246,11 @@ See `documentation <https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html>`_
    exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
 
 
-   # Arvind has to add the function call for analysis
-   ## CODE GOES HERE
+   # Instantiate the meta_matrix_dict of a Experiment
+   exp.metaMatrixInitialisation(standardise_flag=False, average_flag=False)
+
+   # Calling the function for the statistical analysis of the data
+   exp.analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation=True)
 
 
    subject_name = "Sub_001"
