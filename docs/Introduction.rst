@@ -272,8 +272,8 @@ Authors
 -------
 
 -  **Upamanyu Ghose** (`github <https://github.com/titoghose>`_ \| `email <titoghose@gmail.com>`_)
--  **Arvind Srinivasan** (`github <https://github.com/arvindas>`__ \|
-   `email <arvind96@gmail.com>`__)
+-  **Arvind A S** (`github <https://github.com/arvindas>`__ \|
+   `email <96arvind@gmail.com>`__)
 
 See also the list of `contributors <https://github.com/titoghose/PyTrack/contributors>`_ who participated in this project.
 

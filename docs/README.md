@@ -1,3 +1,5 @@
+aov = pg.pairwise_ttests(dv=meta, between=between_factor_list, within=within_factor_list, subject='subject', data=data)
+          pg.print_table(aov)
 # PyTrack
 
 This is a framework to analyse and visualize eye tracking data. It offers 2 designs of analysis:
@@ -5,6 +7,8 @@ This is a framework to analyse and visualize eye tracking data. It offers 2 desi
 * **Stand-alone Design**: Analyse a single stimulus for a single person. 
 
 As of now, it supports data collected using SR Research EyeLink, SMI and Tobii eye trackers. The framework contains a *formatBridge* function that converts these files into a base format and then performs analysis on it. 
+
+The detailed documentation of the project with explanation of all its modules can be found [here](https://pytrack-ntu.readthedocs.io/en/latest/).
 
 ## Getting Started
 
@@ -66,7 +70,7 @@ Now, follow these steps:
     
     * "*Experiment_name*" should be the same name as the json file without the extension and "*Path*" should be the absolute path to your experiment directory without the final "/" at the end.
     * The subjects should be added under the "*Subjects*" field. You may specify one or more groups of division for your subjects (recommended for aggregate between group statistical analysis). **There must be atleast 1 group**.
-    * The stimuli names shpuld be added under the "*Stimuli*" field and again you may specify one or more types (recommended for aggregate between stimulus type statistical analysis). **There must be atleast 1 type**.
+    * The stimuli names should be added under the "*Stimuli*" field and again you may specify one or more types (recommended for aggregate between stimulus type statistical analysis). **There must be atleast 1 type**.
     * The "*Control_Questions*" field is optional. In case you have some stimuli that should be used to standardise/normalise features extracted from all stimuli, sepcify the names here. **These stimuli must be present under the "*Stimuli*" field under one of the types**. 
     * **The field marked "*Columns_of_interest*" should not be altered**. 
     * Under "*Analysis_Params*", just change the values of "Sampling_Freq", "Display_height" and "Display_width" to match the values of your experiment. 
@@ -108,7 +112,8 @@ Now, follow these steps:
          "GazeRighty",
          "PupilLeft",
          "PupilRight",
-         "FixationSeq"   
+         "FixationSeq",
+         "GazeAOI"
       ],
       "Extra":[
          "EventSource"
@@ -124,23 +129,74 @@ Now, follow these steps:
 }
 
 ```
+NOTE: The Experiment class contains a function called analyse() which is used to perform statistical analysis (eg: ANOVA or T test), by default there is only 1 between group factor ("Subject_type") and 1 within group factor ("Stimuli_type") that is considered. If additional factors need to be considered they need to added to the json file.
 
+* For example if Gender is to be considered as an additional between group factor then in the json file, under "Subjects", for each subject, a corresponding dicitionary must be created where you mention the factor name and the corresponding value (eg: Subject_name: {"Gender" : "M"}). Please also note that the square brackets ('[', ']') after group type need to be changed to curly brackets ('{', '}').
+* This must be similarly done for Stimuli, if any additional within group factor that describes the stimuli needs to be added. For example, if you are showing WORDS and PICTURES to elicit different responses from a user and you additonally have 2 different brightness levels ("High" and "Low") of the stimuli, you could consider Type1 and Type2 to be the PICTuRE and WORD gropus and mention Brightness as an additional within group factor.
+
+The below code snippet just shows the changes that are to be done for Subject and Stimuli sections of the json file, the other sections remain the same. 
+
+```json
+"Subjects":{
+      "group1":{
+         "Subject_01": {"Gender": "M"},
+         "Subject_02": {"Gender": "F"}
+      },
+      "group2":{
+         "Subject_03": {"Gender": "F"},
+         "Subject_04": {"Gender": "M"}
+      }
+   },
+   "Stimuli":{
+      "Type_1":{
+         "Stim_1": {"Brightness": "High"},
+         "Stim_2": {"Brightness": "Low"}
+      },
+      "Type_2":{
+         "Stim_3": {"Brightness": "Low"},
+         "Stim_4": {"Brightness": "High"}
+      },
+   },
+
+
+```
 #### Using ***PyTrack***
+
+This involves less than 10 lines of python code. However, in case you want to do more detailed analysis, it may involve a few more lines. 
+
+Using *formatBridge* majorly has 3 cases.:
+
+1. **Explicitly specify the stimulus order for each subject** as a list to the *generateCompatibleFormats* function. This case should be used when the order of stimuli is randomised for every participant. In this case, each participant needs a file specifying the stimulus presentation order. Hence, create a folder inside the *Data* folder called ***stim*** and place individual .txt files with the same names as the subject/participant names with the a new stimulus name on each line. Finally, the *stim_list_mode* parameter in the *generateCompatibleFormat* function needs to be set as "diff" (See [Example](#example-use)).
+
+   eg. If subject data file is *subject_001.asc*, the file in the stim folder should be *subject_001.txt*
+
+   *Note: Yes we undertsand this is a tedious task, but this is the only way we can understand the order of the stimulus which is needed for conclusive analysis and visualization. **However, in case you are using EyeLink data, you can pass a message called "Stim Key: [stim_name]" during each stimulus and we can extract it automatically. See [documentation](https://pytrack-ntu.readthedocs.io/en/latest/).***
+
+2. **Explicitly specify the stimulus order for the entire experiment**. This is for the case where the same order of stimuli are presented to all the participants. Just create a file called *stim_file.txt* and place it inside the *Data* folder. Finally, the *stim_list_mode* parameter in the *generateCompatibleFormat* function needs to be set as "common" (See [Example](#example-use)).
+
+3. **Do not sepcify any stimulus order list**. In this case, the output of the statistical analysis will be inconclusive and the visualization of gaze will be on a black screen instead of the stimulus image. The *stim_list_mode* parameter in the *generateCompatibleFormat* function needs to be set as "NA". However, you can still extract the metadata and features extracted for each participant but the names will not make any sense. ***WE DO NOT RECOMMEND THIS***.
+
+
+#### Example Use 
+
+See [documentation](https://pytrack-ntu.readthedocs.io/en/latest/) for a detailed understanding of each function.
 
 ```python
 from PyTrack.formatBridge import generateCompatibleFormat
 from PyTrack.Experiment import Experiment
 
 # function to convert data to generate database in base format 
-generateCompatibleFormat(exp_path="abcd/efgh/NTU_Experiment/", device="eyelink)
+generateCompatibleFormat(exp_path="abcd/efgh/NTU_Experiment/", device="eyelink", stim_list_mode='diff', start='start_trial', stop='stop_trial')
 
 
 # Creating an object of the Experiment class
 exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
 
+# Instantiate the meta_matrix_dict of a Experiment
+exp.metaMatrixInitialisation(standardise_flag=False, average_flag=False)
 
-# Arvind has to add the function call for analysis
-## CODE GOES HERE
+# Calling the function for the statistical analysis of the data
+exp.analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation=True)
 
 
 subject_name = "Sub_001"
@@ -164,36 +220,20 @@ Explain what these tests test and why
 Give an example
 ```
 
-## Deployment
-
-Add additional notes about how to deploy this on a live system
-
-## Built With
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Upamanyu Ghose** ([github](https://github.com/titoghose) | [email](titoghose@gmail.com))
+* **Arvind A S** ([github](https://github.com/arvindas) | [email](96arvind@gmail.com))
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/titoghose/PyTrack/contributors) who participated in this project.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details
 
 ## Acknowledgments
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* The formatsBridge module was adapted from the work done by [Edwin Dalmaijer](https://github.com/esdalmaijer) in [PyGazeAnalyser](https://github.com/esdalmaijer/PyGazeAnalyser/).
+
+* This work was done under the supervision of [Dr. Chng Eng Siong](http://www.ntu.edu.sg/home/aseschng/) - School of Computer Science and Engineering NTU and in collaboration with [Dr. Xu Hong](http://www.ntu.edu.sg/home/xuhong/) - School of Humanitites and Social Sciences NTU.
+* We extend our thanks to the **Department of Computer Science and Engineering Manipal Isntitute of Technology**[[link]](https://manipal.edu/mit/department-faculty/department-list/computer-science-and-engineering.html) and the **Department of Computer Science and Information Systems BITS Pilani, Hyderabad Campus** [[link]](https://www.bits-pilani.ac.in/hyderabad/computerscience/ComputerScience).
