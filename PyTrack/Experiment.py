@@ -351,7 +351,11 @@ class Experiment:
 			-anova: Any number of between group factors can be considered for analysis
 			-RM_anova: Upto 2 within group factors can be considered at any point of time  
 		file_creation: bool (optional)
-			Indicates whether a csv file containing the statistical results should be created
+			Indicates whether a csv file containing the statistical results should be created.
+			NOTE:
+			The name of the csv file created will be by the name of the statistical test that has been chosen.
+			A directory called "Results" will be created within the Directory whose path is mentioned in the json file and the csv files will be stored within "Results" directory.
+			If any previous file by the same name exists, it will be overwritten.
 		ttest: int {1|2|3} (optional)
 			Indicates what type of parameters will be considered for the ttest
 			NOTE:
