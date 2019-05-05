@@ -119,12 +119,12 @@ class Experiment:
 	-----------
 	json_file: str
 		Name of the json file that contains information regarding the experiment or the database
-	reading_method: str {"SQL"| "CSV"}
+	reading_method: str {"SQL"| "CSV"} (optional)
 		Mentions the format in which the data is being stored
-	sensors: list(str)
+	sensors: list(str) (optional)
 		Contains the names of the different sensors whose indicators are being analysed (currently only Eye Tracking can be done
 		However in future versions, analysis of ECG and EDA may be added)
-	aoi : str {'NA', 'draw'} | tuple
+	aoi : str {'NA', 'draw'} | tuple (optional)
 		If 'NA' then AOI is the entire display size. If 'draw' then the user is prompted to draw an area of interest. If type is ``tuple``, user must specify the coordinates of AOI in the following order (start_x, start_y, end_x, end_y). Here, x is the horizontal axis and y is the vertical axis.
 
 	"""
@@ -201,7 +201,7 @@ class Experiment:
 
 		Parameters
 		----------
-		reading_method: str {'SQL','CSV'}, optional
+		reading_method: str {'SQL','CSV'}
 			Specifies the database from which data extraction is to be done from	
 
 		Returns
@@ -297,9 +297,9 @@ class Experiment:
 
 		Parameters
 		----------
-		standardise_flag: bool
+		standardise_flag: bool (optional)
 			Indicates whether the data being considered need to be standardised (by subtracting the control values/baseline value) 
-		average_flag: bool
+		average_flag: bool (optional)
 			Indicates whether the data being considered should averaged across all stimuli of the same type 
 			NOTE: Averaging will reduce variability and noise in the data, but will also reduce the quantum of data being fed into the statistical test
 
@@ -328,41 +328,43 @@ class Experiment:
 
 		Parameters
 		----------
-		parameter_list: set
+		parameter_list: set (optional)
 			Set of the different indicators/parameters (Pupil_size, Blink_rate) on which statistical analysis is to be performed, by default it will be "all" so that all the parameter are considered. 
-		between_factor_list: list(str)
+		between_factor_list: list(str) (optional)
 			List of between group factors, by default it will only contain "Subject_type"
 			If any additional parameter (eg: Gender) needs to be considered, then the list will be: between_factor_list = ["Subject_type", "Gender"]
 			DO NOT FORGET TO INCLUDE "Subject_type", if you wish to consider "Subject_type" as a between group factor.
 			Eg: between_factor_list = ["factor_x"] will no longer consider "Subject_type" as a factor. 
 			Please go through the README FILE to understand how the JSON FILE is to be written for between group factors to be considered.
-		within_factor_list: list(str)
+		within_factor_list: list(str) (optional)
 			List of within group factors, by default it will only contain "Stimuli_type"
 			If any additional parameter, needs to be considered, then the list will be: between_factor_list = ["Subject_type", "factor_X"]
 			DO NOT FORGET TO INCLUDE "Stimuli_type", if you wish to consider "Stimuli_type" as a within group factor.
 			Eg: within_factor_list = ["factor_x"] will no longer consider "Stimuli_type" as a factor. 
 			Please go through how the README FILE to understand how the JSON FILE is to be written for within group factors to be considered.
-		statistical_test: str {"Mixed_anova","RM_anova","ttest","anova"}
+		statistical_test: str {"Mixed_anova","RM_anova","ttest","anova"} (optional)
 			Name of the statistical test that has to be performed.
 			NOTE:
 			-ttest: Upto 2 between group factors and 2 within group factors can be considered at any point of time
 			-Mixed_anova: Only 1 between group factor and 1 within group factor can be considered at any point of time
 			-anova: Upto 2 between group factors can be considered at any point of time
 			-RM_anova: Upto 2 within group factors can be considered at any point of time  
-		
+		file_creation: bool (optional)
+			Indicates whether a csv file containing the statistical results should be created
+
 		Examples
 		--------
 		For calculating Mixed ANOVA, on all the parameters, with standardisation, NOT averaging across stimuli of the same type
 		and considering Subject_type and Stimuli_type as between and within group factors respectively
 
-		>>> analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova")
+		>>> analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation = True)
 		OR 
 		>>> analyse(self, standardise_flag=True) (as many of the option are present by default)
 
 		For calculating 2-way ANOVA, for "blink_rate" and "avg_blink_duration", without standardisation with averaging across stimuli of the same type
-		and considering Subject_type and Gender as the between group factors
+		and considering Subject_type and Gender as the between group factors while NOT creating a new csv file with the results
 
-		>>> analyse(self, average_flag=True, parameter_list={"blink_rate", "avg_blink_duration"}, between_factor_list=["Subject_type", "Gender"], statistical_test="anova")
+		>>> analyse(self, average_flag=True, parameter_list={"blink_rate", "avg_blink_duration"}, between_factor_list=["Subject_type", "Gender"], statistical_test="anova", file_creation = False)
 
 		"""
 		
