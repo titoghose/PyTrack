@@ -627,13 +627,21 @@ class Experiment:
 			
 		To get the names of all the metadata/features extracted, look at the `Sensor <#module-Sensor>`_ class
 
-		"""
+		"""		
 		if stim == None:
-			sub_ind = self.subjects.index(sub)
+			sub_ind = -1
+			for ind, sub in enumerate(self.subjects):
+				if sub.name == sub:
+					sub_ind = ind
+					break
 			return self.subjects[sub_ind].aggregate_meta
 		
 		else:
-			sub_ind = self.subjects.index(sub)
+			sub_ind = -1
+			for ind, sub in enumerate(self.subjects):
+				if sub.name == sub:
+					sub_ind = ind
+					break
 			stim_cat = ""
 			stim_ind = -1
 			for cat in self.stimuli:
@@ -691,6 +699,14 @@ class Experiment:
 		RS = RectangleSelector(ax, line_select_callback, drawtype='box', useblit=False, button=[1],  minspanx=5, minspany=5, spancoords='pixels',interactive=True)
 
 		RS.to_draw.set_visible(True)
-
+		
 		plt.show()
+
+		json_data["Analysis_Params"]["EyeTracker"]["aoi_left_x"] = aoi_left_x
+		json_data["Analysis_Params"]["EyeTracker"]["aoi_left_y"] = aoi_left_y 
+		json_data["Analysis_Params"]["EyeTracker"]["aoi_right_x"] = aoi_right_x
+		json_data["Analysis_Params"]["EyeTracker"]["aoi_right_y"] = aoi_right_y
+		with open(self.json_file, "w") as f:
+			json.dump(json_data, f, indent=4)
+		
 		return (aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y)

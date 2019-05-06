@@ -116,7 +116,6 @@ class Subject:
 	"""
 
 	def __init__(self, path, name, subj_type, stimuli_names, columns, json_file, sensors, database, reading_method, aoi):
-		print(name)
 		a = datetime.now()
 		self.path = path
 		self.sensors = sensors
@@ -129,7 +128,7 @@ class Subject:
 		self.control_data = self.getControlData()
 		self.aggregate_meta = {}
 		b = datetime.now()
-		print("Total time for subject: ", (b-a).seconds, "\n")
+		print("Total time to instantiate subject ", self.name, ": ", (b-a).seconds, "s\n")
 
 
 	def dataExtraction(self, columns, json_file, database, reading_method, stimuli_names):
@@ -188,13 +187,13 @@ class Subject:
 			c = datetime.now()
 			dummy = database.execute(query)
 			d = datetime.now()
-			print("execute: ", (d-c).seconds)
+			# print("execute: ", (d-c).seconds)
 
 			conversion = pd.DataFrame(dummy.fetchall())
 			conversion.columns = dummy.keys()
 
 			e = datetime.now()
-			print("Convert result proxy to pandas: ", (e-d).seconds)
+			# print("Convert result proxy to pandas: ", (e-d).seconds)
 			
 			return conversion
 
@@ -210,7 +209,7 @@ class Subject:
 			df = pd.read_csv(csv_file, usecols = column_names)
 			df = df.replace(to_replace=r'Unnamed:*', value=float(-1), regex=True)
 			b = datetime.now()
-			print("Query: ", (b-a).seconds)
+			# print("Query: ", (b-a).seconds)
 			
 			return df
 
@@ -402,7 +401,7 @@ class Subject:
 						# Normalizing by subtracting control data
 						for cd in Sensor.meta_cols[sen]:
 							if standardise_flag:
-								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (stim.sensors["EyeTracker"].metadata[cd] - self.control_data[sen][cd])))
+								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], (np.array(stim.sensors["EyeTracker"].metadata[cd]) - self.control_data[sen][cd])))
 							else:
 								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors["EyeTracker"].metadata[cd]))
 

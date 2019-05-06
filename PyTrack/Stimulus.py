@@ -1081,7 +1081,9 @@ class Stimulus:
 										color='r', fill=False, linestyle='--')
 		ax.add_patch(rect)
 
+
 		fixation_dict = self.findFixations()
+		print(fixation_dict)
 		fixation_indices = np.vstack((fixation_dict["start"], fixation_dict["end"]))
 		fixation_indices = np.reshape(fixation_indices, (fixation_indices.shape[0] * fixation_indices.shape[1]), order='F')
 
@@ -1165,7 +1167,7 @@ class Stimulus:
 		mycmap._lut[:,-1] = np.linspace(0, 0.8, 255+4)
 		img = misc.imresize(img, size=downsample_fraction, interp='lanczos')
 		ax.imshow(img)
-		rect = mpl.patches.Rectangle((self.aoi_coords[0], self.aoi_coords[1]), self.aoi_coords[2]-self.aoi_coords[0], self.aoi_coords[3]-self.aoi_coords[1],
+		rect = mpl.patches.Rectangle((self.aoi_coords[0]*downsample_fraction, self.aoi_coords[1]*downsample_fraction), downsample_fraction*(self.aoi_coords[2]-self.aoi_coords[0]), downsample_fraction*(self.aoi_coords[3]-self.aoi_coords[1]),
 										color='r', fill=False, linestyle='--')
 		ax.add_patch(rect)
 		ax.contourf(np.arange(0, int(row_shape*downsample_fraction), 1), np.arange(0, int(col_shape*downsample_fraction), 1), hist.T, cmap=mycmap)
@@ -1795,6 +1797,10 @@ def groupHeatMap(sub_list, stim_name, json_file):
 		path = json_data["Path"]
 		width = json_data["Analysis_Params"]["EyeTracker"]["Display_width"]
 		height = json_data["Analysis_Params"]["EyeTracker"]["Display_height"]
+		aoi_left_x = json_data["Analysis_Params"]["EyeTracker"]["aoi_left_x"]
+		aoi_left_y = json_data["Analysis_Params"]["EyeTracker"]["aoi_left_y"]
+		aoi_right_x = json_data["Analysis_Params"]["EyeTracker"]["aoi_right_x"]
+		aoi_right_y = json_data["Analysis_Params"]["EyeTracker"]["aoi_right_y"]
 
 	try:
 		img = plt.imread(path + "/Stimuli/" + sub_list[0].stimulus[stim_type][stim_num].name + ".jpg")
@@ -1806,6 +1812,7 @@ def groupHeatMap(sub_list, stim_name, json_file):
 			
 			img = np.zeros((height, width))
 
+	
 	downsample_fraction = 0.25
 	col_shape = img.shape[1]
 	row_shape = img.shape[0]
@@ -1818,6 +1825,13 @@ def groupHeatMap(sub_list, stim_name, json_file):
 	mycmap._lut[:,-1] = np.linspace(0, 0.8, 255+4)
 	img = misc.imresize(img, size=downsample_fraction, interp='lanczos')
 	ax.imshow(img)
+
+	rect = mpl.patches.Rectangle((downsample_fraction*aoi_left_x, downsample_fraction*aoi_left_y), 
+								downsample_fraction*(aoi_right_x-aoi_left_x), 
+								downsample_fraction*(aoi_right_y-aoi_left_y),
+										color='r', fill=False, linestyle='--')
+	ax.add_patch(rect)		
+
 	ax.contourf(np.arange(0, int(row_shape*downsample_fraction), 1), np.arange(0, int(col_shape*downsample_fraction), 1), hist.T, cmap=mycmap)
 	ax.set_xlim(0, int(col_shape * downsample_fraction))
 	ax.set_ylim(int(row_shape * downsample_fraction), 0)
