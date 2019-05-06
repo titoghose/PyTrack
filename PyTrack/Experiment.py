@@ -8,16 +8,20 @@ import pickle
 import tkinter as tk
 from datetime import datetime
 from functools import partial
+import csv
 
 
 import numpy as np
 import pandas as pd
 import pingouin as pg
 import statsmodels.api as sm
+from statsmodels.formula.api import ols
+from statsmodels.stats.anova import AnovaRM
 import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
 from matplotlib.widgets import RadioButtons, RectangleSelector
 from matplotlib.patches import Rectangle
+
 
 from Sensor import Sensor
 from Subject import Subject
@@ -116,12 +120,12 @@ class Experiment:
 	-----------
 	json_file: str
 		Name of the json file that contains information regarding the experiment or the database
-	reading_method: str {"SQL"| "CSV"}
+	reading_method: str {"SQL", "CSV"} (optional)
 		Mentions the format in which the data is being stored
-	sensors: list(str)
+	sensors: list(str) (optional)
 		Contains the names of the different sensors whose indicators are being analysed (currently only Eye Tracking can be done
 		However in future versions, analysis of ECG and EDA may be added)
-	aoi : str {'NA', 'draw'} | tuple
+	aoi : str {'NA', 'draw'} | tuple (optional)
 		If 'NA' then AOI is the entire display size. If 'draw' then the user is prompted to draw an area of interest. If type is ``tuple``, user must specify the coordinates of AOI in the following order (start_x, start_y, end_x, end_y). Here, x is the horizontal axis and y is the vertical axis.
 
 	"""
@@ -178,7 +182,18 @@ class Experiment:
 		data_dict = {}
 
 		for k in stimuli_data:
-			data_dict[k] = stimuli_data[k]
+
+			if(type(stimuli_data[k]) == list):
+				data_dict[k] = stimuli_data[k]
+			elif(type(stimuli_data[k]) == dict):
+				#Need to create a list of names of the stimuli
+				list_stimuli = []
+				for _, value in enumerate(stimuli_data[k]):
+					list_stimuli.append(value)
+
+				data_dict[k] = list_stimuli
+			else:
+				print("The Stimuli subsection of the json file is not defined properly")	
 
 		return data_dict
 
@@ -188,7 +203,7 @@ class Experiment:
 
 		Parameters
 		----------
-		reading_method: str {'SQL','CSV'}, optional
+		reading_method: str {'SQL','CSV'}
 			Specifies the database from which data extraction is to be done from	
 
 		Returns
@@ -211,20 +226,29 @@ class Experiment:
 			database = create_engine(extended_name)
 		
 		elif reading_method == "CSV":
-			database = self.path + "/Data/csv_files"
+			database = self.path + "/Data/csv_files/"
 
 		for k in subject_data:
 
-			for subject_name in subject_data[k]:
+			if(type(subject_data[k]) == list):
 
-				subject_object = Subject(self.path, subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database, reading_method, self.aoi_coords)
+				for subject_name in subject_data[k]:
+					subject_object = Subject(self.path, subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database, reading_method, self.aoi_coords)
+					subject_list.append(subject_object)
 
-				subject_list.append(subject_object)
+			elif(type(subject_data[k]) == dict):
+				for subject_index, subject_name in enumerate(subject_data[k]):
+					subject_object = Subject(self.path, subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database, reading_method, self.aoi_coords)
+					subject_list.append(subject_object)
+			else:
+				print("The Subject subsection of the json file is not defined properly")	
 
+			
 		if reading_method == "SQL":	
 			database.dispose()
 
 		return subject_list
+
 
 
 	def columnsArrayInitialisation(self):
@@ -275,9 +299,9 @@ class Experiment:
 
 		Parameters
 		----------
-		standardise_flag: bool
+		standardise_flag: bool (optional)
 			Indicates whether the data being considered need to be standardised (by subtracting the control values/baseline value) 
-		average_flag: bool
+		average_flag: bool (optional)
 			Indicates whether the data being considered should averaged across all stimuli of the same type 
 			NOTE: Averaging will reduce variability and noise in the data, but will also reduce the quantum of data being fed into the statistical test
 
@@ -299,48 +323,60 @@ class Experiment:
 					self.meta_matrix_dict[1][meta][sub_index, stim_index] = sub.aggregate_meta[stimuli_type][meta]
 
 
-	def analyse(self, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova"):
+	def analyse(self, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation = True, ttest_type = 1):
 		"""This function carries out the required statistical analysis.
 		
 		 The analysis is carried out on the specified indicators/parameters using the data extracted from all the subjects that were mentioned in the json file. There are 4 different tests that can be run, namely - Mixed ANOVA, Repeated Measures ANOVA, T Test and Simple ANOVA (both 1 and 2 way)
 
 		Parameters
 		----------
-		parameter_list: set
+		parameter_list: set (optional)
 			Set of the different indicators/parameters (Pupil_size, Blink_rate) on which statistical analysis is to be performed, by default it will be "all" so that all the parameter are considered. 
-		between_factor_list: list(str)
+		between_factor_list: list(str) (optional)
 			List of between group factors, by default it will only contain "Subject_type"
 			If any additional parameter (eg: Gender) needs to be considered, then the list will be: between_factor_list = ["Subject_type", "Gender"]
 			DO NOT FORGET TO INCLUDE "Subject_type", if you wish to consider "Subject_type" as a between group factor.
 			Eg: between_factor_list = ["factor_x"] will no longer consider "Subject_type" as a factor. 
 			Please go through the README FILE to understand how the JSON FILE is to be written for between group factors to be considered.
-		within_factor_list: list(str)
+		within_factor_list: list(str) (optional)
 			List of within group factors, by default it will only contain "Stimuli_type"
 			If any additional parameter, needs to be considered, then the list will be: between_factor_list = ["Subject_type", "factor_X"]
 			DO NOT FORGET TO INCLUDE "Stimuli_type", if you wish to consider "Stimuli_type" as a within group factor.
 			Eg: within_factor_list = ["factor_x"] will no longer consider "Stimuli_type" as a factor. 
 			Please go through how the README FILE to understand how the JSON FILE is to be written for within group factors to be considered.
-		statistical_test: str {"Mixed_anova","RM_anova","ttest","anova"}
+		statistical_test: str {"Mixed_anova","RM_anova","ttest","anova"} (optional)
 			Name of the statistical test that has to be performed.
 			NOTE:
-			-ttest: Upto 2 between group factors and 2 within group factors can be considered at any point of time
+			-ttest: There are 3 options for ttest, and your choice of factors must comply with one of those options, for more information, please see description of `ttest_type` variable given below.
 			-Mixed_anova: Only 1 between group factor and 1 within group factor can be considered at any point of time
-			-anova: Upto 2 between group factors can be considered at any point of time
+			-anova: Any number of between group factors can be considered for analysis
 			-RM_anova: Upto 2 within group factors can be considered at any point of time  
-		
+		file_creation: bool (optional)
+			Indicates whether a csv file containing the statistical results should be created.
+			NOTE:
+			The name of the csv file created will be by the name of the statistical test that has been chosen.
+			A directory called "Results" will be created within the Directory whose path is mentioned in the json file and the csv files will be stored within "Results" directory.
+			If any previous file by the same name exists, it will be overwritten.
+		ttest: int {1,2,3} (optional)
+			Indicates what type of parameters will be considered for the ttest
+			NOTE:
+			-1: Upto 2 between group factors will be considered for ttest
+			-2: 1 within group factor will be considered for ttest
+			-3: 1 within group and 1 between group factor will be considered for ttest
+
 		Examples
 		--------
 		For calculating Mixed ANOVA, on all the parameters, with standardisation, NOT averaging across stimuli of the same type
 		and considering Subject_type and Stimuli_type as between and within group factors respectively
 
-		>>> analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova")
+		>>> analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation = True)
 		OR 
 		>>> analyse(self, standardise_flag=True) (as many of the option are present by default)
 
 		For calculating 2-way ANOVA, for "blink_rate" and "avg_blink_duration", without standardisation with averaging across stimuli of the same type
-		and considering Subject_type and Gender as the between group factors
+		and considering Subject_type and Gender as the between group factors while NOT creating a new csv file with the results
 
-		>>> analyse(self, average_flag=True, parameter_list={"blink_rate", "avg_blink_duration"}, between_factor_list=["Subject_type", "Gender"], statistical_test="anova")
+		>>> analyse(self, average_flag=True, parameter_list={"blink_rate", "avg_blink_duration"}, between_factor_list=["Subject_type", "Gender"], statistical_test="anova", file_creation = False)
 
 		"""
 		
@@ -348,6 +384,17 @@ class Experiment:
 		
 		with open(self.json_file, "r") as json_f:
 			json_data = json.load(json_f)
+
+		if file_creation:
+
+			directory_path = json_data["Path"] + "/Results"
+			if not os.path.isdir(directory_path):
+				os.mkdir(directory_path)
+
+			file_path = directory_path + "/" + statistical_test + ".csv"
+			csvFile = open(file_path, 'w')
+			writer = csv.writer(csvFile)
+	
 
 		meta_not_to_be_considered = ["pupil_size", "pupil_size_downsample"]
 
@@ -398,12 +445,12 @@ class Experiment:
 								row = []
 
 								row.append(value)
-								row.append(sub.subj_type)
 
 								#Add the between group factors (need to be defined in the json file)
 								for param in between_factor_list:
 
 									if param == "Subject_type":
+										row.append(sub.subj_type)
 										continue
 
 									try:
@@ -411,11 +458,10 @@ class Experiment:
 									except:
 										print("Between subject paramter: ", param, " not defined in the json file")	
 
-								row.append(stimuli_type)
-
 								for param in within_factor_list:
 									
 									if param == "Stimuli_type":
+										row.append(stimuli_type)
 										continue
 
 									try:
@@ -436,31 +482,125 @@ class Experiment:
 							print("Error in data instantiation")
 
 				#Depending on the parameter, choose the statistical test to be done
-
 				if statistical_test == "Mixed_anova":
-					print(meta, ":\tMixed anova")
-					aov = pg.mixed_anova(dv=meta, within=within_factor_list[0], between=between_factor_list[0], subject = 'subject', data=data)
+
+					if len(within_factor_list)>1:
+						print("Error: Too many within group factors,\nMixed ANOVA can only accept 1 within group factor\n")
+					elif len(between_factor_list)>1:
+						print("Error: Too many between group factors,\nMixed ANOVA can only accept 1 between group factor\n")
+
+					print(meta, ":\tMixed ANOVA")
+					aov = pg.mixed_anova(dv=meta, within=within_factor_list[0], between=between_factor_list[0], subject='subject', data=data)
 					pg.print_table(aov)
+
+					if file_creation:
+
+						values_list = ["Mixed Anova: "]
+						values_list.append(meta)
+						writer.writerow(values_list)					
+						writer.writerow("\n")
+						aov.to_csv(csvFile)
+						writer.writerow("\n")
+
 					posthocs = pg.pairwise_ttests(dv=meta, within=within_factor_list[0], between=between_factor_list[0], subject='subject', data=data)
 					pg.print_table(posthocs)
 
+					if file_creation:
+						
+						values_list = ["Post Hoc Analysis"]
+						writer.writerow(values_list)
+						writer.writerow("\n")					
+						posthocs.to_csv(csvFile)
+						writer.writerow("\n\n")
+
 				elif statistical_test == "RM_anova":
-					print(meta, ":\tRM Anova")
+
+					if len(within_factor_list)>2 or len(within_factor_list)<1:
+						print("Error: Too many or too few within group factors,\nRepeated Measures ANOVA can only accept 1 or 2 within group factors\n")
+
+					print(meta, ":\tRM ANOVA")
 					aov = pg.rm_anova(dv=meta, within= within_factor_list, subject = 'subject', data=data)
 					pg.print_table(aov)
 
+					if file_creation:
+						
+						values_list = ["Repeated Measures Anova: "]
+						values_list.append(meta)
+						writer.writerow(values_list)
+						writer.writerow("\n")					
+						aov.to_csv(csvFile)
+						writer.writerow("\n\n")
 
-				elif statistical_test == "ttest":
-					print(meta, ":\tt test")
-					aov = pg.pairwise_ttests(dv=meta, within= within_factor_list, between= between_factor_list, subject='subject', data=data)
-					pg.print_table(aov)
 
+				elif(statistical_test == "anova"):
 
-				elif statistical_test == "anova":
 					print(meta, ":\tANOVA")
-					aov = pg.anova(dv = meta, between = between_factor_list, data = data)
-					pg.print_table(aov)	
+					length = len(between_factor_list)
+					model_equation = meta + " ~ C("
 
+					for factor_index in range(len(between_factor_list)):
+						if(factor_index<length-1):
+							model_equation = model_equation + between_factor_list[factor_index] + ")*C("
+						else:
+							model_equation = model_equation + between_factor_list[factor_index] + ")"
+
+					print("Including interaction effect")
+					print(model_equation)		
+					model = ols(model_equation, data).fit()
+					res = sm.stats.anova_lm(model, typ= 2)
+					print(res)
+
+					if file_creation:
+						
+						values_list = ["Anova including interaction effect: "]
+						values_list.append(meta)
+						writer.writerow(values_list)
+						writer.writerow("\n")					
+						res.to_csv(csvFile)
+						writer.writerow("\n\n")
+
+
+					print("\nExcluding interaction effect")
+					model_equation = model_equation.replace("*", "+")
+					print(model_equation)
+					model = ols(model_equation, data).fit()
+					res = sm.stats.anova_lm(model, typ= 2)
+					print(res)
+
+					if file_creation:
+						
+						values_list = ["Anova excluding interaction effect: "]
+						values_list.append(meta)
+						writer.writerow(values_list)
+						writer.writerow("\n")					
+						res.to_csv(csvFile)
+						writer.writerow("\n\n")
+
+				elif(statistical_test == "ttest"):
+
+					print(meta, ":\tt test")
+					
+					if ttest_type==1:
+						aov = pg.pairwise_ttests(dv=meta, between=between_factor_list, subject='subject', data=data)
+						pg.print_table(aov)
+					elif ttest_type==2:
+						aov = pg.pairwise_ttests(dv=meta, within=within_factor_list, subject='subject', data=data)
+						pg.print_table(aov)
+					elif ttest_type==3:
+						aov = pg.pairwise_ttests(dv=meta, between=between_factor_list, within=within_factor_list, subject='subject', data=data)
+						pg.print_table(aov)
+					else:
+						print("The value given to ttest_type is not acceptable, it must be either 1 or 2 or 3")
+
+					
+					if file_creation:
+						
+						values_list = ["Pairwise ttest: "]
+						values_list.append(meta)
+						writer.writerow(values_list)
+						writer.writerow("\n")					
+						aov.to_csv(csvFile)
+						writer.writerow("\n\n")
 
 	def getMetaData(self, sub, stim=None, sensor="EyeTracker"):
 		"""Function to return the extracted features for a given subject/participant.
