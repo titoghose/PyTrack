@@ -90,7 +90,7 @@ class SubjectVisualize:
 
 
 class Subject:
-	"""This class deals with encapsulating all the relevant information regarding a subject who participated in an experiment. The class contains functions that help in the extraction of data from the databases (SQL or CSV) and the creation of the `Stimuli <#module-Stimulus>` _ objects. The class also calculates the control data for the purpose of standardisation.
+	"""This class deals with encapsulating all the relevant information regarding a subject who participated in an experiment. The class contains functions that help in the extraction of data from the databases (SQL or CSV) and the creation of the `Stimuli <#module-Stimulus>`_ objects. The class also calculates the control data for the purpose of standardisation.
  		
 	Parameters
 	---------
@@ -260,7 +260,7 @@ class Subject:
 
 	
 	def stimulusDictInitialisation(self, stimuli_names, columns, json_file, sensors, database, reading_method):
-		"""Creates a list of objects of class `Stimuli <#module-Stimulus>` _.
+		"""Creates a list of objects of class `Stimuli <#module-Stimulus>`_.
 
 		Parameters
 		---------
