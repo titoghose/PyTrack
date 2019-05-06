@@ -1,5 +1,5 @@
-Introduction to the framework
-=============================
+PyTrack
+=======
 
 This is a framework to analyse and visualize eye tracking data. It
 offers 2 designs of analysis:
@@ -14,6 +14,7 @@ Tobii eye trackers. The framework contains a *formatBridge* function
 that converts these files into a base format and then performs analysis
 on it.
 
+
 Getting Started
 ---------------
 
@@ -25,7 +26,7 @@ Prerequisites
 
 The framework uses Python 3.x. For systems running Linux or Mac OS, it
 should be pre-installed. For Windows users, in case you do not have it
-installed, get it from `here <https://www.python.org/downloads/>`_.
+installed, get it from `here <https://www.python.org/downloads/>`__.
 
 Installing
 ~~~~~~~~~~
@@ -41,10 +42,11 @@ Running the tests
 -----------------
 
 In order to test **PyTrack**, some sample data files can be found
-`here <https://drive.google.com/open?id=1N9ZrTO6Bikx3aI7BKivSFAp3vrLxSCM6>`__. To get started, first you need to choose which design you
-want to run the framework in. If you wish to use the *Experiment
-Design*, see `this <#experiment-design>`_. If you wish to use the *Stand-alone Design* see
-`this <#stand-alone-design>`__.
+`here <https://drive.google.com/open?id=1N9ZrTO6Bikx3aI7BKivSFAp3vrLxSCM6>`__.
+To get started, first you need to choose which design you want to run
+the framework in. If you wish to use the *Experiment Design*, see
+`this <#experiment-design>`__. If you wish to use the *Stand-alone
+Design* see `this <#stand-alone-design>`__.
 
 Experiment Design
 ~~~~~~~~~~~~~~~~~
@@ -111,7 +113,7 @@ Now, follow these steps:
       specify one or more groups of division for your subjects
       (recommended for aggregate between group statistical analysis).
       **There must be atleast 1 group**.
-   -  The stimuli names shpuld be added under the "*Stimuli*" field and
+   -  The stimuli names should be added under the "*Stimuli*" field and
       again you may specify one or more types (recommended for aggregate
       between stimulus type statistical analysis). **There must be
       atleast 1 type**.
@@ -166,7 +168,8 @@ Now, follow these steps:
             "GazeRighty",
             "PupilLeft",
             "PupilRight",
-            "FixationSeq"   
+            "FixationSeq",
+            "GazeAOI"
          ],
          "Extra":[
             "EventSource"
@@ -181,9 +184,58 @@ Now, follow these steps:
       }
    }
 
+NOTE: The Experiment class contains a function called analyse() which is
+used to perform statistical analysis (eg: ANOVA or T test), by default
+there is only 1 between group factor ("Subject_type") and 1 within group
+factor ("Stimuli_type") that is considered. If additional factors need
+to be considered they need to added to the json file.
 
-Using PyTrack
-^^^^^^^^^^^^^
+-  For example if Gender is to be considered as an additional between
+   group factor then in the json file, under "Subjects", for each
+   subject, a corresponding dicitionary must be created where you
+   mention the factor name and the corresponding value (eg:
+   Subject_name: {"Gender" : "M"}). Please also note that the square
+   brackets ('[', ']') after group type need to be changed to curly
+   brackets ('{', '}').
+-  This must be similarly done for Stimuli, if any additional within
+   group factor that describes the stimuli needs to be added. For
+   example, if you are showing WORDS and PICTURES to elicit different
+   responses from a user and you additonally have 2 different brightness
+   levels ("High" and "Low") of the stimuli, you could consider Type1
+   and Type2 to be the PICTuRE and WORD gropus and mention Brightness as
+   an additional within group factor.
+
+The below code snippet just shows the changes that are to be done for
+Subject and Stimuli sections of the json file, the other sections remain
+the same.
+
+.. code:: json
+
+   {
+      "Subjects":{
+         "group1":{
+            "Subject_01": {"Gender": "M"},
+            "Subject_02": {"Gender": "F"}
+         },
+         "group2":{
+            "Subject_03": {"Gender": "F"},
+            "Subject_04": {"Gender": "M"}
+         }
+      },
+      "Stimuli":{
+         "Type_1":{
+            "Stim_1": {"Brightness": "High"},
+            "Stim_2": {"Brightness": "Low"}
+         },
+         "Type_2":{
+            "Stim_3": {"Brightness": "Low"},
+            "Stim_4": {"Brightness": "High"}
+         },
+      },
+   }
+
+Using **PyTrack**
+^^^^^^^^^^^^^^^^^
 
 This involves less than 10 lines of python code. However, in case you
 want to do more detailed analysis, it may involve a few more lines.
@@ -199,24 +251,19 @@ Using *formatBridge* majorly has 3 cases.:
    as the subject/participant names with the a new stimulus name on each
    line. Finally, the *stim_list_mode* parameter in the
    *generateCompatibleFormat* function needs to be set as "diff" (See
-   `Example <#example-use>`_).
+   `Example <#example-use>`__).
 
    eg. If subject data file is *subject_001.asc*, the file in the stim
    folder should be *subject_001.txt*
 
-   *Note: Yes we undertsand this is a tedious task, but this is the only
-   way we can understand the order of the stimulus which is needed for
-   conclusive analysis and visualization.*\ **However, in case you are
-   using EyeLink data, you can pass a message called "Stim Key:
-   [stim_name]" during each stimulus and we can extract it
-   automatically. See**\ *\ *\ `documentation <https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html>`_\ *\ *\ **.**
+   *Note: Yes we undertsand this is a tedious task, but this is the only way we can understand the order of the stimulus which is needed for conclusive analysis and visualization*. **However, in case you are using EyeLink data, you can pass a message called "Stim Key: [stim_name]" during each stimulus and we can extract it automatically**.
 
 2. **Explicitly specify the stimulus order for the entire experiment**.
    This is for the case where the same order of stimuli are presented to
    all the participants. Just create a file called *stim_file.txt* and
    place it inside the *Data* folder. Finally, the *stim_list_mode*
    parameter in the *generateCompatibleFormat* function needs to be set
-   as "common" (See `Example <#example-use>`_).
+   as "common" (See `Example <#example-use>`__).
 
 3. **Do not sepcify any stimulus order list**. In this case, the output
    of the statistical analysis will be inconclusive and the
@@ -227,11 +274,8 @@ Using *formatBridge* majorly has 3 cases.:
    participant but the names will not make any sense. **WE DO NOT
    RECOMMEND THIS**.
 
-
 Example Use
 ^^^^^^^^^^^
-
-See `documentation <https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html>`_ for a detailed understanding of each function.
 
 .. code:: python
 
@@ -244,7 +288,6 @@ See `documentation <https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html>`_
 
    # Creating an object of the Experiment class
    exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
-
 
    # Instantiate the meta_matrix_dict of a Experiment
    exp.metaMatrixInitialisation(standardise_flag=False, average_flag=False)
@@ -265,38 +308,49 @@ See `documentation <https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html>`_
    # This function call opens up an interactive GUI that can be used to visualize the experiment data
    exp.visualizeData()
 
-
 Stand-alone Design
-~~~~~~~~~~~~~~~~~~~~~~
-[In progress]
+~~~~~~~~~~~~~~~~~~
 
+Explain what these tests test and why
+
+::
+
+   Give an example
 
 Authors
 -------
 
--  **Upamanyu Ghose** (`github <https://github.com/titoghose>`_ \| `email <titoghose@gmail.com>`_)
+-  **Upamanyu Ghose** (`github <https://github.com/titoghose>`__ \|
+   `email <titoghose@gmail.com>`__)
 -  **Arvind A S** (`github <https://github.com/arvindas>`__ \|
    `email <96arvind@gmail.com>`__)
 
-See also the list of `contributors <https://github.com/titoghose/PyTrack/contributors>`_ who participated in this project.
+See also the list of
+`contributors <https://github.com/titoghose/PyTrack/contributors>`__ who
+participated in this project.
 
 License
 -------
 
-This project is licensed under the MIT License - see the `LICENSE.txt`
-file for details
+This project is licensed under the GNU GPL v3 License - see the
+`LICENSE <https://pytrack-ntu.readthedocs.io/en/latest/License.html>`__ file for details
 
 Acknowledgments
 ---------------
 
 -  The formatsBridge module was adapted from the work done by `Edwin
-   Dalmaijer <https://github.com/esdalmaijer>`_ in `PyGazeAnalyser <https://github.com/esdalmaijer/PyGazeAnalyser/>`_.
+   Dalmaijer <https://github.com/esdalmaijer>`__ in
+   `PyGazeAnalyser <https://github.com/esdalmaijer/PyGazeAnalyser/>`__.
 
--  This work was done under the supervision of `Dr. Chng Eng Siong <http://www.ntu.edu.sg/home/aseschng/>`_ -
-   School of Computer Science and Engineering NTU and in collaboration
-   with `Dr. Xu Hong <http://www.ntu.edu.sg/home/xuhong/>`_ - School of Humanitites and Social Sciences NTU.
+-  This work was done under the supervision of `Dr. Chng Eng
+   Siong <http://www.ntu.edu.sg/home/aseschng/>`__ - School of Computer
+   Science and Engineering NTU and in collaboration with `Dr. Xu
+   Hong <http://www.ntu.edu.sg/home/xuhong/>`__ - School of Humanitites
+   and Social Sciences NTU.
 
 -  We extend our thanks to the **Department of Computer Science and
-   Engineering Manipal Isntitute of Technology**\ `[link] <https://manipal.edu/mit/department-faculty/department-list/computer-science-and-engineering.html>`_ and the
-   **Department of Computer Science and Information Systems BITS Pilani,
-   Hyderabad Campus** `[link] <https://www.bits-pilani.ac.in/hyderabad/computerscience/ComputerScience>`__.
+   Engineering Manipal Isntitute of
+   Technology**\ `[link] <https://manipal.edu/mit/department-faculty/department-list/computer-science-and-engineering.html>`__
+   and the **Department of Computer Science and Information Systems BITS
+   Pilani, Hyderabad Campus**
+   `[link] <https://www.bits-pilani.ac.in/hyderabad/computerscience/ComputerScience>`__.
