@@ -250,7 +250,6 @@ class Experiment:
 		return subject_list
 
 
-
 	def columnsArrayInitialisation(self):
 		"""The functions extracts the names of the columns that are to be analysed 
 
@@ -321,6 +320,7 @@ class Experiment:
 
 				for meta in sub.aggregate_meta[stimuli_type]:
 					self.meta_matrix_dict[1][meta][sub_index, stim_index] = sub.aggregate_meta[stimuli_type][meta]
+
 
 	def return_index(self, meta, value_index,sub_index,stimuli_index):
 		
@@ -393,7 +393,7 @@ class Experiment:
 			return summation_index
 
 
-	def analyse(self, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation = True, ttest_type = 1):
+	def analyse(self, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation=True, ttest_type=1):
 		"""This function carries out the required statistical analysis.
 		
 		 The analysis is carried out on the specified indicators/parameters using the data extracted from all the subjects that were mentioned in the json file. There are 4 different tests that can be run, namely - Mixed ANOVA, Repeated Measures ANOVA, T Test and Simple ANOVA (both 1 and 2 way)
@@ -414,25 +414,25 @@ class Experiment:
 			DO NOT FORGET TO INCLUDE "Stimuli_type", if you wish to consider "Stimuli_type" as a within group factor.
 			Eg: within_factor_list = ["factor_x"] will no longer consider "Stimuli_type" as a factor. 
 			Please go through how the README FILE to understand how the JSON FILE is to be written for within group factors to be considered.
-		statistical_test: str {"Mixed_anova","RM_anova","ttest","anova"} (optional)
+		statistical_test: str {"Mixed_anova","RM_anova","ttest","anova","None"} (optional)
 			Name of the statistical test that has to be performed.
-			NOTE:
-			-ttest: There are 3 options for ttest, and your choice of factors must comply with one of those options, for more information, please see description of `ttest_type` variable given below.
-			-Mixed_anova: Only 1 between group factor and 1 within group factor can be considered at any point of time
-			-anova: Any number of between group factors can be considered for analysis
-			-RM_anova: Upto 2 within group factors can be considered at any point of time  
+				NOTE:
+				- ttest: There are 3 options for ttest, and your choice of factors must comply with one of those options, for more information, please see description of `ttest_type` variable given below.
+				- Mixed_anova: Only 1 between group factor and 1 within group factor can be considered at any point of time
+				- anova: Any number of between group factors can be considered for analysis
+				- RM_anova: Upto 2 within group factors can be considered at any point of time  
 		file_creation: bool (optional)
 			Indicates whether a csv file containing the statistical results should be created.
-			NOTE:
-			The name of the csv file created will be by the name of the statistical test that has been chosen.
-			A directory called "Results" will be created within the Directory whose path is mentioned in the json file and the csv files will be stored within "Results" directory.
-			If any previous file by the same name exists, it will be overwritten.
-		ttest: int {1,2,3} (optional)
+				NOTE:
+				The name of the csv file created will be by the name of the statistical test that has been chosen.
+				A directory called "Results" will be created within the Directory whose path is mentioned in the json file and the csv files will be stored within "Results" directory.
+				If any previous file by the same name exists, it will be overwritten.
+		ttest_type: int {1,2,3} (optional)
 			Indicates what type of parameters will be considered for the ttest
-			NOTE:
-			-1: Upto 2 between group factors will be considered for ttest
-			-2: 1 within group factor will be considered for ttest
-			-3: 1 within group and 1 between group factor will be considered for ttest
+				NOTE:
+				- 1: Upto 2 between group factors will be considered for ttest
+				- 2: 1 within group factor will be considered for ttest
+				- 3: 1 within group and 1 between group factor will be considered for ttest
 
 		Examples
 		--------
@@ -449,17 +449,17 @@ class Experiment:
 		>>> analyse(self, average_flag=True, parameter_list={"blink_rate", "avg_blink_duration"}, between_factor_list=["Subject_type", "Gender"], statistical_test="anova", file_creation = False)
 
 		"""
-		
-		#Defining the meta_matrix_dict data structure
-		
+
 		with open(self.json_file, "r") as json_f:
 			json_data = json.load(json_f)
 
 		if file_creation:
-
 			directory_path = json_data["Path"] + "/Results"
 			if not os.path.isdir(directory_path):
 				os.mkdir(directory_path)
+			
+			if not os.path.isdir(directory_path + '/Data/'):
+				os.mkdir(directory_path + '/Data/')
 
 			file_path = directory_path + "/" + statistical_test + ".csv"
 			csvFile = open(file_path, 'w')
@@ -472,17 +472,13 @@ class Experiment:
 			meta_not_to_be_considered.extend(["no_revisits", "first_pass", "second_pass"])
 
 
-		for sen in self.sensors: #For each type of sensor
-
+		for sen in self.sensors: 
 			for meta in Sensor.meta_cols[sen]:
 				if meta in meta_not_to_be_considered:
 					continue
 
-				if 'all' not in parameter_list:
-
-					if meta not in parameter_list:
-						#print("The following parameter is not present in the parameter list: ", meta)
-						continue
+				if ('all' not in parameter_list) and (meta not in parameter_list):
+					continue
 
 				print("\n\n")
 				print("\t\t\t\tAnalysis for ",meta)	
@@ -500,29 +496,21 @@ class Experiment:
 
 				data =  pd.DataFrame(columns=column_list)
 
-
 				#For each subject
 				for sub_index, sub in enumerate(self.subjects):
-
 					#For each Question Type (NTBC: FIND OUT WHAT THE AGGREGATE_META CONTAINS)
 					for stimuli_index, stimuli_type in enumerate(sub.aggregate_meta):
-
 						#Value is an array (NTBC : Is it always an array or can it also be a single value?)	
 						value_array = self.meta_matrix_dict[1][meta][sub_index,stimuli_index]
-						#print(meta, " length is: ", len(value_array))
-
-						# if(meta == "ms_count"):
-						# 	print(value_array)
-						# 	print("Sum:", sum(value_array))
-
+						
 						index_extra = 0
 
 						for value_index in range(len(value_array)):
 
 							if meta in ["sacc_duration", "sacc_vel", "sacc_amplitude", "ms_duration", "ms_vel", "ms_amplitude"]:
 
-								if(value_array[value_index] == 0):
-									index_extra = index_extra + 1
+								if value_array[value_index] == 0:
+									index_extra += 1
 									continue
 
 								proper_index = self.return_index(meta, value_index-index_extra, sub_index, stimuli_index)
@@ -560,13 +548,13 @@ class Experiment:
 							row.append(sub.name)
 							row.append(stimulus_name)
 
-							if(np.isnan(value_array[value_index])):
+							if np.isnan(value_array[value_index]):
 								print("The data being read for analysis contains null value: ", row)
 
 							#Instantiate into the pandas dataframe
 							data.loc[len(data)] = row
 
-				print(data)
+				data.to_csv(directory_path + '/Data/' + meta + "_data.csv")
 
 				#Depending on the parameter, choose the statistical test to be done
 				if statistical_test == "Mixed_anova":
@@ -619,7 +607,7 @@ class Experiment:
 						writer.writerow("\n\n")
 
 
-				elif(statistical_test == "anova"):
+				elif statistical_test == "anova":
 
 					print(meta, ":\tANOVA")
 					length = len(between_factor_list)
@@ -663,7 +651,7 @@ class Experiment:
 						res.to_csv(csvFile)
 						writer.writerow("\n\n")
 
-				elif(statistical_test == "ttest"):
+				elif statistical_test == "ttest":
 
 					print(meta, ":\tt test")
 					
