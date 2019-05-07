@@ -25,6 +25,9 @@ class SubjectVisualize:
 		self.root = master
 		self.v = tk.IntVar()
 		self.v.set(3)
+		
+		self.save_var = tk.IntVar()
+		self.save_var.set(0)
 
 		self.subject_window = tk.Toplevel(master)
 		self.subject_window.title(subj_name)
@@ -71,13 +74,21 @@ class SubjectVisualize:
 			live_plot_frame.pack(side="right", expand=True)	
 		
 		stim_names_frame.pack(side="bottom")
+		
+		save_button_frame = tk.Frame(self.subject_window)
+		tk.Checkbutton(save_button_frame, text="Save Figure", variable=self.save_var).pack()
+		save_button_frame.pack(side="bottom")
+		
 
 	def button_click(self, stim, stim_num=-1):
 		if self.v.get() == 1:
 			stim.visualize()
 
 		elif self.v.get() == 2:
-			stim.gazePlot()
+			if self.save_var.get() == 1:
+				stim.gazePlot(save_fig=True)
+			else:
+				stim.gazePlot()
 		
 		elif self.v.get() == 3:
 			if self.viz_type == "group":
@@ -86,7 +97,10 @@ class SubjectVisualize:
 				groupHeatMap(self.sub_list, stim_name, self.json_file)
 
 			else:
-				stim.gazeHeatMap()
+				if self.save_var.get() == 1:
+					stim.gazeHeatMap(save_fig=True)
+				else:
+					stim.gazeHeatMap()
 
 
 class Subject:

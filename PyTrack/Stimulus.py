@@ -1743,7 +1743,7 @@ class Stimulus:
 		return gaze_aoi_new
 
 
-def groupHeatMap(sub_list, stim_name, json_file):
+def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 	"""Function to plot aggregate heat map of gaze for a list if subjects.
 
 		Invoked by the `subjectVisualize <#Subject.Subject.subjectVisualize>`_ function of the `Subject <#module-Subject>`_ class.
@@ -1756,7 +1756,9 @@ def groupHeatMap(sub_list, stim_name, json_file):
 			Dictionary containing the type of stimulus and the number of stimulus of that type. {stim_type:stim_num}
 		json_file : str
 			Name of json file containing details of the experiment.
-		
+		save_fig : bool
+			Save the figure or not.
+
 	"""
 
 	mpl.use("TkAgg")
@@ -1802,8 +1804,6 @@ def groupHeatMap(sub_list, stim_name, json_file):
 		try:
 			img = plt.imread(path + "Stimuli/" + sub_list[0].stimulus[stim_type][stim_num].name + ".jpeg")
 		except:
-			
-			
 			img = np.zeros((height, width))
 
 	
