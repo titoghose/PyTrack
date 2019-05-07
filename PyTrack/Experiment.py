@@ -322,6 +322,76 @@ class Experiment:
 				for meta in sub.aggregate_meta[stimuli_type]:
 					self.meta_matrix_dict[1][meta][sub_index, stim_index] = sub.aggregate_meta[stimuli_type][meta]
 
+	def return_index(self, meta, value_index,sub_index,stimuli_index):
+		
+		if meta in ["sacc_duration", "sacc_vel", "sacc_amplitude"]:
+
+			value_array = self.meta_matrix_dict[1]["sacc_count"][sub_index,stimuli_index]
+
+			summation_array =  [-1]
+			sum_value = 0
+
+			for i in range(len(value_array)):
+
+				if value_array[i] == 0:
+					summation_array.append(-1)
+				else:	
+					sum_value = sum_value + value_array[i]
+					summation_array.append(sum_value)	
+
+			summation_array.append(10000)
+
+			summation_index = -1
+
+			for i in range(len(summation_array)):
+
+				if summation_array[i+1] == -1:
+					if value_index >= summation_array[i] and value_index < summation_array[i+2]:
+						summation_index = i
+						break
+				else:
+					if value_index >= summation_array[i] and value_index < summation_array[i+1]:
+						summation_index = i
+						break
+
+			return summation_index
+
+		elif meta in ["ms_duration", "ms_vel", "ms_amplitude"]:
+
+			value_array = self.meta_matrix_dict[1]["ms_count"][sub_index,stimuli_index]
+
+			summation_array =  [-1]
+			sum_value = 0
+
+			#print(value_index)
+			#print(value_array)
+
+			for i in range(len(value_array)):
+
+				if value_array[i] == 0:
+					summation_array.append(-1)
+				else:	
+					sum_value = sum_value + value_array[i]
+					summation_array.append(sum_value)	
+
+			summation_index = -1
+			summation_array.append(10000)
+
+			#print(summation_array)
+
+			for i in range(len(summation_array)):
+
+				if summation_array[i+1] == -1:
+					if value_index >= summation_array[i] and value_index < summation_array[i+2]:
+						summation_index = i
+						break
+				else:
+					if value_index >= summation_array[i] and value_index < summation_array[i+1]:
+						summation_index = i
+						break
+
+			return summation_index
+
 
 	def analyse(self, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation = True, ttest_type = 1):
 		"""This function carries out the required statistical analysis.
@@ -411,7 +481,7 @@ class Experiment:
 				if 'all' not in parameter_list:
 
 					if meta not in parameter_list:
-						print("The following parameter is not present in the parameter list: ", meta)
+						#print("The following parameter is not present in the parameter list: ", meta)
 						continue
 
 				print("\n\n")
@@ -426,6 +496,7 @@ class Experiment:
 				column_list.extend(between_factor_list)
 				column_list.extend(within_factor_list)
 				column_list.append("subject")
+				column_list.append("stimuli_name")
 
 				data =  pd.DataFrame(columns=column_list)
 
@@ -438,48 +509,64 @@ class Experiment:
 
 						#Value is an array (NTBC : Is it always an array or can it also be a single value?)	
 						value_array = self.meta_matrix_dict[1][meta][sub_index,stimuli_index]
+						#print(meta, " length is: ", len(value_array))
 
-						try:					
-							for value in value_array:
+						# if(meta == "ms_count"):
+						# 	print(value_array)
+						# 	print("Sum:", sum(value_array))
 
-								row = []
+						index_extra = 0
 
-								row.append(value)
+						for value_index in range(len(value_array)):
 
-								#Add the between group factors (need to be defined in the json file)
-								for param in between_factor_list:
+							if meta in ["sacc_duration", "sacc_vel", "sacc_amplitude", "ms_duration", "ms_vel", "ms_amplitude"]:
 
-									if param == "Subject_type":
-										row.append(sub.subj_type)
-										continue
+								if(value_array[value_index] == 0):
+									index_extra = index_extra + 1
+									continue
 
-									try:
-										row.append(json_data["Subjects"][sub.subj_type][sub.name][param])
-									except:
-										print("Between subject paramter: ", param, " not defined in the json file")	
+								proper_index = self.return_index(meta, value_index-index_extra, sub_index, stimuli_index)
+								stimulus_name = self.stimuli[stimuli_type][proper_index]
+							else:
+								stimulus_name = self.stimuli[stimuli_type][value_index]
 
-								for param in within_factor_list:
-									
-									if param == "Stimuli_type":
-										row.append(stimuli_type)
-										continue
+							row = []
+							row.append(value_array[value_index])
 
-									try:
-										stimulus_name = self.stimuli[stimuli_type][stimuli_index]
-										row.append(json_data["Stimuli"][stimuli_type][stimulus_name][param])
-									except:
-										print("Within stimuli parameter: ", param, " not defined in the json file")
+							#Add the between group factors (need to be defined in the json file)
+							for param in between_factor_list:
 
-								row.append(sub.name)
+								if param == "Subject_type":
+									row.append(sub.subj_type)
+									continue
 
-								if(np.isnan(value)):
-									print("The data being read for analysis contains null value: ", row)
+								try:
+									row.append(json_data["Subjects"][sub.subj_type][sub.name][param])
+								except:
+									print("Between subject paramter: ", param, " not defined in the json file")	
 
-								#Instantiate into the pandas dataframe
-								data.loc[len(data)] = row
+							for param in within_factor_list:
+								
+								if param == "Stimuli_type":
+									row.append(stimuli_type)
+									continue
 
-						except:
-							print("Error in data instantiation")
+								try:
+									stimulus_name = self.stimuli[stimuli_type][value_index]
+									row.append(json_data["Stimuli"][stimuli_type][stimulus_name][param])
+								except:
+									print("Within stimuli parameter: ", param, " not defined in the json file")
+
+							row.append(sub.name)
+							row.append(stimulus_name)
+
+							if(np.isnan(value_array[value_index])):
+								print("The data being read for analysis contains null value: ", row)
+
+							#Instantiate into the pandas dataframe
+							data.loc[len(data)] = row
+
+				print(data)
 
 				#Depending on the parameter, choose the statistical test to be done
 				if statistical_test == "Mixed_anova":

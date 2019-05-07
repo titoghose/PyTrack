@@ -2,20 +2,22 @@
 
 import os
 import json
+import warnings
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
-from scipy import signal, io, stats, misc
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 from matplotlib.widgets import Slider, CheckButtons
 import matplotlib.animation as animation
-from Sensor import Sensor
 import matplotlib.cm as cm
+from scipy import signal, io, stats, misc
 from scipy.ndimage.filters import gaussian_filter
-from datetime import datetime
 import math
 
+from Sensor import Sensor
 
 class Stimulus:
 	"""This is the main class that performs analysis and visualization of data collected during presentation of various stimuli during the experiment. 
@@ -79,6 +81,9 @@ class Stimulus:
 		# Experiment json file does not exist so stimulus is being created as a stand alone object
 		else:
 			self.data = self.getDataStandAlone(data, sensor_names)
+
+
+		warnings.filterwarnings("ignore")
 
 
 	def diff(self, series):
