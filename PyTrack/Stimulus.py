@@ -2,20 +2,22 @@
 
 import os
 import json
+import warnings
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
-from scipy import signal, io, stats, misc
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 from matplotlib.widgets import Slider, CheckButtons
 import matplotlib.animation as animation
-from Sensor import Sensor
 import matplotlib.cm as cm
+from scipy import signal, io, stats, misc
 from scipy.ndimage.filters import gaussian_filter
-from datetime import datetime
 import math
 
+from Sensor import Sensor
 
 class Stimulus:
 	"""This is the main class that performs analysis and visualization of data collected during presentation of various stimuli during the experiment. 
@@ -79,6 +81,9 @@ class Stimulus:
 		# Experiment json file does not exist so stimulus is being created as a stand alone object
 		else:
 			self.data = self.getDataStandAlone(data, sensor_names)
+
+
+		warnings.filterwarnings("ignore")
 
 
 	def diff(self, series):
@@ -801,11 +806,11 @@ class Stimulus:
 		temp_amp = np.zeros(1, dtype='float32')
 		for ms in all_bin_MS:
 			# Net microsaccade count i.e binary + left +right
-			ms_count += ms["NB"] + ms["NL"] + ms["NR"]
 
 			if ms["NB"] != 0:
 				for m in ms["bin"]:
 					if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
+						ms_count += 1
 						# Appending peak velocity for binary microsaccade
 						vel_val = (m[2] + m[11]) / 2.
 						temp_vel = np.hstack((temp_vel, vel_val))
@@ -818,31 +823,31 @@ class Stimulus:
 						dur_val = ((m[1] - m[0]) + (m[10] - m[9])) / 2.
 						ms_duration = np.hstack((ms_duration, dur_val))	
 			
-			if ms["NL"] != 0:
-				for m in ms["left"]:
-					if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
-						# Appending peak velocity for left eye microsaccade
-						temp_vel = np.hstack((temp_vel, m[2]))
+			# if ms["NL"] != 0:
+			# 	for m in ms["left"]:
+			# 		if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
+			# 			# Appending peak velocity for left eye microsaccade
+			# 			temp_vel = np.hstack((temp_vel, m[2]))
 						
-						# Appending amplitude for left eye microsaccade
-						temp_amp = np.hstack((temp_amp, np.sqrt(m[5]**2 + m[6]**2)))
+			# 			# Appending amplitude for left eye microsaccade
+			# 			temp_amp = np.hstack((temp_amp, np.sqrt(m[5]**2 + m[6]**2)))
 
-						# Appending durations for left eye microsaccade
-						dur_val = m[1] - m[0]
-						ms_duration = np.hstack((ms_duration, dur_val))
+			# 			# Appending durations for left eye microsaccade
+			# 			dur_val = m[1] - m[0]
+			# 			ms_duration = np.hstack((ms_duration, dur_val))
 			
-			if ms["NR"] != 0:
-				for m in ms["right"]:
-					if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
-						# Appending peak velocity for left eye microsaccade
-						temp_vel = np.hstack((temp_vel, m[2]))
+			# if ms["NR"] != 0:
+			# 	for m in ms["right"]:
+			# 		if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
+			# 			# Appending peak velocity for left eye microsaccade
+			# 			temp_vel = np.hstack((temp_vel, m[2]))
 						
-						# Appending amplitude for left eye microsaccade
-						temp_amp = np.hstack((temp_amp, np.sqrt(m[5]**2 + m[6]**2)))
+			# 			# Appending amplitude for left eye microsaccade
+			# 			temp_amp = np.hstack((temp_amp, np.sqrt(m[5]**2 + m[6]**2)))
 
-						# Appending durations for left eye microsaccade
-						dur_val = m[1] - m[0]
-						ms_duration = np.hstack((ms_duration, dur_val))
+			# 			# Appending durations for left eye microsaccade
+			# 			dur_val = m[1] - m[0]
+			# 			ms_duration = np.hstack((ms_duration, dur_val))
 
 		if ms_count == 0:
 			ms_duration = [0, 0]
