@@ -630,23 +630,24 @@ class Experiment:
 		"""		
 		if stim == None:
 			sub_ind = -1
-			for ind, sub in enumerate(self.subjects):
-				if sub.name == sub:
+			for ind, subject in enumerate(self.subjects):
+				if subject.name == sub:
 					sub_ind = ind
 					break
 			return self.subjects[sub_ind].aggregate_meta
 		
 		else:
 			sub_ind = -1
-			for ind, sub in enumerate(self.subjects):
-				if sub.name == sub:
+			for ind, subject in enumerate(self.subjects):
+				if subject.name == sub:
 					sub_ind = ind
 					break
+			
 			stim_cat = ""
 			stim_ind = -1
 			for cat in self.stimuli:
-				stim_ind = self.stimuli[cat].index(stim)
-				if stim_ind != -1:
+				if stim in self.stimuli[cat]:
+					stim_ind = self.stimuli[cat].index(stim)
 					stim_cat = cat
 					break
 			

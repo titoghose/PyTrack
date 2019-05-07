@@ -801,11 +801,10 @@ class Stimulus:
 		temp_amp = np.zeros(1, dtype='float32')
 		for ms in all_bin_MS:
 			# Net microsaccade count i.e binary + left +right
-			ms_count += ms["NB"] + ms["NL"] + ms["NR"]
-
 			if ms["NB"] != 0:
 				for m in ms["bin"]:
 					if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
+						ms_count += 1
 						# Appending peak velocity for binary microsaccade
 						vel_val = (m[2] + m[11]) / 2.
 						temp_vel = np.hstack((temp_vel, vel_val))
@@ -818,31 +817,33 @@ class Stimulus:
 						dur_val = ((m[1] - m[0]) + (m[10] - m[9])) / 2.
 						ms_duration = np.hstack((ms_duration, dur_val))	
 			
-			if ms["NL"] != 0:
-				for m in ms["left"]:
-					if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
-						# Appending peak velocity for left eye microsaccade
-						temp_vel = np.hstack((temp_vel, m[2]))
+			# if ms["NL"] != 0:
+			# 	for m in ms["left"]:
+			# 		if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
+			# 			ms_count += 1
+			# 			# Appending peak velocity for left eye microsaccade
+			# 			temp_vel = np.hstack((temp_vel, m[2]))
 						
-						# Appending amplitude for left eye microsaccade
-						temp_amp = np.hstack((temp_amp, np.sqrt(m[5]**2 + m[6]**2)))
+			# 			# Appending amplitude for left eye microsaccade
+			# 			temp_amp = np.hstack((temp_amp, np.sqrt(m[5]**2 + m[6]**2)))
 
-						# Appending durations for left eye microsaccade
-						dur_val = m[1] - m[0]
-						ms_duration = np.hstack((ms_duration, dur_val))
+			# 			# Appending durations for left eye microsaccade
+			# 			dur_val = m[1] - m[0]
+			# 			ms_duration = np.hstack((ms_duration, dur_val))
 			
-			if ms["NR"] != 0:
-				for m in ms["right"]:
-					if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
-						# Appending peak velocity for left eye microsaccade
-						temp_vel = np.hstack((temp_vel, m[2]))
+			# if ms["NR"] != 0:
+			# 	for m in ms["right"]:
+			# 		if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
+			# 			ms_count += 1
+			# 			# Appending peak velocity for left eye microsaccade
+			# 			temp_vel = np.hstack((temp_vel, m[2]))
 						
-						# Appending amplitude for left eye microsaccade
-						temp_amp = np.hstack((temp_amp, np.sqrt(m[5]**2 + m[6]**2)))
+			# 			# Appending amplitude for left eye microsaccade
+			# 			temp_amp = np.hstack((temp_amp, np.sqrt(m[5]**2 + m[6]**2)))
 
-						# Appending durations for left eye microsaccade
-						dur_val = m[1] - m[0]
-						ms_duration = np.hstack((ms_duration, dur_val))
+			# 			# Appending durations for left eye microsaccade
+			# 			dur_val = m[1] - m[0]
+			# 			ms_duration = np.hstack((ms_duration, dur_val))
 
 		if ms_count == 0:
 			ms_duration = [0, 0]
@@ -1035,11 +1036,11 @@ class Stimulus:
 				if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)):
 					inside_aoi[0] += 1
 					temp1.append(end - start)
-			
+
 			if len(temp1) != 0:
 				inside_aoi[1] = np.max(temp1)
 				inside_aoi[2] = np.mean(temp1)
-		
+
 		return tuple(inside_aoi)
 
 
@@ -1083,7 +1084,6 @@ class Stimulus:
 
 
 		fixation_dict = self.findFixations()
-		print(fixation_dict)
 		fixation_indices = np.vstack((fixation_dict["start"], fixation_dict["end"]))
 		fixation_indices = np.reshape(fixation_indices, (fixation_indices.shape[0] * fixation_indices.shape[1]), order='F')
 
@@ -1476,19 +1476,8 @@ class Stimulus:
 
 		"""
 
-		# Finding word and character count in text stimulus
-		num_chars = 1
-		num_words = 1
-		# if self.stim_type in ["alpha", "relevant", "general", "general_lie"]:
-		# 	with open("questions.json") as q_file:
-		# 		data = json.load(q_file)
-
-		# 	num_chars = len(data[self.name])
-		# 	num_words = len(data[self.name].split())
-
-		# Finding response time based on number of  samples 
 		self.response_time = self.findResponseTime()
-		self.sensors["EyeTracker"].metadata["response_time"] = self.response_time / num_words
+		self.sensors["EyeTracker"].metadata["response_time"] = self.response_time
 	
 		# Pupil Features
 		pupil_size, peak_pupil, time_to_peak, pupil_AUC, pupil_slope, pupil_mean, pupil_size_downsample = self.findPupilParams()
