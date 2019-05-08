@@ -6,7 +6,6 @@ python:
 # command to install dependencies
 os:
   - linux
-  - windows
   - osx
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python-tk ; fi
