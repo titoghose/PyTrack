@@ -354,13 +354,12 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
         if not os.path.isdir(data_path + "/csv_files/"):
             os.makedirs(data_path + "/csv_files/")
 
-
         stim = None
 
         if stim_list_mode == "common":
             stim = np.loadtxt(data_path + "/" + "stim_file.txt", dtype=str)
 
-        subjects = {"Subjects":{"Group1":[]}}
+        print(data_path)
 
         for f in os.listdir(data_path):
             if os.path.isdir(data_path + "/" + f):
@@ -376,21 +375,6 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
             
             df = convertToBase(data_path + "/" + f, sensor_type='EyeTracker', device=device, stim_list=stim, start=start, stop=stop, eye=eye)
             df.to_csv(data_path + "/csv_files/" + f.split(".")[0] + ".csv")
-            subjects["Subjects"]["Group1"].append(f.split(".")[0])
-
-        if stim_list_mode == "NA":
-            stimuli = {"Stimuli":{"Type1":[]}}
-            for s in np.unique(df["StimulusName"]):
-                stimuli["Stimuli"]["Type1"].append(s)
-
-            with open(exp_info, 'r') as json_f:
-                json_dict = json.load(json_f)
-
-            json_dict.update(subjects)
-            json_dict.update(stimuli)
-
-            with open(exp_info, 'w') as json_f:
-                json.dump(json_dict, json_f, indent=4)
 
         source_folder = data_path + "/csv_files/"
 

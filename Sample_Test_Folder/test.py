@@ -23,14 +23,6 @@ exp = Experiment(json_file=os.path.abspath("Sample_Test_Folder/NTU_Experiment/NT
 exp.metaMatrixInitialisation(standardise_flag=False, 
                               average_flag=False)
 
-# Calling the function for the statistical analysis of the data
-# file_creation=True. Hence, the output of the data used to run the tests and the output of the tests will be stored in in the 'Results' folder inside your experiment folder
-exp.analyse(parameter_list={"all"}, 
-            between_factor_list=["Subject_type"], 
-            within_factor_list=["Stimuli_type"], 
-            statistical_test="Mixed_anova", 
-            file_creation=True)
-
 
 # Calling the function for advanced statistical analysis of the data 
 # file_creation=True. Hence, the output of the data used to run the tests and the output of the tests will be stored in in the 'Results' folder inside your experiment folder
