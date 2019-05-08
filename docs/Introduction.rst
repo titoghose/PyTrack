@@ -1,6 +1,29 @@
 PyTrack
 =======
 
+Table of Contents
+=================
+
+1. `Getting Started <#getting-started>`__
+
+   1. `Prerequisites <#prerequisites>`__
+   2. `Installing <#installing>`__
+
+2. `Running the tests <#running-the-tests>`__
+
+   1. `Experiment Design <#experiment-design>`__
+
+      1. `Setup <#setup>`__
+      2. `Using PyTrack <#using-pytrack>`__
+      3. `Example Use <#example-use>`__
+      4. `Advanced Functionality <#advanced-functionality>`__
+
+   2. `Stand-alone Design <#stand-alone-design>`__
+
+3. `Authors <#authors>`__
+4. `License <#license>`__
+5. `Acknowledgments <#acknowledgments>`__
+
 This is a framework to analyse and visualize eye tracking data. It
 offers 2 designs of analysis:
 
@@ -43,6 +66,7 @@ Running the tests
 
 In order to test **PyTrack**, some sample data files can be found
 `here <https://drive.google.com/open?id=1N9ZrTO6Bikx3aI7BKivSFAp3vrLxSCM6>`__.
+
 To get started, first you need to choose which design you want to run
 the framework in. If you wish to use the *Experiment Design*, see
 `this <#experiment-design>`__. If you wish to use the *Stand-alone
@@ -184,9 +208,117 @@ Now, follow these steps:
       }
    }
 
-NOTE: The Experiment class contains a function called analyse() which is
-used to perform statistical analysis (eg: ANOVA or T test), by default
-there is only 1 between group factor ("Subject_type") and 1 within group
+**NOTE: For some advanced functionality on analysis read**\ `ADVANCED
+FUNCTIONALITY <#advanced-functionality>`__\ **. If only basic
+functionality is desired, you may ignore it.**
+
+Using PyTrack
+^^^^^^^^^^^^^
+
+This involves less than 10 lines of python code. However, in case you
+want to do more detailed analysis, it may involve a few more lines.
+
+Using *formatBridge* majorly has 3 cases.:
+
+1. **Explicitly specify the stimulus order for each subject** as a list
+   to the *generateCompatibleFormats* function. This case should be used
+   when the order of stimuli is randomised for every participant. In
+   this case, each participant needs a file specifying the stimulus
+   presentation order. Hence, create a folder inside the *Data* folder
+   called **stim** and place individual .txt files with the same names
+   as the subject/participant names with the a new stimulus name on each
+   line. Finally, the *stim_list_mode* parameter in the
+   *generateCompatibleFormat* function needs to be set as "diff" (See
+   `Example <#example-use>`__).
+
+   eg. If subject data file is *subject_001.asc*, the file in the stim
+   folder should be *subject_001.txt*
+
+   *Note: Yes we understand this is a tedious task, but this is the only
+   way we can understand the order of the stimulus which is needed for
+   conclusive analysis and visualization.*\ **However, if you specify
+   the stimulus name for every event in the message column of your data
+   in this format: "Stim Key: [stim_name]", we can extract it
+   automatically. WE RECOMMEND THIS FOR BEST USER EXPERIENCE.**
+
+2. **Explicitly specify the stimulus order for the entire experiment**.
+   This is for the case where the same order of stimuli are presented to
+   all the participants. Just create a file called *stim_file.txt* and
+   place it inside the *Data* folder. Finally, the *stim_list_mode*
+   parameter in the *generateCompatibleFormat* function needs to be set
+   as "common" (See `Example <#example-use>`__).
+
+3. **Do not sepcify any stimulus order list**. In this case, the output
+   of the statistical analysis will be inconclusive and the
+   visualization of gaze will be on a black screen instead of the
+   stimulus image. The *stim_list_mode* parameter in the
+   *generateCompatibleFormat* function needs to be set as "NA". However,
+   you can still extract the metadata and features extracted for each
+   participant but the names will not make any sense. **WE DO NOT
+   RECOMMEND THIS**.
+
+Example Use
+^^^^^^^^^^^
+
+See
+`documentation <https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html>`__
+for a detailed understanding of each function.
+
+**Converting to the correct format:**
+
+.. code:: python
+
+   from PyTrack.formatBridge import generateCompatibleFormat
+
+   # function to convert data to generate database in base format for experiment done using EyeLink on both eyes and the stimulus name specified in the message section
+   generateCompatibleFormat(exp_path="abcd/efgh/NTU_Experiment/",
+                           device="eyelink", 
+                           stim_list_mode='NA', 
+                           start='start_trial', 
+                           stop='stop_trial', 
+                           eye='B')
+
+**Running the analysis or extracting data:**
+
+.. code:: python
+
+   from PyTrack.Experiment import Experiment
+
+   # Creating an object of the Experiment class
+   exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
+
+   # Instantiate the meta_matrix_dict of an Experiment to find and extract all features from the raw data
+   exp.metaMatrixInitialisation(standardise_flag=False, 
+                                 average_flag=False)
+
+   # Calling the function for the statistical analysis of the data
+   # file_creation=True. Hence, the output of the data used to run the tests and the output of the tests will be stored in in the 'Results' folder inside your experiment folder
+   exp.analyse(parameter_list={"all"}, 
+               between_factor_list=["Subject_type"], 
+               within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", 
+               file_creation=True)
+
+**Visualizing the data:**
+
+.. code:: python
+
+   from PyTrack.Experiment import Experiment
+
+   # Creating an object of the Experiment class
+   exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
+
+   # This function call will open up a GUI which you can use to navigate the entire visualization process
+   exp.visualizeData()
+
+Advanced Functionality
+^^^^^^^^^^^^^^^^^^^^^^
+
+**THIS SECTION IS ONLY FOR ADVANCED STATISTICAL ANALYSIS FUNCTIONALITY.
+IGNORE IT IF THE BASIC ANALYSIS IS SUFFICIENT FOR YOU.**
+
+The Experiment class contains a function called analyse() which is used
+to perform statistical analysis (eg: ANOVA or T test), by default there
+is only 1 between group factor ("Subject_type") and 1 within group
 factor ("Stimuli_type") that is considered. If additional factors need
 to be considered they need to added to the json file.
 
@@ -234,88 +366,106 @@ the same.
       },
    }
 
-Using **PyTrack**
-^^^^^^^^^^^^^^^^^
-
-This involves less than 10 lines of python code. However, in case you
-want to do more detailed analysis, it may involve a few more lines.
-
-Using *formatBridge* majorly has 3 cases.:
-
-1. **Explicitly specify the stimulus order for each subject** as a list
-   to the *generateCompatibleFormats* function. This case should be used
-   when the order of stimuli is randomised for every participant. In
-   this case, each participant needs a file specifying the stimulus
-   presentation order. Hence, create a folder inside the *Data* folder
-   called **stim** and place individual .txt files with the same names
-   as the subject/participant names with the a new stimulus name on each
-   line. Finally, the *stim_list_mode* parameter in the
-   *generateCompatibleFormat* function needs to be set as "diff" (See
-   `Example <#example-use>`__).
-
-   eg. If subject data file is *subject_001.asc*, the file in the stim
-   folder should be *subject_001.txt*
-
-   *Note: Yes we undertsand this is a tedious task, but this is the only way we can understand the order of the stimulus which is needed for conclusive analysis and visualization*. **However, in case you are using EyeLink data, you can pass a message called "Stim Key: [stim_name]" during each stimulus and we can extract it automatically**.
-
-2. **Explicitly specify the stimulus order for the entire experiment**.
-   This is for the case where the same order of stimuli are presented to
-   all the participants. Just create a file called *stim_file.txt* and
-   place it inside the *Data* folder. Finally, the *stim_list_mode*
-   parameter in the *generateCompatibleFormat* function needs to be set
-   as "common" (See `Example <#example-use>`__).
-
-3. **Do not sepcify any stimulus order list**. In this case, the output
-   of the statistical analysis will be inconclusive and the
-   visualization of gaze will be on a black screen instead of the
-   stimulus image. The *stim_list_mode* parameter in the
-   *generateCompatibleFormat* function needs to be set as "NA". However,
-   you can still extract the metadata and features extracted for each
-   participant but the names will not make any sense. **WE DO NOT
-   RECOMMEND THIS**.
-
-Example Use
-^^^^^^^^^^^
+**The snippet at the bottom allows the use of advanced functionality:**
 
 .. code:: python
 
-   from PyTrack.formatBridge import generateCompatibleFormat
    from PyTrack.Experiment import Experiment
-
-   # function to convert data to generate database in base format 
-   generateCompatibleFormat(exp_path="abcd/efgh/NTU_Experiment/", device="eyelink", stim_list_mode='diff', start='start_trial', stop='stop_trial')
-
 
    # Creating an object of the Experiment class
    exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
 
-   # Instantiate the meta_matrix_dict of a Experiment
-   exp.metaMatrixInitialisation(standardise_flag=False, average_flag=False)
+   # Instantiate the meta_matrix_dict of an Experiment to find and extract all features from the raw data
+   exp.metaMatrixInitialisation(standardise_flag=False, 
+                                 average_flag=False)
 
-   # Calling the function for the statistical analysis of the data
-   exp.analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation=True)
+   # Calling the function for advanced statistical analysis of the data 
+   # file_creation=True. Hence, the output of the data used to run the tests and the output of the tests will be stored in in the 'Results' folder inside your experiment folder
+
+   #############################################################
+   ## 1. Running anova on advanced between and within factors ##
+   #############################################################
+   exp.analyse(parameter_list={"all"}, 
+               between_factor_list=["Subject_type", "Gender"],
+               within_factor_list=["Stimuli_type", "Brightness"],
+               statistical_test="anova", 
+               file_creation=True)
+
+   #############################################################
+   ## 2. Running no tests. Just storing analysis data in Results folder ##
+   #############################################################
+   exp.analyse(statistical_test="None", 
+               file_creation=True)
 
 
-   subject_name = "Sub_001"
-   stimulus_name = "Stim_1"
+   # In case you want the data for a particular participant/subject as a dictionary of values, use this
+
+   subject_name = "Sub_001" #specify your own subject's name (must be in json file)
+   stimulus_name = "Stim_1" #specify your own stimulus name (must be in json file)
+
    # Access metadata dictionary for particular subject and stimulus
-   single_meta = exp.getMetaData(sub=subject_name, stim=stimulus_name)
+   single_meta = exp.getMetaData(sub=subject_name, 
+                                 stim=stimulus_name)
 
    # Access metadata dictionary for particular subject and averaged for stimulus types
-   agg_type_meta = exp.getMetaData(sub=subject_name, stim=None)
-
-
-   # This function call opens up an interactive GUI that can be used to visualize the experiment data
-   exp.visualizeData()
+   agg_type_meta = exp.getMetaData(sub=subject_name, 
+                                    stim=None)
 
 Stand-alone Design
 ~~~~~~~~~~~~~~~~~~
 
-Explain what these tests test and why
+The stand-alone design requires only interaction with tyhe Stimulus
+class. This is recommended if you wish to extract features or visualize
+data for only 1 subject on a particular stimulus. If not, look at
+`Experiment Design <#experiment-design>`__
 
-::
+**Here is a sample code snippet explaining the functionality:**
 
-   Give an example
+.. code:: python
+
+   from PyTrack.Stimulus import Stimulus
+   from PyTrack.formatBridge import generateCompatibleFormat
+   import pandas as pd
+   import numpy as np
+
+
+   # function to convert data to generate csv file for data file recorded using EyeLink on both eyes and the stimulus name specified in the message section
+   generateCompatibleFormat(exp_path="/path/to/data/file/in/raw/format",
+                           device="eyelink", 
+                           stim_list_mode='NA', 
+                           start='start_trial', 
+                           stop='stop_trial', 
+                           eye='B')
+
+   df = pd.read_csv("/path/to/enerated/data/file/in/csv/format")
+
+   # Dictionary containing details of recording. Please change the values according to your experiment. If no AOI is desired, set aoi_left values to (0, 0) and aoi_right to the same as Display_width and Display_height
+   sensor_dict = {
+                     "EyeTracker":
+                     {
+                        "Sampling_Freq": 1000,
+                        "Display_width": 1280,
+                        "Display_height": 1024,
+                        "aoi_left_x": 390,
+                        "aoi_left_y": 497,
+                        "aoi_right_x": 759,
+                        "aoi_right_y": 732
+                     }
+                  }
+
+   # Creating Stimulus object. See the documentation for advanced parameters.
+   stim = Stimulus(path="path/to/experiment/folder",
+                  data=df, 
+                  sensor_names=sensor_dict)
+
+   # Some functionality usage. See documentation of Stimulus class for advanced use.
+   stim.findEyeMetaData()
+   features = stim.sensors["EyeTracker"].metadata  # Getting dictioary of found metadata/features
+
+   stim.gazePlot(save_fig=True)
+   stim.gazeHeatMap(save_fig=True)
+   stim.findMicrosaccades(plot_ms=True)
+   stim.visualize()
 
 Authors
 -------
@@ -332,8 +482,7 @@ participated in this project.
 License
 -------
 
-This project is licensed under the GNU GPL v3 License - see the
-`LICENSE <https://pytrack-ntu.readthedocs.io/en/latest/License.html>`__ file for details
+This project is licensed under the GNU GPL v3 License - see `License <https://pytrack-ntu.readthedocs.io/en/latest/License.html>`__ for details
 
 Acknowledgments
 ---------------
