@@ -1,7 +1,7 @@
 import sys
 import os
-sys.path.append(os.path.abspath(".."))
 sys.path.append(os.path.abspath("../PyTrack"))
+sys.path.append(os.path.abspath("../PyTrack/PyTrack"))
 print(sys.path)
 
 import json
