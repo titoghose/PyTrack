@@ -1,6 +1,7 @@
 import sys
 sys.path.append("..")
 sys.path.append("../PyTrack")
+print(sys.path)
 
 import json
 from formatBridge import generateCompatibleFormat
