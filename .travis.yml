@@ -17,6 +17,7 @@ script:
   - py.test tests/test.py --cov=codecov
   - py.test tests/testStandAlone.py --cov=codecov
 after_success:
+  - coverage combine
   - codecov
 branches:
   only:
