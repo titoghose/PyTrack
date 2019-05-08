@@ -790,7 +790,7 @@ class Stimulus:
 					os.makedirs(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/")
 
 				plt.savefig(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/" + self.name + "_" + str(fix_ind) + ".png", dpi=200)
-				fig.close()
+				plt.close(fig)
 
 
 			if plot_ms:
@@ -806,7 +806,7 @@ class Stimulus:
 						plt.scatter(amp, peak_vel, marker='o', facecolors='none', edgecolors='r')
 				
 				plt.savefig(self.path + "/Subjects/" + self.subject_name + "/ms_main_seq" + self.name + ".png", dpi=200)
-				fig2.close()
+				plt.close(fig2)
 
 		ms_count = 0
 		ms_duration = np.zeros(1, dtype='float32')
