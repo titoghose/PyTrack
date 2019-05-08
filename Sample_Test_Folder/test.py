@@ -1,12 +1,12 @@
 import sys
-sys.path.append("..")
-sys.path.append("../PyTrack")
+import os
+sys.path.append(os.path.abspath(".."))
+sys.path.append(os.path.abspath("../PyTrack"))
 print(sys.path)
 
 import json
 from formatBridge import generateCompatibleFormat
 from Experiment import Experiment
-from datetime import datetime
 
 # function to convert data to generate database in base format for experiment done using EyeLink on both eyes and the stimulus name specified in the message section
 generateCompatibleFormat(exp_path="NTU_Experiment/",

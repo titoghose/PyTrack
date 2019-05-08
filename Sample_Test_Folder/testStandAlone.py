@@ -1,6 +1,7 @@
 import sys
-sys.path.append("..")
-sys.path.append("../PyTrack")
+import os
+sys.path.append(os.path.abspath(".."))
+sys.path.append(os.path.abspath("../PyTrack"))
 
 from Stimulus import Stimulus
 from formatBridge import generateCompatibleFormat
