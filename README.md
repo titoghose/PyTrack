@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/titoghose/PyTrack.svg?branch=master)](https://travis-ci.org/titoghose/PyTrack)
 [![codecov](https://codecov.io/gh/titoghose/PyTrack/branch/master/graph/badge.svg)](https://codecov.io/gh/titoghose/PyTrack)
+[![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/?version=latest)](https://pytrack-ntu.readthedocs.io/en/latest/?badge=latest)
 
 # PyTrack
 

@@ -1,6 +1,6 @@
 {
     "Experiment_name": "NTU_Experiment",
-    "Path": "/home/travis/build/titoghose/PyTrack/Sample_Test_Folder/NTU_Experiment",
+    "Path": "/home/travis/build/titoghose/PyTrack/tests/NTU_Experiment",
     "Columns_of_interest": {
         "EyeTracker": [
             "GazeLeftx",
