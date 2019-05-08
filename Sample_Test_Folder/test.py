@@ -32,8 +32,12 @@ exp.metaMatrixInitialisation(standardise_flag=False,
 #############################################################
 exp.analyse(parameter_list={"all"}, 
             between_factor_list=["Subject_type", "Gender"],
-            within_factor_list=["Stimuli_type", "Brightness"],
+            within_factor_list=["Stimuli_type"],
             statistical_test="anova", 
+            file_creation=True)
+
+exp.analyse(parameter_list={"all"}, 
+            statistical_test="ttest", 
             file_creation=True)
 
 #############################################################

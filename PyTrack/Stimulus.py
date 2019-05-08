@@ -1673,7 +1673,7 @@ class Stimulus:
 
 				self.sensors.update({sen : Sensor(sen, et_sfreq)})
 				
-				data = data[self.start_time : self:end_time + 1]
+				data = data[self.start_time : self.end_time + 1]
 
 				l_gazex_df = np.array(data.GazeLeftx)
 				l_gazey_df = np.array(data.GazeLefty)
