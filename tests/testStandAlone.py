@@ -43,3 +43,6 @@ stim = Stimulus(path=os.path.abspath("tests/NTU_Experiment"),
 stim.findEyeMetaData()
 features = stim.sensors["EyeTracker"].metadata  # Getting dictioary of found metadata/features
 stim.findMicrosaccades(plot_ms=True)
+stim.gazePlot(show_fig=False, save_fig=True)
+stim.gazeHeatMap(show_fig=False, save_fig=True)
+stim.visualize()

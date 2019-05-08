@@ -35,8 +35,16 @@ exp.analyse(parameter_list={"all"},
             statistical_test="anova", 
             file_creation=True)
 
+exp.analyse(parameter_list={"all"},
+            statistical_test="anova", 
+            file_creation=True)
+
 exp.analyse(parameter_list={"all"}, 
             statistical_test="ttest", 
+            file_creation=True)
+
+exp.analyse(parameter_list={"all"}, 
+            statistical_test="RM_anova", 
             file_creation=True)
 
 #############################################################
@@ -57,3 +65,5 @@ single_meta = exp.getMetaData(sub=subject_name,
 # Access metadata dictionary for particular subject and averaged for stimulus types
 agg_type_meta = exp.getMetaData(sub=subject_name, 
                                  stim=None)
+
+exp.visualizeData()
