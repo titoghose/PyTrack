@@ -27,7 +27,7 @@ class Stimulus:
 	Parameters
 	----------
 	path : str
-		This parameter is the absolute path to the experiment directory containing the json file, stimuli folder with pictures etc. For the *Experiment Design*, this parameter is internally handled. In the *Stand-alone Design*, this parameter needs to be specified while creating the object.
+		This parameter is the absolute path to the experiment directory containing the json file, stimuli folder with pictures etc. For the *Experiment Design*, this parameter is internally handled. In the *Stand-alone Design*, this parameter needs to be specified while creating the object. All data and plots, if saved, will be stored in folders in this location.
 	name : str 
 		The name of the stimulus. For the *Experiment Design*, this parameter is internally handled. If using in *Stand-alone Design*, this parameter is optional and will default to `id_rather_not`.
 	stim_type : str	
@@ -65,7 +65,6 @@ class Stimulus:
 		self.json_file = json_file
 		self.sensors = dict()
 		self.subject_name = subject_name
-		self.aoi_coords = aoi
 		mpl.use("TkAgg")
 
 		if not os.path.isdir(self.path + '/Subjects/' + self.subject_name + '/'):
@@ -73,6 +72,7 @@ class Stimulus:
 
 		# Experiment json file exists so stimulus is being created for experiment
 		if self.json_file != None:
+			self.aoi_coords = aoi
 			if self.start_time == -1:
 				self.data = None
 			else:
@@ -80,6 +80,8 @@ class Stimulus:
 		
 		# Experiment json file does not exist so stimulus is being created as a stand alone object
 		else:
+			self.aoi_coords = (sensor_names["EyeTracker"]["aoi_left_x"], sensor_names["EyeTracker"]["aoi_left_y"], sensor_names["EyeTracker"]["aoi_right_x"], sensor_names["EyeTracker"]["aoi_right_y"])
+
 			self.data = self.getDataStandAlone(data, sensor_names)
 
 
@@ -1671,6 +1673,8 @@ class Stimulus:
 				et_sfreq = sensor_names[sen]["Sampling_Freq"]
 
 				self.sensors.update({sen : Sensor(sen, et_sfreq)})
+				
+				data = data[self.start_time : self:end_time + 1]
 
 				l_gazex_df = np.array(data.GazeLeftx)
 				l_gazey_df = np.array(data.GazeLefty)
@@ -1693,9 +1697,6 @@ class Stimulus:
 				r_gaze_y = np.squeeze(np.array([r_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
 				r_gaze = {"x": r_gaze_x, "y": r_gaze_y}
 				gaze = {"left" : l_gaze, "right" : r_gaze}
-				
-				if(gaze_aoi_flag == 1):
-					gaze_aoi = np.squeeze(np.array([gaze_aoi_df[i] for i in sorted(et_rows)], dtype="float32"))
 
 				# Extracting Pupil Size Data
 				pupil_size_r = np.squeeze(np.array([pupil_size_r_df[i] for i in sorted(et_rows)], dtype="float32"))
@@ -1705,6 +1706,8 @@ class Stimulus:
 				blinks_l, interp_pupil_size_l, new_gaze_l = self.findBlinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
 				blinks_r, interp_pupil_size_r, new_gaze_r = self.findBlinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
 				interp_pupil_size = np.mean([interp_pupil_size_r, interp_pupil_size_l], axis=0)
+
+				gaze_aoi = self.setAOICol([gaze_aoi_df, new_gaze_l["left"]["x"], new_gaze_l["left"]["y"]])
 
 				extracted_data["ETRows"] = et_rows
 				extracted_data["FixationSeq"] = fixation_seq
