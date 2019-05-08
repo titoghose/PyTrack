@@ -9,7 +9,7 @@ from formatBridge import generateCompatibleFormat
 from Experiment import Experiment
 
 # function to convert data to generate database in base format for experiment done using EyeLink on both eyes and the stimulus name specified in the message section
-generateCompatibleFormat(exp_path=os.path.abspath("Sample_Test_Folder/NTU_Experiment/Data"),
+generateCompatibleFormat(exp_path=os.path.abspath("Sample_Test_Folder/NTU_Experiment"),
                         device="eyelink", 
                         stim_list_mode='NA', 
                         start='start_trial', 
