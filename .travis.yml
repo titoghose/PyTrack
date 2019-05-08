@@ -1,17 +1,20 @@
 language: python
+notifications:
+  email: false
 python:
   - "3.6"
-# command to install dependencies
 os:
   - linux
 before_install:
   - sudo apt-get install python-tk
 install:
   - pip3 install -r requirements.txt
-  - pip3 install coverage
+  - pip3 install coverage>=4.4.0
+  - pip3 install pytest>=3.6.0
+  - pip3 install pytest-cov
 script:
-  - coverage run Sample_Test_Folder/test.py
-  - coverage run Sample_Test_Folder/testStandAlone.py
+  - py.test Sample_Test_Folder/test.py --cov=codecov
+  - py.test Sample_Test_Folder/testStandAlone.py --cov=codecov
 after_success:
   - codecov
 branches:
