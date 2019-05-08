@@ -75,6 +75,10 @@ class Stimulus:
 		# Experiment json file exists so stimulus is being created for experiment
 		if self.json_file != None:
 			self.aoi_coords = aoi
+			with open(self.json_file) as json_f:
+				json_data = json.load(json_f)
+			self.width = json_data["Analysis_Params"]["EyeTracker"]["Display_width"]
+			self.height = json_data["Analysis_Params"]["EyeTracker"]["Display_height"]
 			if self.start_time == -1:
 				self.data = None
 			else:
@@ -83,7 +87,8 @@ class Stimulus:
 		# Experiment json file does not exist so stimulus is being created as a stand alone object
 		else:
 			self.aoi_coords = (sensor_names["EyeTracker"]["aoi_left_x"], sensor_names["EyeTracker"]["aoi_left_y"], sensor_names["EyeTracker"]["aoi_right_x"], sensor_names["EyeTracker"]["aoi_right_y"])
-
+			self.width = sensor_names["EyeTracker"]["Display_width"]
+			self.height = sensor_names["EyeTracker"]["Display_height"]
 			self.data = self.getDataStandAlone(data, sensor_names)
 
 
@@ -1083,11 +1088,7 @@ class Stimulus:
 			try:
 				img = plt.imread(self.path + "/Stimuli/" + self.name + ".jpeg")
 			except:
-				with open(self.json_file) as json_f:
-					json_data = json.load(json_f)
-				width = json_data["Analysis_Params"]["EyeTracker"]["Display_width"]
-				height = json_data["Analysis_Params"]["EyeTracker"]["Display_height"]
-				img = np.zeros((height, width))
+				img = np.zeros((self.height, self.width))
 		
 		ax = plt.gca()
 		ax.imshow(img)
@@ -1162,11 +1163,7 @@ class Stimulus:
 			try:
 				img = plt.imread(self.path + "/Stimuli/" + self.name + ".jpeg")
 			except:
-				with open(self.json_file) as json_f:
-					json_data = json.load(json_f)
-				width = json_data["Analysis_Params"]["EyeTracker"]["Display_width"]
-				height = json_data["Analysis_Params"]["EyeTracker"]["Display_height"]
-				img = np.zeros((height, width))
+				img = np.zeros((self.height, self.width))
 
 		downsample_fraction = 0.25
 		col_shape = img.shape[1]
@@ -1218,11 +1215,7 @@ class Stimulus:
 			try:
 				img = plt.imread(self.path + "/Stimuli/" + self.name + ".jpeg")
 			except:
-				with open(self.json_file) as json_f:
-					json_data = json.load(json_f)
-				width = json_data["Analysis_Params"]["EyeTracker"]["Display_width"]
-				height = json_data["Analysis_Params"]["EyeTracker"]["Display_height"]
-				img = np.zeros((height, width))
+				img = np.zeros((self.height, self.width))
 				
 		ax.imshow(img)
 		rect = mpl.patches.Rectangle((self.aoi_coords[0], self.aoi_coords[1]), self.aoi_coords[2]-self.aoi_coords[0], self.aoi_coords[3]-self.aoi_coords[1],

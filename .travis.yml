@@ -11,6 +11,7 @@ install:
   - pip3 install coverage>=4.4.0
   - pip3 install pytest>=3.6.0
   - pip3 install pytest-cov
+  - pip3 install Pillow
 script:
   - coverage run tests/test.py
   - coverage run tests/testStandAlone.py
