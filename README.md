@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/titoghose/PyTrack.svg?branch=master)](https://travis-ci.org/titoghose/PyTrack)
+
 # PyTrack
 
 # Table of Contents

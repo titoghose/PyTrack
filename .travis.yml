@@ -8,9 +8,12 @@ before_install:
   - sudo apt-get install python-tk
 install:
   - pip3 install -r requirements.txt
+  - pip3 install coverage
 script:
-  - python3 Sample_Test_Folder/test.py
-  - python3 Sample_Test_Folder/testStandAlone.py
+  - coverage run Sample_Test_Folder/test.py
+  - coverage run Sample_Test_Folder/testStandAlone.py
+after_success:
+  - codecov
 branches:
   only:
     - master
