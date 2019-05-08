@@ -5,11 +5,6 @@ python:
   - "3.6"
 os:
   - linux
-env:
-  - DISPLAY=:99.0
-before_install:
-  - sh -e /etc/init.d/xvfb start
-  - sudo apt-get install python-tk
 install:
   - pip3 install -r requirements.txt
   - pip3 install codecov

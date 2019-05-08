@@ -65,5 +65,3 @@ single_meta = exp.getMetaData(sub=subject_name,
 # Access metadata dictionary for particular subject and averaged for stimulus types
 agg_type_meta = exp.getMetaData(sub=subject_name, 
                                  stim=None)
-
-exp.visualizeData()
