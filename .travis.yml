@@ -1,14 +1,11 @@
 language: python
 python:
-  - "3.4"
-  - "3.5"
   - "3.6"
 # command to install dependencies
 os:
   - linux
-  - osx
 before_install:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install python-tk ; fi
+  - sudo apt-get install python-tk
 install:
   - pip3 install -r requirements.txt
 script:

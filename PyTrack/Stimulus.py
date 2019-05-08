@@ -65,7 +65,6 @@ class Stimulus:
 		self.json_file = json_file
 		self.sensors = dict()
 		self.subject_name = subject_name
-		mpl.use("TkAgg")
 
 		if not os.path.isdir(self.path + '/Subjects/' + self.subject_name + '/'):
 			os.makedirs(self.path + '/Subjects/' + self.subject_name + '/')
