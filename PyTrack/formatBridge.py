@@ -359,7 +359,6 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
         if stim_list_mode == "common":
             stim = np.loadtxt(data_path + "/" + "stim_file.txt", dtype=str)
 
-        print(data_path)
 
         for f in os.listdir(data_path):
             if os.path.isdir(data_path + "/" + f):
