@@ -66,6 +66,9 @@ class Stimulus:
 		self.sensors = dict()
 		self.subject_name = subject_name
 
+		if not os.path.isdir(self.path + '/Subjects/'):
+			os.makedirs(self.path + '/Subjects/')
+
 		if not os.path.isdir(self.path + '/Subjects/' + self.subject_name + '/'):
 			os.makedirs(self.path + '/Subjects/' + self.subject_name + '/')
 
@@ -781,6 +784,10 @@ class Stimulus:
 				a2.set_title("gaze velocity plot")
 				for i in range(len(MS["bin"])):
 					a2.plot(vel["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], vel["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r') 
+
+				
+				if not os.path.isdir(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/"):
+					os.makedirs(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/")
 
 				plt.savefig(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/" + self.name + "_" + str(fix_ind) + ".png", dpi=200)
 				fig.close()
@@ -1756,8 +1763,6 @@ def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 			Save the figure or not.
 
 	"""
-
-	mpl.use("TkAgg")
 
 	fig = plt.figure()
 	fig.canvas.set_window_title("Aggregate Gaze Heat Map")
