@@ -14,8 +14,8 @@ install:
   - pip3 install pytest>=3.6.0
   - pip3 install pytest-cov
 script:
-  - py.test tests/test.py --cov=codecov
-  - py.test tests/testStandAlone.py --cov=codecov
+  - coverage run tests/test.py
+  - coverage run tests/testStandAlone.py
 after_success:
   - coverage combine
   - codecov
