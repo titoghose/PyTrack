@@ -1,10 +1,5 @@
 
 # File types to ignore #
-*.jpg
-*.jpeg
-*.png
-*.tiff
-*.gif
 *.pyc
 *.db
 *.pickle
@@ -12,24 +7,15 @@
 *.h5
 *.hdf5
 *.h5py
-*.sql
 *.sqlite
 *.pyc
 *.ods
 *.xls
-*.csv
 .vscode
 .DS_Store
 .DS_Store?
 .Trashes
-test.py
-main.py
 .icaRejectionLog.p
 .vscode
-PyTrack/Results/
-PyTrack/Subjects/
-PyTrack/Stimuli/
-PyTrack/control_values/
-PyTrack/question_indices/
 PyTrack/__pycache__/
 docs/_build/*
