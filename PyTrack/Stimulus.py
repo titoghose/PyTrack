@@ -1330,10 +1330,7 @@ class Stimulus:
 		
 		"""
 
-		with open(self.json_file) as jf:
-			contents = json.load(jf)
-
-		frequency = contents["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
+		frequency = self.sensors["EyeTracker"].sampling_freq
 		
 		#To find number of rows that is equal to 4 ms, however if that is less than 4 rows then atleast 4 rows will be considered
 		no_rows = (frequency*4)/1000
@@ -1363,10 +1360,10 @@ class Stimulus:
 			else:
 				present_flag = -1
 
-			if(present_flag != previous_flag):
+			if present_flag != previous_flag:
 
 				try:
-					if(len(np.unique(np.array(data_array[i : i + no_rows], dtype = str))) == 1):
+					if len(np.unique(np.array(data_array[i : i + no_rows], dtype = str))) == 1:
 
 						if(present_flag == 1):
 							no_revisits += 1
@@ -1375,7 +1372,7 @@ class Stimulus:
 
 			#change the value of the previous_flag only if the next no_rows values are the same
 
-			if(len(np.unique(np.array(data_array[i : i + no_rows], dtype = str))) == 1):
+			if len(np.unique(np.array(data_array[i : i + no_rows], dtype = str))) == 1:
 				previous_flag = present_flag
 
 		return no_revisits
@@ -1398,10 +1395,7 @@ class Stimulus:
 
 		"""
 
-		with open(self.json_file) as jf:
-			contents = json.load(jf)
-
-		frequency = contents["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
+		frequency = self.sensors["EyeTracker"].sampling_freq
 		
 		#To find number of rows that is equal to 4 ms, however if that is less than 4 rows then atleast 4 rows will be considered
 		no_rows = (frequency*4)/1000
@@ -1434,9 +1428,9 @@ class Stimulus:
 			else: 
 				present_flag = -1
 
-			if(present_flag != previous_flag and present_flag == 1):
+			if present_flag != previous_flag and present_flag == 1:
 
-				if(len(np.unique(np.array(data_array[i : i+no_rows], dtype = str))) == 1):
+				if len(np.unique(np.array(data_array[i : i+no_rows], dtype = str))) == 1:
 
 					no_revisits += 1
 
@@ -1445,7 +1439,7 @@ class Stimulus:
 					elif(no_revisits == 2):
 						second_pass = i
 
-			if(present_flag != previous_flag and previous_flag == 1):
+			if present_flag != previous_flag and previous_flag == 1:
 
 					if(no_revisits == 1):
 						first_pass = i - first_pass
@@ -1453,7 +1447,7 @@ class Stimulus:
 						second_pass = i - second_pass
 						break
 
-			if(len(np.unique(np.array(data_array[i : i+no_rows], dtype = str))) == 1):			
+			if len(np.unique(np.array(data_array[i : i+no_rows], dtype = str))) == 1:			
 				previous_flag = present_flag
 
 		#converting rows into milliseconds
