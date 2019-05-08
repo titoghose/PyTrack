@@ -9,14 +9,14 @@ import pandas as pd
 import numpy as np
 
 # function to convert data to generate csv file for data file recorded using EyeLink on both eyes and the stimulus name specified in the message section
-generateCompatibleFormat(exp_path="NTU_Experiment/Data/sub_222.asc",
+generateCompatibleFormat(exp_path=os.path.abspath("NTU_Experiment/Data/sub_222.asc"),
                         device="eyelink", 
                         stim_list_mode='NA', 
                         start='start_trial', 
                         stop='stop_trial', 
                         eye='B')
 
-df = pd.read_csv("NTU_Experiment/Data/sub_222.csv")
+df = pd.read_csv(os.path.abspath("NTU_Experiment/Data/sub_222.csv"))
 
 # Dictionary containing details of recording. Please change the values according to your experiment. If no AOI is desired, set aoi_left values to (0, 0) and aoi_right to the same as Display_width and Display_height
 sensor_dict = {
@@ -33,7 +33,7 @@ sensor_dict = {
                }
 
 # Creating Stimulus object. See the documentation for advanced parameters.
-stim = Stimulus(path="NTU_Experiment",
+stim = Stimulus(path=os.path.abspath("NTU_Experiment"),
                data=df, 
                sensor_names=sensor_dict,
                start_time=0,
