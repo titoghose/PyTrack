@@ -9,7 +9,7 @@ from formatBridge import generateCompatibleFormat
 from Experiment import Experiment
 
 # function to convert data to generate database in base format for experiment done using EyeLink on both eyes and the stimulus name specified in the message section
-generateCompatibleFormat(exp_path=os.path.abspath("NTU_Experiment/Data"),
+generateCompatibleFormat(exp_path=os.path.abspath("Sample_Test_Folder/NTU_Experiment/Data"),
                         device="eyelink", 
                         stim_list_mode='NA', 
                         start='start_trial', 
@@ -17,7 +17,7 @@ generateCompatibleFormat(exp_path=os.path.abspath("NTU_Experiment/Data"),
                         eye='B')
                     
 # Creating an object of the Experiment class
-exp = Experiment(json_file=os.path.abspath("NTU_Experiment/NTU_Experiment.json"))
+exp = Experiment(json_file=os.path.abspath("Sample_Test_Folder/NTU_Experiment/NTU_Experiment.json"))
 
 # Instantiate the meta_matrix_dict of an Experiment to find and extract all features from the raw data
 exp.metaMatrixInitialisation(standardise_flag=False, 
