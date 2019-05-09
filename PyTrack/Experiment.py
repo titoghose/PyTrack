@@ -679,8 +679,8 @@ class Experiment:
 						aov.to_csv(csvFile)
 						writer.writerow("\n\n")
 				
-				if csvFile != None:
-					csvFile.close()
+		if csvFile != None:
+			csvFile.close()
 
 	def getMetaData(self, sub, stim=None, sensor="EyeTracker"):
 		"""Function to return the extracted features for a given subject/participant.
