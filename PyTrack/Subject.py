@@ -95,7 +95,7 @@ class SubjectVisualize:
 			if self.viz_type == "group":
 				stim_name = {stim.stim_type : stim_num}
 				# self.subject_window.destroy()
-				groupHeatMap(self.sub_list, stim_name, self.json_file)
+				groupHeatMap(self.sub_list, stim_name, self.json_file, save_fig=True)
 
 			else:
 				if self.save_var.get() == 1:
