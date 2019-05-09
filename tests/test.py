@@ -3,65 +3,133 @@ import os
 sys.path.append(os.path.abspath("../PyTrack"))
 sys.path.append(os.path.abspath("../PyTrack/PyTrack"))
 
-import json
 from formatBridge import generateCompatibleFormat
 from Experiment import Experiment
-
-# function to convert data to generate database in base format for experiment done using EyeLink on both eyes and the stimulus name specified in the message section
-generateCompatibleFormat(exp_path=os.path.abspath("tests/NTU_Experiment"),
-                        device="eyelink", 
-                        stim_list_mode='NA', 
-                        start='start_trial', 
-                        stop='stop_trial', 
-                        eye='B')
-                    
-# Creating an object of the Experiment class
-exp = Experiment(json_file=os.path.abspath("tests/NTU_Experiment/NTU_Experiment.json"))
-
-# Instantiate the meta_matrix_dict of an Experiment to find and extract all features from the raw data
-exp.metaMatrixInitialisation(standardise_flag=False, 
-                              average_flag=False)
+from Stimulus import Stimulus
+import pandas as pd
+import numpy as np
+import json
+import unittest
 
 
-# Calling the function for advanced statistical analysis of the data 
-# file_creation=True. Hence, the output of the data used to run the tests and the output of the tests will be stored in in the 'Results' folder inside your experiment folder
+class TestMethods(unittest.TestCase):
+    
+    def testExperimentDesign(self):
+        check = 0
+        try:
+            generateCompatibleFormat(exp_path=os.path.abspath("tests/NTU_Experiment"),
+                                device="eyelink", 
+                                stim_list_mode='NA', 
+                                start='start_trial', 
+                                stop='stop_trial', 
+                                eye='B')
+            check = 1
+        finally:
+            self.assertEqual(check, 1)
+        
+        check = 0
+        try:
+            exp = Experiment(json_file=os.path.abspath("tests/NTU_Experiment/NTU_Experiment.json"))
+            check = 1
+        finally:
+            self.assertEqual(check, 1)
+        
+        check = 0
+        try:
+            exp.metaMatrixInitialisation(standardise_flag=False, 
+                                    average_flag=False)
+            check = 1
+        finally:
+            self.assertEqual(check, 1)
 
-#############################################################
-## 1. Running anova on advanced between and within factors ##
-#############################################################
-exp.analyse(parameter_list={"all"}, 
-            between_factor_list=["Subject_type", "Gender"],
-            within_factor_list=["Stimuli_type"],
-            statistical_test="anova", 
-            file_creation=True)
+        check = 0
+        try:
+            exp.analyse(parameter_list={"all"}, 
+                        between_factor_list=["Subject_type", "Gender"],
+                        within_factor_list=["Stimuli_type"],
+                        statistical_test="anova", 
+                        file_creation=True)
 
-exp.analyse(parameter_list={"all"},
-            statistical_test="anova", 
-            file_creation=True)
+            exp.analyse(parameter_list={"all"},
+                        statistical_test="anova", 
+                        file_creation=True)
 
-exp.analyse(parameter_list={"all"}, 
-            statistical_test="ttest", 
-            file_creation=True)
+            exp.analyse(parameter_list={"all"}, 
+                        statistical_test="ttest", 
+                        file_creation=True)
 
-exp.analyse(parameter_list={"all"}, 
-            statistical_test="RM_anova", 
-            file_creation=True)
+            exp.analyse(parameter_list={"all"}, 
+                        statistical_test="RM_anova", 
+                        file_creation=True)
+            
+            exp.analyse(statistical_test="None", 
+                        file_creation=True)
 
-#############################################################
-## 2. Running no tests. Just storing analysis data in Results folder ##
-#############################################################
-exp.analyse(statistical_test="None", 
-            file_creation=True)
+            check = 1
+        finally:
+            self.assertEqual(check, 1)
+        
+        check = 0
+        try:
+            subject_name = "sub_222"
+            stimulus_name = "Alpha1"
 
-# In case you want the data for a particular participant/subject as a dictionary of values, use this
+            single_meta = exp.getMetaData(sub=subject_name, stim=stimulus_name)
 
-subject_name = "sub_222" #specify your own subject's name (must be in json file)
-stimulus_name = "Alpha1" #specify your own stimulus name (must be in json file)
+            agg_type_meta = exp.getMetaData(sub=subject_name, stim=None)
+        finally:
+            self.assertEqual(check, 1)
 
-# Access metadata dictionary for particular subject and stimulus
-single_meta = exp.getMetaData(sub=subject_name, 
-                              stim=stimulus_name)
+    def testStandaloneDesign(self):
+        check = 0
+        try:
+            generateCompatibleFormat(exp_path=os.path.abspath("tests/NTU_Experiment/Data/sub_222.asc"),
+                            device="eyelink", 
+                            stim_list_mode='NA', 
+                            start='start_trial', 
+                            stop='stop_trial', 
+                            eye='B')
+            df = pd.read_csv(os.path.abspath("tests/NTU_Experiment/Data/sub_222.csv"))
+            check = 1
+        finally:
+            self.assertEqual(check, 1)
+        
+        check = 0
+        try:
+            sensor_dict = {
+                            "EyeTracker":
+                            {
+                                "Sampling_Freq": 1000,
+                                "Display_width": 1280,
+                                "Display_height": 1024,
+                                "aoi_left_x": 0,
+                                "aoi_left_y": 0,
+                                "aoi_right_x": 1280,
+                                "aoi_right_y": 1024
+                            }
+                        }
 
-# Access metadata dictionary for particular subject and averaged for stimulus types
-agg_type_meta = exp.getMetaData(sub=subject_name, 
-                                 stim=None)
+            stim = Stimulus(path=os.path.abspath("tests/NTU_Experiment"),
+                        data=df, 
+                        sensor_names=sensor_dict,
+                        start_time=0,
+                        end_time=6000)
+            
+            check = 1
+        finally:
+            self.assertEqual(check, 1)
+
+        check = 0
+        try:
+            stim.findEyeMetaData()
+            features = stim.sensors["EyeTracker"].metadata
+            stim.findMicrosaccades(plot_ms=True)
+            stim.gazePlot(show_fig=False, save_fig=True)
+            stim.gazeHeatMap(show_fig=False, save_fig=True)
+            stim.visualize(show=False)
+            check = 1
+        finally:
+            self.assertEqual(check, 1)
+
+if __name__ == '__main__':
+    unittest.main()

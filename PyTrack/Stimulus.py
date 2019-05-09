@@ -1192,7 +1192,7 @@ class Stimulus:
 			fig.savefig(self.path + "/Subjects/" + self.subject_name + "/gaze_heatmap_" + self.name + ".png", dpi=300)
 
 
-	def visualize(self):
+	def visualize(self, show=True):
 		"""Function to create dynamic plot of gaze and pupil size.
 		
 		Internal function of class that uses its `data` member variable. Does not take any input and can be invoked by an object of the class.
@@ -1309,7 +1309,8 @@ class Stimulus:
 
 		ani = animation.FuncAnimation(fig, update_plot, interval=1)
 
-		plt.show()
+		if show:
+			plt.show()		
 
 
 	def numberRevisits(self, data_array):
