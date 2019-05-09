@@ -16,7 +16,7 @@ from scipy import signal, io, stats, misc
 from scipy.ndimage.filters import gaussian_filter
 import math
 
-from PyTrack.Sensor import Sensor
+from Sensor import Sensor
 
 class Stimulus:
 	"""This is the main class that performs analysis and visualization of data collected during presentation of various stimuli during the experiment. 

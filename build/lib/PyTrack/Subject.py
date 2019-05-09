@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 
-import os
 import json
+import pandas as pd
+import numpy as np
+from Stimulus import Stimulus, groupHeatMap
+from Sensor import Sensor
+from sqlalchemy import create_engine
+import os
 import pickle
 import tkinter as tk
 from datetime import datetime
+from matplotlib.widgets import TextBox
+import matplotlib.pyplot as plt
 from functools import partial
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from sqlalchemy import create_engine
-from matplotlib.widgets import TextBox
-
-from PyTrack.Stimulus import Stimulus, groupHeatMap
-from PyTrack.Sensor import Sensor
 
 class SubjectVisualize:
 	

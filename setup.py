@@ -4,14 +4,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="PyLogy-titoghose",
+    name="PyTrack-NTU",
     version="0.0.1",
     author="Upamanyu Ghose, Arvind Srinivasan",
     author_email="titoghose@gmail.com, 96arvind@gmail.com",
     description="A small example package",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/titoghose/PyLogy",
+    url="https://github.com/titoghose/PyTrack",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -19,12 +19,13 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-          'numpy',
-          'scipy',
-          'pingouin',
-          'sqlalchemy',
-          'pandas',
-          'matplotlib',
-          'statsmodels'
+        "numpy==1.16.2",
+        "scipy==1.2.1",
+        "pingouin==0.2.2",
+        "sqlalchemy",
+        "pandas==0.23.4",
+        "matplotlib==3.0.2",
+        "statsmodels==0.9.0",
+        "Pillow"
       ]
 )

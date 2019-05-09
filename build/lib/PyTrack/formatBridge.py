@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import os
-import json
-from datetime import datetime
-
-import numpy as np
-import pandas as pd
+from etDataReader import read_edf, read_idf, read_tobii
 from sqlalchemy import create_engine
+from datetime import datetime
+import pandas as pd
+import numpy as np
+import json
+import os
 
-from PyTrack.etDataReader import read_edf, read_idf, read_tobii
 
 def getColHeaders():
     """Function to return the column headers for the *PyTrack* base format data representation.

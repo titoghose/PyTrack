@@ -10,6 +10,7 @@ from datetime import datetime
 from functools import partial
 import csv
 
+
 import numpy as np
 import pandas as pd
 import pingouin as pg
@@ -21,8 +22,9 @@ from sqlalchemy import create_engine
 from matplotlib.widgets import RadioButtons, RectangleSelector
 from matplotlib.patches import Rectangle
 
-from PyTrack.Sensor import Sensor
-from PyTrack.Subject import Subject
+
+from Sensor import Sensor
+from Subject import Subject
 
 
 class Visualize:
