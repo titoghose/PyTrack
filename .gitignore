@@ -21,3 +21,4 @@ PyTrack/__pycache__/
 docs/_build/*
 dist
 *.egg-info
+build
