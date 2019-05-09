@@ -21,7 +21,7 @@ from PyTrack.Subject import Subject
 
 
 class Visualize:
-	
+
 	def __init__(self, master, subjects, exp):
 		self.exp = exp
 		master.title("PyTrack Visualization")
@@ -33,7 +33,7 @@ class Visualize:
 		self.sub_frame = tk.Frame(self.master_frame, height=30, width=70)
 		self.sub_frame.grid_propagate(False)
 		self.text = tk.Text(self.sub_frame, width=50)
-		
+
 		self.submit_frame = tk.Frame(self.root, width=70)
 		func = partial(self.button_click)
 		self.submit_btn = tk.Button(self.submit_frame, text="Visualize", command=func)
@@ -43,17 +43,17 @@ class Visualize:
 		tk.Radiobutton(viz_type_frame, text="Group Visualization", padx=20, variable=self.v, value=1, command=self.subFrameSetup).pack(side="left", anchor=tk.W)
 		tk.Radiobutton(viz_type_frame, text="Individual Visualization", padx=20, variable=self.v, value=2, command=self.subFrameSetup).pack(side="right", anchor=tk.W)
 		viz_type_frame.pack(side="top", fill="both", expand=True)
-		
+
 		self.master_frame.pack()
 		# self.subFrameSetup()
 
 	def subFrameSetup(self):
-		
+
 		self.sub_frame.destroy()
 		self.submit_frame.pack_forget()
 
 		if self.v.get() == 1:
-			
+
 			self.sub_frame = tk.Frame(self.master_frame, height=30, width=70)
 			self.sub_frame.grid_propagate(False)
 			self.text = tk.Text(self.sub_frame, width=50)
@@ -64,12 +64,12 @@ class Visualize:
 				func = partial(self.button_click, sub)
 				chk_bt = tk.Checkbutton(self.sub_frame, text=sub.name, variable=self.chk_bt_var[i], onvalue=1, offvalue=0)
 				self.text.window_create(tk.END, window=chk_bt)
-				self.text.insert(tk.END, "\n")	
-			
+				self.text.insert(tk.END, "\n")
+
 			self.submit_frame.pack(side="bottom", fill="both", expand=True)
 
 		else:
-			
+
 			self.sub_frame = tk.Frame(self.master_frame, height=30, width=70)
 			self.sub_frame.grid_propagate(False)
 			self.text = tk.Text(self.sub_frame, width=50)
@@ -82,9 +82,9 @@ class Visualize:
 
 		vsb = tk.Scrollbar(self.sub_frame, orient="vertical")
 		vsb.config(command=self.text.yview)
-		
+
 		self.text.configure(yscrollcommand=vsb.set)
-		
+
 		self.text.pack(side="left", fill="both", expand=True)
 		vsb.pack(side="right", fill="y")
 
@@ -96,7 +96,7 @@ class Visualize:
 			for ind, i in enumerate(self.chk_bt_var):
 				if i.get() == 1:
 					sub_list.append(self.subjects[ind])
-			
+
 			sub_list[0].subjectVisualize(self.root, viz_type="group", sub_list=sub_list)
 
 		else:
@@ -131,7 +131,7 @@ class Experiment:
 		self.name = json_data["Experiment_name"]
 		self.json_file = json_file #string
 		self.sensors = ["EyeTracker"]
-		
+
 		self.aoi_coords = None
 		# Setting AOI coordinates
 		if isinstance(aoi, str):
@@ -141,22 +141,22 @@ class Experiment:
 				self.aoi_coords = (0, 0, json_data["Analysis_Params"]["EyeTracker"]["Display_width"], json_data["Analysis_Params"]["EyeTracker"]["Display_height"])
 		else:
 			self.aoi_coords = aoi
-		
+
 		json_data["Analysis_Params"]["EyeTracker"]["aoi_left_x"] = self.aoi_coords[0]
-		json_data["Analysis_Params"]["EyeTracker"]["aoi_left_y"] = self.aoi_coords[1] 
+		json_data["Analysis_Params"]["EyeTracker"]["aoi_left_y"] = self.aoi_coords[1]
 		json_data["Analysis_Params"]["EyeTracker"]["aoi_right_x"] = self.aoi_coords[2]
 		json_data["Analysis_Params"]["EyeTracker"]["aoi_right_y"] = self.aoi_coords[3]
 		with open(self.json_file, "w") as f:
 			json.dump(json_data, f, indent=4)
-		
+
 		self.columns = self.columnsArrayInitialisation()
 		self.stimuli = self.stimuliArrayInitialisation() #dict of names of stimuli demarcated by category
 		self.subjects = self.subjectArrayInitialisation(reading_method) #list of subject objects
 		self.meta_matrix_dict = (np.ndarray(len(self.subjects), dtype=str), dict())
-	
+
 		if not os.path.isdir(self.path + '/Subjects/'):
 			os.makedirs(self.path + '/Subjects/')
-		
+
 
 	def stimuliArrayInitialisation(self):
 		"""This functions instantiates the dictionary `stimuli` with the list of names of the different stimuli by category
@@ -184,7 +184,7 @@ class Experiment:
 
 			if isinstance(stimuli_data[k], list):
 				data_dict[k] = stimuli_data[k]
-			
+
 			elif isinstance(stimuli_data[k], dict):
 				#Need to create a list of names of the stimuli
 				list_stimuli = []
@@ -210,7 +210,7 @@ class Experiment:
 		-------
 		subject_list : list(Subject objects)
 			list of objects of class Subject
-		
+
 		"""
 
 		with open(self.json_file) as json_f:
@@ -224,7 +224,7 @@ class Experiment:
 			name_of_database = json_data["Experiment_name"]
 			extended_name = "sqlite:///" + self.path + "/Data/" + name_of_database + ".db"
 			database = create_engine(extended_name)
-		
+
 		elif reading_method == "CSV":
 			database = self.path + "/Data/csv_files/"
 
@@ -239,7 +239,7 @@ class Experiment:
 				for _, subject_name in enumerate(subject_data[k]):
 					subject_object = Subject(self.path, subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database, reading_method, self.aoi_coords)
 					subject_list.append(subject_object)
-			
+
 			else:
 				print("The Subject subsection of the json file is not defined properly")
 
@@ -261,7 +261,7 @@ class Experiment:
 		-------
 		columns_list: list(str)
 			List of names of columns of interest
-		
+
 		"""
 
 		with open(self.json_file) as json_f:
@@ -283,7 +283,7 @@ class Experiment:
 		"""Function to open up the GUI for visualizing the data of the experiment.
 
 		This function can be invoked by an `Experiment <#module-Experiment>`_ object. It opens up a window and allows the usee to visualize data such as dynamic gaze and pupil plots, fixation plots and gaze heat maps for individual subjects or aggregate heat maps for a group of subjects on a given stimulus.
-		
+
 		"""
 
 		root = tk.Tk()
@@ -291,7 +291,7 @@ class Experiment:
 		_ = Visualize(root, self.subjects, self)
 		root.mainloop()
 
-	
+
 	def metaMatrixInitialisation(self, standardise_flag=False, average_flag=False):
 		"""This function instantiates the ``meta_matrix_dict`` with values that it extracts from the ``aggregate_meta`` variable of each Subject object.
 
@@ -322,7 +322,7 @@ class Experiment:
 
 
 	def return_index(self, meta, value_index,sub_index,stimuli_index):
-		
+
 		if meta in ["sacc_duration", "sacc_vel", "sacc_amplitude"]:
 
 			value_array = self.meta_matrix_dict[1]["sacc_count"][sub_index,stimuli_index]
@@ -334,9 +334,9 @@ class Experiment:
 
 				if value_array[i] == 0:
 					summation_array.append(-1)
-				else:	
+				else:
 					sum_value = sum_value + value_array[i]
-					summation_array.append(sum_value)	
+					summation_array.append(sum_value)
 
 			summation_array.append(10000)
 
@@ -391,13 +391,13 @@ class Experiment:
 
 	def analyse(self, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation=True, ttest_type=1):
 		"""This function carries out the required statistical analysis.
-		
+
 		 The analysis is carried out on the specified indicators/parameters using the data extracted from all the subjects that were mentioned in the json file. There are 4 different tests that can be run, namely - Mixed ANOVA, Repeated Measures ANOVA, T Test and Simple ANOVA (both 1 and 2 way)
 
 		Parameters
 		----------
 		parameter_list: set (optional)
-			Set of the different indicators/parameters (Pupil_size, Blink_rate) on which statistical analysis is to be performed, by default it will be "all" so that all the parameter are considered. 
+			Set of the different indicators/parameters (Pupil_size, Blink_rate) on which statistical analysis is to be performed, by default it will be "all" so that all the parameter are considered.
 		between_factor_list: list(str) (optional)
 			List of between group factors, by default it will only contain "Subject_type"
 			If any additional parameter (eg: Gender) needs to be considered, then the list will be: between_factor_list = ["Subject_type", "Gender"]
@@ -454,7 +454,7 @@ class Experiment:
 			directory_path = json_data["Path"] + "/Results"
 			if not os.path.isdir(directory_path):
 				os.mkdir(directory_path)
-			
+
 			if not os.path.isdir(directory_path + '/Data/'):
 				os.mkdir(directory_path + '/Data/')
 
@@ -462,7 +462,7 @@ class Experiment:
 				file_path = directory_path + "/" + statistical_test + ".csv"
 				csvFile = open(file_path, 'w')
 				writer = csv.writer(csvFile)
-	
+
 
 		meta_not_to_be_considered = ["pupil_size", "pupil_size_downsample"]
 
@@ -500,7 +500,7 @@ class Experiment:
 					for stimuli_index, stimuli_type in enumerate(sub.aggregate_meta):
 						#Value is an array (NTBC : Is it always an array or can it also be a single value?)
 						value_array = self.meta_matrix_dict[1][meta][sub_index,stimuli_index]
-						
+
 						index_extra = 0
 
 						for value_index, _ in enumerate(value_array):
@@ -532,7 +532,7 @@ class Experiment:
 									print("Between subject paramter: ", param, " not defined in the json file")
 
 							for param in within_factor_list:
-								
+
 								if param == "Stimuli_type":
 									row.append(stimuli_type)
 									continue
@@ -574,15 +574,15 @@ class Experiment:
 						writer.writerow("\n")
 						aov.to_csv(csvFile)
 						writer.writerow("\n")
-						
+
 					posthocs = pg.pairwise_ttests(dv=meta, within=within_factor_list[0], between=between_factor_list[0], subject='subject', data=data)
 					pg.print_table(posthocs)
 
 					if file_creation:
-						
+
 						values_list = ["Post Hoc Analysis"]
 						writer.writerow(values_list)
-						writer.writerow("\n")					
+						writer.writerow("\n")
 						posthocs.to_csv(csvFile)
 						writer.writerow("\n\n")
 
@@ -596,11 +596,11 @@ class Experiment:
 					pg.print_table(aov)
 
 					if file_creation:
-						
+
 						values_list = ["Repeated Measures Anova: "]
 						values_list.append(meta)
 						writer.writerow(values_list)
-						writer.writerow("\n")					
+						writer.writerow("\n")
 						aov.to_csv(csvFile)
 						writer.writerow("\n\n")
 
@@ -624,11 +624,11 @@ class Experiment:
 					print(res)
 
 					if file_creation:
-						
+
 						values_list = ["Anova including interaction effect: "]
 						values_list.append(meta)
 						writer.writerow(values_list)
-						writer.writerow("\n")					
+						writer.writerow("\n")
 						res.to_csv(csvFile)
 						writer.writerow("\n\n")
 
@@ -641,18 +641,18 @@ class Experiment:
 					print(res)
 
 					if file_creation:
-						
+
 						values_list = ["Anova excluding interaction effect: "]
 						values_list.append(meta)
 						writer.writerow(values_list)
-						writer.writerow("\n")		
+						writer.writerow("\n")
 						res.to_csv(csvFile)
 						writer.writerow("\n\n")
 
 				elif statistical_test == "ttest":
 
 					print(meta, ":\tt test")
-					
+
 					if ttest_type==1:
 						aov = pg.pairwise_ttests(dv=meta, between=between_factor_list, subject='subject', data=data)
 						pg.print_table(aov)
@@ -665,16 +665,16 @@ class Experiment:
 					else:
 						print("The value given to ttest_type is not acceptable, it must be either 1 or 2 or 3")
 
-					
+
 					if file_creation:
-						
+
 						values_list = ["Pairwise ttest: "]
 						values_list.append(meta)
 						writer.writerow(values_list)
-						writer.writerow("\n")					
+						writer.writerow("\n")
 						aov.to_csv(csvFile)
 						writer.writerow("\n\n")
-				
+
 		if csvFile != None:
 			csvFile.close()
 
@@ -690,21 +690,21 @@ class Experiment:
 			Name of the stimulus. If 'str', the features of the given stimulus will be returned. If ``None``, the features of all stimuli averaged for the different stimuli types (as mentoned in json file) is wanted.
 		sensor : str
 			Name of the sensor for which the features is wanted.
-		
+
 		Returns
 		-------
 		dict
-			
+
 		Note
 		----
 		- If the `stim` is ``None``, the returned dictionary is organised as follows
 			{"Stim_TypeA": {"meta1":[], "meta2":[], ...}, "Stim_TypeB": {"meta1":[], "meta2":[], ...}, ...}
 		- If the `stim` is ``str``, the returned dictionary is organised as follows
 			{"meta1":[], "meta2":[], ...}
-			
+
 		To get the names of all the metadata/features extracted, look at the `Sensor <#module-Sensor>`_ class
 
-		"""		
+		"""
 		if stim == None:
 			sub_ind = -1
 			for ind, subject in enumerate(self.subjects):
@@ -712,14 +712,14 @@ class Experiment:
 					sub_ind = ind
 					break
 			return self.subjects[sub_ind].aggregate_meta
-		
+
 		else:
 			sub_ind = -1
 			for ind, subject in enumerate(self.subjects):
 				if subject.name == sub:
 					sub_ind = ind
 					break
-			
+
 			stim_cat = ""
 			stim_ind = -1
 			for cat in self.stimuli:
@@ -727,10 +727,10 @@ class Experiment:
 					stim_ind = self.stimuli[cat].index(stim)
 					stim_cat = cat
 					break
-			
+
 			return self.subjects[sub_ind].stimulus[stim_cat][stim_ind].sensors[sensor].metadata
 
-	
+
 	def drawAOI(self):
 		"""Function that allows speicification of area of interest (AOI) for analysis.
 
@@ -738,7 +738,7 @@ class Experiment:
 
 		with open(self.json_file, "r") as f:
 			json_data = json.load(f)
-		
+
 		aoi_left_x = 0
 		aoi_left_y = 0
 		aoi_right_x = 0
@@ -749,7 +749,7 @@ class Experiment:
 
 		cnt = 0
 		img = None
-		
+
 		if os.path.isdir(self.path + "/Stimuli/"):
 			for f in os.listdir(self.path + "/Stimuli/"):
 				if f.split(".")[-1] in ['jpg', 'jpeg', 'png']:
@@ -769,13 +769,13 @@ class Experiment:
 
 			aoi_left_x, aoi_left_y = int(round(eclick.xdata)), int(round(eclick.ydata))
 			aoi_right_x, aoi_right_y = int(round(erelease.xdata)), int(round(erelease.ydata))
-			
+
 			print("Coordinates [(start_x, start_y), (end_x, end_y)]: ", "[(%6.2f, %6.2f), (%6.2f, %6.2f)]" % (aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y))
 
 		RS = RectangleSelector(ax, line_select_callback, drawtype='box', useblit=False, button=[1],  minspanx=5, minspany=5, spancoords='pixels',interactive=True)
 
 		RS.to_draw.set_visible(True)
-		
+
 		plt.show()
-		
+
 		return (aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y)

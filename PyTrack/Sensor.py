@@ -2,7 +2,7 @@
 
 class Sensor:
 	"""This class represents the paramters of the sensors used during the experiment.
-	
+
 	As of now the sensor class only support the Eye Tracker but in future versions, we plan to include EEG, ECG, EDA and Respiration as well. The class is used to store all the metadata/features extracted during analysis.
 
 	Attributes

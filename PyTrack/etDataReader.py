@@ -6,7 +6,7 @@ import numpy
 
 def blink_detection(x, y, time, missing=0.0, minlen=10):
 	"""Detects blinks, defined as a period of missing data that lasts for at least a minimal amount of samples
-	
+
 	Parameters
 	----------
 	x : array
@@ -17,9 +17,9 @@ def blink_detection(x, y, time, missing=0.0, minlen=10):
 		Timestamps
 	missing	: float
 		Value to be used for missing data (default = 0.0)
-	minlen : int 
+	minlen : int
 		Minimal amount of consecutive missing samples
-	
+
 	Returns
 	-------
 	Sblk : list of lists
@@ -28,21 +28,21 @@ def blink_detection(x, y, time, missing=0.0, minlen=10):
 		Each containing [starttime, endtime, duration]
 
 	"""
-	
+
 	# empty list to contain data
 	Sblk = []
 	Eblk = []
-	
+
 	# check where the missing samples are
 	mx = numpy.array(x==missing, dtype=int)
 	my = numpy.array(y==missing, dtype=int)
 	miss = numpy.array((mx+my) == 2, dtype=int)
-	
+
 	# check where the starts and ends are (+1 to counteract shift to left)
 	diff = numpy.diff(miss)
 	starts = numpy.where(diff==1)[0] + 1
 	ends = numpy.where(diff==-1)[0] + 1
-	
+
 	# compile blink starts and ends
 	for i in range(len(starts)):
 		# get starting index
@@ -61,13 +61,13 @@ def blink_detection(x, y, time, missing=0.0, minlen=10):
 			Sblk.append([time[s]])
 			# add ending time
 			Eblk.append([time[s],time[e],time[e]-time[s]])
-	
+
 	return Sblk, Eblk
 
 
 def fixation_detection(x, y, time, missing=0.0, maxdist=25, mindur=50):
 	"""Detects fixations, defined as consecutive samples with an inter-sample distance of less than a set amount of pixels (disregarding missing data)
-	
+
 	Parameters
 	----------
 	x : array
@@ -82,7 +82,7 @@ def fixation_detection(x, y, time, missing=0.0, maxdist=25, mindur=50):
 		Maximal inter sample distance in pixels (default = 25)
 	mindur : int
 		Minimal duration of a fixation in milliseconds; detected fixation cadidates will be disregarded if they are below this duration (default = 100)
-	
+
 	Returns
 	-------
 	Sfix : list of lists
@@ -91,11 +91,11 @@ def fixation_detection(x, y, time, missing=0.0, maxdist=25, mindur=50):
 		Each containing [starttime, endtime, duration, endx, endy]
 
 	"""
-	
+
 	# empty list to contain data
 	Sfix = []
 	Efix = []
-	
+
 	# loop through all coordinates
 	si = 0
 	fixstart = False
@@ -121,13 +121,13 @@ def fixation_detection(x, y, time, missing=0.0, maxdist=25, mindur=50):
 			si = 0 + i
 		elif not fixstart:
 			si += 1
-	
+
 	return Sfix, Efix
 
 
 def saccade_detection(x, y, time, missing=0.0, minlen=5, maxvel=40, maxacc=340):
 	"""Detects saccades, defined as consecutive samples with an inter-sample velocity of over a velocity threshold or an acceleration threshold
-	
+
 	Parameters
 	----------
 	x : array
@@ -144,7 +144,7 @@ def saccade_detection(x, y, time, missing=0.0, minlen=5, maxvel=40, maxacc=340):
 		Velocity threshold in pixels/second (default = 40)
 	maxacc : int
 		Acceleration threshold in pixels / second**2 (default = 340)
-	
+
 	Returns
 	-------
 	Ssac : list of lists
@@ -153,7 +153,7 @@ def saccade_detection(x, y, time, missing=0.0, minlen=5, maxvel=40, maxacc=340):
 		Each containing [starttime, endtime, duration, startx, starty, endx, endy]
 
 	"""
-	
+
 	# CONTAINERS
 	Ssac = []
 	Esac = []
@@ -166,7 +166,7 @@ def saccade_detection(x, y, time, missing=0.0, minlen=5, maxvel=40, maxacc=340):
 	inttime = numpy.diff(time)
 	# recalculate inter-sample times to seconds
 	inttime = inttime / 1000.0
-	
+
 	# VELOCITY AND ACCELERATION
 	# the velocity between samples is the inter-sample distance
 	# divided by the inter-sample time
@@ -182,7 +182,7 @@ def saccade_detection(x, y, time, missing=0.0, minlen=5, maxvel=40, maxacc=340):
 		# saccade start (t1) is when the velocity or acceleration
 		# surpass threshold, saccade end (t2) is when both return
 		# under threshold
-	
+
 		# detect saccade starts
 		sacstarts = numpy.where((vel[1+t0i:] > maxvel).astype(int) + (acc[t0i:] > maxacc).astype(int) >= 1)[0]
 		if len(sacstarts) > 0:
@@ -191,10 +191,10 @@ def saccade_detection(x, y, time, missing=0.0, minlen=5, maxvel=40, maxacc=340):
 			if t1i >= len(time)-1:
 				t1i = len(time)-2
 			t1 = time[t1i]
-			
+
 			# add to saccade starts
 			Ssac.append([t1])
-			
+
 			# detect saccade endings
 			sacends = numpy.where((vel[1+t1i:] < maxvel).astype(int) + (acc[t1i:] < maxacc).astype(int) == 2)[0]
 			if len(sacends) > 0:
@@ -219,13 +219,13 @@ def saccade_detection(x, y, time, missing=0.0, minlen=5, maxvel=40, maxacc=340):
 				stop = True
 		else:
 			stop = True
-	
+
 	return Ssac, Esac
 
 
 def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 	"""Returns a list with dicts for every trial.
-		
+
 	Parameters
 	----------
 	filename : str
@@ -238,7 +238,7 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 		Value to be used for missing data (default = 0.0)
 	debug : bool
 		Indicating if DEBUG mode should be on or off; if DEBUG mode is on, information on what the script currently is doing will be printed to the console (default = False)
-	
+
 	Returns
 	-------
 	data : list
@@ -254,18 +254,18 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 
 	# # # # #
 	# debug mode
-	
+
 	if debug:
 		def message(msg):
 			print(msg)
 	else:
 		def message(msg):
 			pass
-		
-	
+
+
 	# # # # #
 	# file handling
-	
+
 	# check if the file exists
 	if os.path.isfile(filename):
 		# open file
@@ -274,19 +274,19 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 	# raise exception if the file does not exist
 	else:
 		raise Exception("Error in read_idf: file '%s' does not exist" % filename)
-	
+
 	# read file contents
 	message("reading file '%s'" % filename)
 	raw = f.readlines()
-	
+
 	# close file
 	message("closing file '%s'" % filename)
 	f.close()
 
-	
+
 	# # # # #
 	# parse lines
-	
+
 	# variables
 	data = []
 	x_l = []
@@ -302,7 +302,7 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 	started = False
 	trialend = False
 	filestarted = False
-	
+
 	timei = None
 	typei = None
 	msgi = -1
@@ -312,7 +312,7 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 
 	# loop through all lines
 	for i in range(len(raw)):
-		
+
 		# string to list
 		line = raw[i].replace('\n','').replace('\r','').split('\t')
 		# check if the line starts with '##' (denoting header)
@@ -323,7 +323,7 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 			# check the indexes for several key things we want to extract
 			# (we need to do this, because ASCII outputs of the IDF reader
 			# are different, based on whatever the user wanted to extract)
-			
+
 			timei = line.index("Time")
 			typei = line.index("Type")
 			msgi = -1
@@ -361,7 +361,7 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 
 			# # # # #
 			# trial ending
-			
+
 			if trialend:
 				message("trialend %d; %d samples found" % (len(data),len(x_l)))
 				# message("trialend %d; %d x_r samples found" % (len(data),len(x_r)))
@@ -397,7 +397,7 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 				trackertime = []
 				events = {'Sfix':[],'Ssac':[],'Sblk':[],'Efix':[],'Esac':[],'Eblk':[],'msg':[]}
 				trialend = False
-				
+
 		# check if the current line contains start message
 		else:
 			if start in line[msgi]:
@@ -406,10 +406,10 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 				started = True
 				# find starting time
 				starttime = int(line[timei])
-		
+
 		# # # # #
 		# parse line
-		
+
 		if started:
 			# message lines will usually start with a timestamp, followed
 			# by 'MSG', the trial number and the actual message, e.g.:
@@ -418,7 +418,7 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 				t = int(line[timei]) # time
 				m = line[msgi] # message
 				events['msg'].append([t,m])
-			
+
 			# regular lines will contain tab separated values, beginning with
 			# a timestamp, follwed by the values that were chosen to be
 			# extracted by the IDF converter
@@ -455,7 +455,7 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 								line[vi['L']] = str(missing)
 							val_r = float(line[vi['R']])
 							val_l = float(line[vi['L']])
-						
+
 						if ind == 0:
 							x_l.append(val_l)
 							x_r.append(val_r)
@@ -472,31 +472,31 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 
 				except:
 					message("line '%s' could not be parsed" % line)
-					continue # skip this line	
-	
+					continue # skip this line
+
 	# # # # #
 	# return
-	
+
 	return data
 
 
 def replace_missing(value, missing=0.0):
 	"""Returns missing code if passed value is missing, or the passed value if it is not missing; a missing value in the EDF contains only a period, no numbers; NOTE: this function is for gaze position values only, NOT for pupil size, as missing pupil size data is coded '0.0'
-	
+
 	Parameters
 	----------
 	value : str
 		Either an X or a Y gaze position value (NOT pupil size! This is coded '0.0')
 	missing : float
 		The missing code to replace missing data with (default = 0.0)
-	
+
 	Returns
 	-------
 	float
 		Either a missing code, or a float value of the gaze position
-	
+
 	"""
-	
+
 	if value.replace(' ','') == '.':
 		return missing
 	else:
@@ -505,7 +505,7 @@ def replace_missing(value, missing=0.0):
 
 def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 	"""Returns a list with dicts for every trial.
-		
+
 	Parameters
 	----------
 	filename : str
@@ -531,23 +531,23 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 		3. time -array of timestamps, t=0 at trialstart,
 		4. trackertime -array of timestamps, according to the tracker,
 		5. events -dict {Sfix, Ssac, Sblk, Efix, Esac, Eblk, msg}
-				
+
 	"""
 
 	# # # # #
 	# debug mode
-	
+
 	if debug:
 		def message(msg):
 			print(msg)
 	else:
 		def message(msg):
 			pass
-		
-	
+
+
 	# # # # #
 	# file handling
-	
+
 	# check if the file exists
 	if os.path.isfile(filename):
 		# open file
@@ -556,19 +556,19 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 	# raise exception if the file does not exist
 	else:
 		raise Exception("Error in read_edf: file '%s' does not exist" % filename)
-	
+
 	# read file contents
 	message("reading file '%s'" % filename)
 	raw = f.readlines()
-	
+
 	# close file
 	message("closing file '%s'" % filename)
 	f.close()
 
-	
+
 	# # # # #
 	# parse lines
-	
+
 	# variables
 	data = []
 	x_l = []
@@ -587,16 +587,16 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 	fixation_flag = 0
 	saccade_flag = 0
 	blink_flag = 0
-	
+
 	which_eye = ''
 	if eye == 'B':
 		which_eye = 'L'
 	else:
 		which_eye = eye
-	
+
 	# loop through all lines
 	for line in raw:
-		
+
 		# check if trial has already started
 		if started:
 			# only check for stop if there is one
@@ -612,10 +612,10 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 					fixation_flag = 0
 					saccade_flag = 0
 					blink_flag = 0
-			
+
 			# # # # #
 			# trial ending
-			
+
 			if trialend:
 				message("trialend %d; %d samples found" % (len(data),len(x_l)))
 				# trial dict
@@ -642,7 +642,7 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 				trackertime = []
 				events = {'Sfix':[],'Ssac':[],'Sblk':[],'Efix':[],'Esac':[],'Eblk':[],'msg':[]}
 				trialend = False
-				
+
 		# check if the current line contains start message
 		else:
 			if start in line:
@@ -654,10 +654,10 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 				fixation_flag = 0
 				saccade_flag = 0
 				blink_flag = 0
-		
+
 		# # # # #
 		# parse line
-		
+
 		if started:
 			# message lines will start with MSG, followed by a tab, then a
 			# timestamp, a space, and finally the message, e.g.:
@@ -667,11 +667,11 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 				t = int(line[4:ms]) # time
 				m = line[ms+1:] # message
 				events['msg'].append([t,m])
-	
+
 			# EDF event lines are constructed of 9 characters, followed by
 			# tab separated values; these values MAY CONTAIN SPACES, but
 			# these spaces are ignored by float() (thank you Python!)
-					
+
 			# fixation start
 			elif line[0:6] == ("SFIX " + which_eye):
 				message("fixation start")
@@ -694,7 +694,7 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 				sy = replace_missing(l[4], missing=missing) # y position
 				events['Efix'].append([st, et, dur, sx, sy])
 				fixation_flag = 0
-			
+
 			# saccade start
 			elif line[0:7] == ("SSACC " + which_eye):
 				message("saccade start")
@@ -740,7 +740,7 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 				dur = int(l[2])
 				events['Eblk'].append([st,et,dur])
 				blink_flag = 0
-			
+
 			# regular lines will contain tab separated values, beginning with
 			# a timestamp, follwed by the values that were asked to be stored
 			# in the EDF and a mysterious '...'. Usually, this comes down to
@@ -758,7 +758,7 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 				except:
 					message("line '%s' could not be parsed" % line)
 					continue # skip this line
-				
+
 				try:
 					float(l[1])
 				except:
@@ -768,7 +768,7 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 					if len(l) > 5:
 						l[4] = missing
 						l[5] = missing
-						l[6] = missing	
+						l[6] = missing
 
 				# extract data
 				x_l.append(float(l[1]))
@@ -789,20 +789,20 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 					x_r.append(float(l[1]))
 					y_r.append(float(l[2]))
 					size_r.append(float(l[3]))
-				
+
 				time.append(int(l[0])-starttime)
 				trackertime.append(int(l[0]))
-	
-	
+
+
 	# # # # #
 	# return
-	
+
 	return data
 
 
 def read_tobii(filename, start, stop=None, missing=0.0, debug=False):
 	"""Returns a list with dicts for every trial.
-		
+
 	Parameters
 	----------
 	filename : str
@@ -815,7 +815,7 @@ def read_tobii(filename, start, stop=None, missing=0.0, debug=False):
 		Value to be used for missing data (default = 0.0)
 	debug : bool
 		Indicating if DEBUG mode should be on or off; if DEBUG mode is on, information on what the script currently is doing will be printed to the console (default = False)
-	
+
 	Returns
 	-------
 	data : list
@@ -826,6 +826,6 @@ def read_tobii(filename, start, stop=None, missing=0.0, debug=False):
 		3. time -array of timestamps, t=0 at trialstart,
 		4. trackertime -array of timestamps, according to the tracker,
 		5. events -dict {Sfix, Ssac, Sblk, Efix, Esac, Eblk, msg}
-			
+
 	"""
-	return 
+	return

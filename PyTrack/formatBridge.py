@@ -21,7 +21,7 @@ def eyeLinkToBase(filename, stim_list=None, start='START', stop=None, eye='B'):
 
     Parameters
     ----------
-    filename : str 
+    filename : str
         Full file name (with path) of the data file
     stim_list : list (str)
         Name of stimuli as a list of strings. If there are n trials/events found in the data, the length of stim_list should be n containing the names of stimuli for each trial/event.
@@ -34,8 +34,8 @@ def eyeLinkToBase(filename, stim_list=None, start='START', stop=None, eye='B'):
 
     Returns
     -------
-    df : pandas DataFrame  
-        Pandas dataframe of the data in the framework friendly base csv format 
+    df : pandas DataFrame
+        Pandas dataframe of the data in the framework friendly base csv format
     """
 
     col_headers = getColHeaders()
@@ -67,7 +67,7 @@ def eyeLinkToBase(filename, stim_list=None, start='START', stop=None, eye='B'):
         temp_dict['SaccadeSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['Blink'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['GazeAOI'] = np.ones(len(temp_dict['Timestamp'])) * -1
-        
+
         cnt = 0
         for e in d['events']['Efix']:
             ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
@@ -81,14 +81,14 @@ def eyeLinkToBase(filename, stim_list=None, start='START', stop=None, eye='B'):
             ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
             temp_dict['SaccadeSeq'][ind_start : ind_end + 1] = cnt
             cnt += 1
-        
+
         cnt = 0
         for e in d['events']['Eblk']:
             ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
             ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
             temp_dict['Blink'][ind_start : ind_end + 1] = cnt
             cnt += 1
-        
+
         for m in d['events']['msg']:
             if 'Stim Key' in m[1]:
                 temp_dict['StimulusName'] = [m[1].strip("\n").split(":")[1].strip(" ")] * len(temp_dict['Timestamp'])
@@ -96,7 +96,7 @@ def eyeLinkToBase(filename, stim_list=None, start='START', stop=None, eye='B'):
 
         df = df.append(pd.DataFrame.from_dict(temp_dict, orient='index').transpose(), ignore_index=True, sort=False)
         del(temp_dict)
-        
+
         i += 1
 
     return df
@@ -107,26 +107,26 @@ def smiToBase(filename, stim_list=None, start='START', stop=None):
 
     Parameters
     ----------
-    filename : str 
+    filename : str
         Full file name (with path) of the data file
-    
+
     stim_list : list (str)
         Name of stimuli as a list of strings. If there are n trials/events found in the data, the length of stim_list should be n containing the names of stimuli for each trial/event.
 
     start : str
         Marker for start of event in the .asc file. Default value is 'START'.
-    
+
     stop : str
         Marker for end of event in the .asc file. Default value is None. If None, new event/trial will start when start trigger is detected again.
 
     Returns
     -------
-    df : pandas DataFrame  
-        Pandas dataframe of the data in the framework friendly base csv format 
+    df : pandas DataFrame
+        Pandas dataframe of the data in the framework friendly base csv format
     """
-    
+
     col_headers = getColHeaders()
-    
+
     print("Converting SMI IDF file to Pandas CSV: ", filename.split("/")[-1])
 
     data = read_idf(filename, start=start, stop=stop, missing=-1.0)
@@ -137,12 +137,12 @@ def smiToBase(filename, stim_list=None, start='START', stop=None):
         temp_dict = dict.fromkeys(col_headers)
 
         temp_dict['Timestamp'] = d['trackertime']
-        
+
         if stim_list == None:
             temp_dict['StimulusName'] = ['stimulus_' + str(i)] * len(temp_dict['Timestamp'])
         else:
             temp_dict['StimulusName'] = [stim_list[i]] * len(temp_dict['Timestamp'])
-        
+
         temp_dict['EventSource'] = ['ET'] * len(temp_dict['Timestamp'])
         temp_dict['GazeLeftx'] = d['x_l']
         temp_dict['GazeRightx'] = d['x_r']
@@ -154,7 +154,7 @@ def smiToBase(filename, stim_list=None, start='START', stop=None):
         temp_dict['SaccadeSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['Blink'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['GazeAOI'] = np.ones(len(temp_dict['Timestamp'])) * -1
-        
+
         fix_cnt = 0
         sac_cnt = 0
         prev_end = 0
@@ -179,7 +179,7 @@ def smiToBase(filename, stim_list=None, start='START', stop=None):
         del(temp_dict)
 
         i += 1
-    
+
     return df
 
 
@@ -190,13 +190,13 @@ def tobiiToBase(filename, stim_list=None, start='START', stop=None):
     ----------
     filename : str
         Full file name (with path) of the data file
-    
+
     stim_list : list (str)
         Name of stimuli as a list of strings. If there are n trials/events found in the data, the length of stim_list should be n containing the names of stimuli for each trial/event.
 
     start : str
         Marker for start of event in the .asc file. Default value is 'START'.
-    
+
     stop : str
         Marker for end of event in the .asc file. Default value is None. If None, new event/trial will start when start trigger is detected again.
 
@@ -225,7 +225,7 @@ def convertToBase(filename, sensor_type, device, stim_list=None, start='START', 
     start : str
         The start of event marker in the data (Defaults to 'START').
     stop : str
-        The end of event marker in the data (Defaults to ``None``). If ``None``, start of new event will be considered as end of previous event. 
+        The end of event marker in the data (Defaults to ``None``). If ``None``, start of new event will be considered as end of previous event.
     eye : str {'B','L','R'}
 		Which eye is being tracked? Deafults to 'B'-Both. ['L'-Left, 'R'-Right, 'B'-Both]
 
@@ -239,17 +239,17 @@ def convertToBase(filename, sensor_type, device, stim_list=None, start='START', 
     if sensor_type == 'EyeTracker':
         if device == 'eyelink':
             return eyeLinkToBase(filename, stim_list, start=start, stop=stop, eye=eye)
-        
+
         elif device == 'smi':
             return smiToBase(filename, stim_list, start=start, stop=stop)
 
         elif device == 'tobii':
             return tobiiToBase(filename, stim_list, start=start, stop=stop)
-        
+
         else:
             print("Sorry " + sensor_type + " data format not supported!\n")
             return
-    
+
     else:
         print("Sorry " + sensor_type + " not supported!\n")
 
@@ -267,11 +267,11 @@ def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na
 		Dictionary mapping the names of the columns ot their data type
 	na_strings: list
 		Is a list of the strings that are to be considered as null value
-    
+
 	"""
-    
+
     all_files = os.listdir(source_folder)
-    
+
     newlist = []
     for names in all_files:
         if names.endswith(".csv"):
@@ -309,7 +309,7 @@ def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na
         i = 0
         j = 1
         for df in pd.read_csv(file_name, chunksize=chunksize, iterator=True, na_values = na_strings, dtype=dtype_dictionary):
-            
+
             #SQL columns ideally should not have ' ', '/', '(', ')'
 
             df = df.rename(columns={c: c.replace(' ', '_') for c in df.columns})
@@ -325,7 +325,7 @@ def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na
 
 def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START', stop=None, eye='B', reading_method="SQL"):
     """Function to convert data into the base format before starting analysis and visualization.
-    
+
     The function creates a directory called 'csv_files' inside the `Data` folder and stores the converted csv files in it. If `reading_method` is specified as 'SQL' then an SQL database is created inside the 'Data' folder but the user need not worry about it.
 
     Parameters
@@ -346,7 +346,7 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
         'SQL' (default) reading method is faster but will need extra space. This affects the internal functioning of he framework and the user can leave it as is.
 
     """
-    
+
     if os.path.isdir(exp_path):
 
         exp_info = exp_path + "/" + exp_path.split("/")[-1] + ".json"
@@ -363,7 +363,7 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
         for f in os.listdir(data_path):
             if os.path.isdir(data_path + "/" + f):
                 continue
-            
+
             if f.split(".")[-1] not in ["csv", "asc", "txt", "tsv"]:
                 continue
 
@@ -371,7 +371,7 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
 
             if stim_list_mode == "diff":
                 stim = np.loadtxt(data_path + "/stim/" + f.split(".")[0] + ".txt", dtype=str)
-            
+
             df = convertToBase(data_path + "/" + f, sensor_type='EyeTracker', device=device, stim_list=stim, start=start, stop=stop, eye=eye)
             df.to_csv(data_path + "/csv_files/" + f.split(".")[0] + ".csv")
 

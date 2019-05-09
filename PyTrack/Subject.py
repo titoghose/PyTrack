@@ -14,7 +14,7 @@ from PyTrack.Stimulus import Stimulus, groupHeatMap
 from PyTrack.Sensor import Sensor
 
 class SubjectVisualize:
-	
+
 	def __init__(self, master, subj_name, stimuli, json_file=None, viz_type="individual", sub_list=None):
 		self.json_file = json_file
 		self.sub_list = sub_list
@@ -23,7 +23,7 @@ class SubjectVisualize:
 		self.root = master
 		self.v = tk.IntVar()
 		self.v.set(3)
-		
+
 		self.save_var = tk.IntVar()
 		self.save_var.set(0)
 
@@ -35,19 +35,19 @@ class SubjectVisualize:
 		self.stimuli = stimuli
 
 		plot_type_frame = tk.Frame(self.subject_window)
-		
+
 		tk.Radiobutton(plot_type_frame, text="Gaze Heat Map", padx=20, variable=self.v, value=3).pack(side="left", anchor=tk.W)
-		
+
 		if viz_type == "individual":
 			tk.Radiobutton(plot_type_frame, text="Live Plot", padx=20, variable=self.v, value=1).pack(side="right", anchor=tk.W)
 			tk.Radiobutton(plot_type_frame, text="Fixation Plot", padx=20, variable=self.v, value=2).pack(side="right", anchor=tk.W)
-		
+
 		plot_type_frame.pack(side="top")
 
 		stim_names_frame = tk.Frame(self.subject_window)
 
 		for stim_type in self.stimuli:
-			
+
 			live_plot_frame = tk.Frame(stim_names_frame, width=30, height=30)
 			live_plot_frame.grid_propagate(False)
 
@@ -55,28 +55,28 @@ class SubjectVisualize:
 			text.tag_configure("bold", font="Helvetica 12 bold")
 			text.insert("end", stim_type, "bold")
 			text.insert("end", "\n\n")
-			
+
 			for i, stim in enumerate(self.stimuli[stim_type]):
 				func = partial(self.button_click, stim, i)
 				bt = tk.Button(live_plot_frame, text=stim.name, width=10, command=func)
 				text.window_create(tk.END, window=bt)
 				text.insert(tk.END, "\n")
-			
+
 			scroll = tk.Scrollbar(live_plot_frame, orient="vertical")
 			scroll.config(command=text.yview)
 
 			text.configure(yscrollcommand=scroll.set)
-			
+
 			text.pack(side="left", expand=True, fill="both")
 			scroll.pack(side="right", fill="y")
 			live_plot_frame.pack(side="right", expand=True)
-		
+
 		stim_names_frame.pack(side="bottom")
-		
+
 		save_button_frame = tk.Frame(self.subject_window)
 		tk.Checkbutton(save_button_frame, text="Save Figure", variable=self.save_var).pack()
 		save_button_frame.pack(side="bottom")
-		
+
 
 	def button_click(self, stim, stim_num=-1):
 		if self.v.get() == 1:
@@ -87,7 +87,7 @@ class SubjectVisualize:
 				stim.gazePlot(save_fig=True)
 			else:
 				stim.gazePlot()
-		
+
 		elif self.v.get() == 3:
 			if self.viz_type == "group":
 				stim_name = {stim.stim_type : stim_num}
@@ -106,7 +106,7 @@ class SubjectVisualize:
 
 class Subject:
 	"""This class deals with encapsulating all the relevant information regarding a subject who participated in an experiment. The class contains functions that help in the extraction of data from the databases (SQL or CSV) and the creation of the `Stimuli <#module-Stimulus>`_ objects. The class also calculates the control data for the purpose of standardisation.
- 		
+
 	Parameters
 	---------
 	name: str
@@ -127,7 +127,7 @@ class Subject:
 		Indicates whether artifact removal is manually done or not
 	reading_method: str
 		Mentions the format in which the data is being stored
-	
+
 	"""
 
 	def __init__(self, path, name, subj_type, stimuli_names, columns, json_file, sensors, database, reading_method, aoi):
@@ -161,14 +161,14 @@ class Subject:
 			Describes which type of databse is to be used for data extraction
 		stimuli_names: list(str)
 			List of stimuli that are to be considered for extraction
-	
+
 		Returns
 		-------
 		df: pandas DataFrame
 			contains the data of columns of our interest
 
 		"""
-		
+
 		if reading_method == "SQL":
 
 			string = 'SELECT '
@@ -203,7 +203,7 @@ class Subject:
 
 			conversion = pd.DataFrame(dummy.fetchall())
 			conversion.columns = dummy.keys()
-			
+
 			return conversion
 
 		elif reading_method == "CSV":
@@ -219,13 +219,13 @@ class Subject:
 			df = df.replace(to_replace=r'Unnamed:*', value=float(-1), regex=True)
 			b = datetime.now()
 			# print("Query: ", (b-a).seconds)
-			
+
 			return df
 
 		else:
 			print("Neither of the 2 options have been chosen")
 			return None
-		
+
 
 	def timeIndexInitialisation(self, stimulus_column_name, stimulus_name, df):
 		"""This function that will retireve the index of the start, end and roi of a question
@@ -266,7 +266,7 @@ class Subject:
 
 		return start,end,roi
 
-	
+
 	def stimulusDictInitialisation(self, stimuli_names, columns, json_file, sensors, database, reading_method):
 		"""Creates a list of objects of class `Stimuli <#module-Stimulus>`_.
 
@@ -284,12 +284,12 @@ class Subject:
 			Is the SQL object that is created for accessing the SQL database | Name of the folder containing the CSV files
 		reading_method: str {"SQL","CSV"}
 			Describes which type of databse is to be used for data extraction
-		
+
 		Returns
 		-------
 		stimulus_object_dict: dict
 			dictionary of objects of class stimulus ordered by category
-		
+
 		"""
 
 		data = self.dataExtraction(columns,json_file, database, reading_method, stimuli_names)
@@ -297,7 +297,7 @@ class Subject:
 		stimulus_object_dict = {}
 
 		for category in stimuli_names:
-	
+
 			stimulus_object_list = []
 
 			for stimulus_name in stimuli_names[category]:
@@ -309,9 +309,9 @@ class Subject:
 				stimulus_object = Stimulus(self.path, stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file, self.name, self.aoi)
 
 				stimulus_object_list.append(stimulus_object)
-				
+
 			stimulus_object_dict[category] = stimulus_object_list
-		
+
 		return stimulus_object_dict
 
 
@@ -324,7 +324,7 @@ class Subject:
 		-------
 		control : dict
 			Dictionary containing the standardised values for all the metadata/features. The keys of the dictionary are the different meta columns for a given sensor type. It can be found under meta_cols in `Sensor <#module-Sensor>`_.
-		
+
 		"""
 
 		control = dict()
@@ -339,7 +339,7 @@ class Subject:
 		if "Control_Questions" in json_data:
 			if not os.path.isdir(self.path + '/control_values/'):
 				os.makedirs(self.path + '/control_values/')
-			
+
 			if os.path.isfile(self.path + '/control_values/' + self.name + '.pickle') == True:
 				pickle_in = open(self.path + '/control_values/' + self.name + '.pickle',"rb")
 				control = pickle.load(pickle_in)
@@ -356,7 +356,7 @@ class Subject:
 								for sen in self.sensors:
 									for c in control[sen]:
 										control[sen][c] = np.hstack((control[sen][c], cqo.sensors[sen].metadata[c]))
-				
+
 				for sen in self.sensors:
 					for c in control[sen]:
 						control[sen][c] = np.mean(control[sen][c])
@@ -365,7 +365,7 @@ class Subject:
 				pickle_out = open(self.path + '/control_values/' + self.name + '.pickle',"wb")
 				pickle.dump(control, pickle_out)
 				pickle_out.close()
-		
+
 		return control
 
 
