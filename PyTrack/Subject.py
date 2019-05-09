@@ -9,9 +9,6 @@ from functools import partial
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from sqlalchemy import create_engine
-from matplotlib.widgets import TextBox
 
 from PyTrack.Stimulus import Stimulus, groupHeatMap
 from PyTrack.Sensor import Sensor
@@ -72,7 +69,7 @@ class SubjectVisualize:
 			
 			text.pack(side="left", expand=True, fill="both")
 			scroll.pack(side="right", fill="y")
-			live_plot_frame.pack(side="right", expand=True)	
+			live_plot_frame.pack(side="right", expand=True)
 		
 		stim_names_frame.pack(side="bottom")
 		
@@ -95,7 +92,10 @@ class SubjectVisualize:
 			if self.viz_type == "group":
 				stim_name = {stim.stim_type : stim_num}
 				# self.subject_window.destroy()
-				groupHeatMap(self.sub_list, stim_name, self.json_file, save_fig=True)
+				if self.save_var.get() == 1:
+					groupHeatMap(self.sub_list, stim_name, self.json_file, save_fig=True)
+				else:
+					groupHeatMap(self.sub_list, stim_name, self.json_file)
 
 			else:
 				if self.save_var.get() == 1:
@@ -116,7 +116,7 @@ class Subject:
 	stimuli_names: list(str)
 		List of stimuli that are to be considered for extraction
 	columns: list(str)
-		List of columns that need to be extracted from the database 
+		List of columns that need to be extracted from the database
 	json_file: str
 		Name of json file that contains information regarding the experiment/database
 	sensors: list(str)
@@ -139,7 +139,7 @@ class Subject:
 		self.subj_type = subj_type
 		self.json_file = json_file
 		self.aoi = aoi
-		self.stimulus = self.stimulusDictInitialisation(stimuli_names, columns, json_file, sensors, database, reading_method) 
+		self.stimulus = self.stimulusDictInitialisation(stimuli_names, columns, json_file, sensors, database, reading_method)
 		self.control_data = self.getControlData()
 		self.aggregate_meta = {}
 		b = datetime.now()
@@ -147,7 +147,7 @@ class Subject:
 
 
 	def dataExtraction(self, columns, json_file, database, reading_method, stimuli_names):
-		"""Extracts the required columns from the data base and the required stimuli_column and returns a pandas datastructure 
+		"""Extracts the required columns from the data base and the required stimuli_column and returns a pandas datastructure
 
 		Parameters
 		----------
@@ -180,11 +180,11 @@ class Subject:
 				if index == 0:
 					string = string + name
 					index = index + 1
-				else:   
+				else:
 					string = string + ',' + name
 					index = index + 1
 
-			#NTBD: Change StimulusName from being Hardcoded		
+			#NTBD: Change StimulusName from being Hardcoded
 			query = string + ' FROM "' + self.name + '" WHERE StimulusName in ('
 			flag = -1
 
@@ -199,16 +199,10 @@ class Subject:
 
 			query = query + selected_stimuli + ")"
 
-			c = datetime.now()
 			dummy = database.execute(query)
-			d = datetime.now()
-			# print("execute: ", (d-c).seconds)
 
 			conversion = pd.DataFrame(dummy.fetchall())
 			conversion.columns = dummy.keys()
-
-			e = datetime.now()
-			# print("Convert result proxy to pandas: ", (e-d).seconds)
 			
 			return conversion
 
@@ -238,12 +232,12 @@ class Subject:
 
 		Parameters
 		----------
-		stimulus_column_name: str 
-			Name of the column where the stimuli names are present 
+		stimulus_column_name: str
+			Name of the column where the stimuli names are present
 		stimulus_name: str
 			Name of the stimulus
 		df: pandas dataframe
-			Contains the data from which `start`, `end` and `roi` will be extracted from 
+			Contains the data from which `start`, `end` and `roi` will be extracted from
 
 		Returns
 		-------
@@ -278,25 +272,25 @@ class Subject:
 
 		Parameters
 		---------
-		stimuli_names: list(str) 
+		stimuli_names: list(str)
 			list of names of different stimulus
-		columns: list(str) 
+		columns: list(str)
 			list of names of the columns of interest
 		json_file: str
 			Name of json file that contains information about the experiment/database
 		sensors: object of class Sensor
 			Is an object of class sensor and is used to see if EEG extraction is required
-		database: SQL object | str 
-			Is the SQL object that is created for accessing the SQL database | Name of the folder containing the CSV files  
+		database: SQL object | str
+			Is the SQL object that is created for accessing the SQL database | Name of the folder containing the CSV files
 		reading_method: str {"SQL","CSV"}
 			Describes which type of databse is to be used for data extraction
 		
 		Returns
 		-------
-		stimulus_object_dict: dict 
+		stimulus_object_dict: dict
 			dictionary of objects of class stimulus ordered by category
 		
-		"""	
+		"""
 
 		data = self.dataExtraction(columns,json_file, database, reading_method, stimuli_names)
 
@@ -307,12 +301,8 @@ class Subject:
 			stimulus_object_list = []
 
 			for stimulus_name in stimuli_names[category]:
-				#NTBD change the harcoding of the stimulusName 
-				a = datetime.now()
+				#NTBD change the harcoding of the stimulusName
 				start_time, end_time, roi_time = self.timeIndexInitialisation("StimulusName",stimulus_name, data)
-				b = datetime.now()
-
-				#print("Time index initialisation: ", (b-a))
 
 				stimuli_data = data[start_time : end_time+1]
 
@@ -326,9 +316,9 @@ class Subject:
 
 
 	def getControlData(self):
-		"""Function to find the values for standardization/normalization of the features extracte from the different stimuli. 
+		"""Function to find the values for standardization/normalization of the features extracte from the different stimuli.
 
-		The method is invoked implicitly by the `__init__` method. It extracts the features/metadata for the stimuli mentioned in the json file under the "*Control_Questions*" field. If it is blank the values in the control data structure will be all 0s. During analysis, these control values will be subtracted from the values found for each stimulus. 
+		The method is invoked implicitly by the `__init__` method. It extracts the features/metadata for the stimuli mentioned in the json file under the "*Control_Questions*" field. If it is blank the values in the control data structure will be all 0s. During analysis, these control values will be subtracted from the values found for each stimulus.
 
 		Returns
 		-------
@@ -385,11 +375,11 @@ class Subject:
 		It is invoked internally by the `visualizaData <#Experiment.Experiment.visualizeData>`_ function.
 
 		"""
-		sub_viz = SubjectVisualize(master, self.name, self.stimulus, json_file=self.json_file, viz_type=viz_type, sub_list=sub_list)
+		_ = SubjectVisualize(master, self.name, self.stimulus, json_file=self.json_file, viz_type=viz_type, sub_list=sub_list)
 
 
 	def subjectAnalysis(self, average_flag, standardise_flag):
-		"""Function to find features for all stimuli for a given subject. 
+		"""Function to find features for all stimuli for a given subject.
 
 		Does not return any value. It stores the calculated features/metadata in its `aggregate_meta` member variable. Can be accessed by an object of the class. For structure of this variable see `Subject <#module-Subject>`_.
 
@@ -401,7 +391,7 @@ class Subject:
 			If ``True``, subtract `control_data` values for a given meta variable for each stimulus. See `getControlData <#Subject.Subject.getControlData>`_ for more details on `control_data`.
 
 		"""
-		
+
 		for st in self.stimulus:
 			self.aggregate_meta.update({st : {}})
 			for sen in self.sensors:
@@ -420,7 +410,7 @@ class Subject:
 							else:
 								self.aggregate_meta[s][cd] = np.hstack((self.aggregate_meta[s][cd], stim.sensors["EyeTracker"].metadata[cd]))
 
-		if average_flag:	
+		if average_flag:
 			for s in self.stimulus:
 				for sen in self.sensors:
 					for cd in Sensor.meta_cols[sen]:

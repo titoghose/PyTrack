@@ -1117,12 +1117,12 @@ class Stimulus:
 			ax.text(np.mean(x), np.mean(y), str(i), fontsize=10, color='w')
 			i += 1
 
+		if show_fig:
+			plt.show()
+
 		if save_fig:
 			fig.savefig(self.path + "/Subjects/" + self.subject_name + "/gaze_plot_" + self.name + ".png", dpi=300)
 
-		if show_fig:
-			plt.show()
-		
 		plt.close(fig)
 		
 		
@@ -1182,12 +1182,12 @@ class Stimulus:
 		ax.set_xlim(0, int(col_shape * downsample_fraction))
 		ax.set_ylim(int(row_shape * downsample_fraction), 0)
 
-		if save_fig:
-			fig.savefig(self.path + "/Subjects/" + self.subject_name + "/gaze_heatmap_" + self.name + ".png", dpi=300)
-
 		if show_fig:
 			plt.show()
 		
+		if save_fig:
+			fig.savefig(self.path + "/Subjects/" + self.subject_name + "/gaze_heatmap_" + self.name + ".png", dpi=300)
+
 		plt.close(fig)
 		
 
@@ -1828,6 +1828,9 @@ def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 		if not os.path.isdir(path + "/Aggregate_Plots/"):
 			os.mkdir(path + "/Aggregate_Plots/")	
 		fig.savefig(path + "/Subjects/Aggregate_Plots"+ "/agg_gaze_heatmap_" + str(datetime.now().timestamp()).split(".")[0] + ".png", dpi=300)
+		with open(path + "/Subjects/Aggregate_Plots"+ "/agg_gaze_heatmap_" + str(datetime.now().timestamp()).split(".")[0] + ".txt", "w") as f:
+			for sub in sub_list:
+				f.write(sub.name + "\n")
 
 	plt.show()
 	plt.close(fig)

@@ -2,7 +2,6 @@
 
 import os
 import json
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -70,21 +69,21 @@ def eyeLinkToBase(filename, stim_list=None, start='START', stop=None, eye='B'):
         temp_dict['GazeAOI'] = np.ones(len(temp_dict['Timestamp'])) * -1
         
         cnt = 0
-        for ind, e in enumerate(d['events']['Efix']):
+        for e in d['events']['Efix']:
             ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
             ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
             temp_dict['FixationSeq'][ind_start : ind_end + 1] = cnt
             cnt += 1
 
         cnt = 0
-        for ind, e in enumerate(d['events']['Esac']):
+        for e in d['events']['Esac']:
             ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
             ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
             temp_dict['SaccadeSeq'][ind_start : ind_end + 1] = cnt
             cnt += 1
         
         cnt = 0
-        for ind, e in enumerate(d['events']['Eblk']):
+        for e in d['events']['Eblk']:
             ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
             ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
             temp_dict['Blink'][ind_start : ind_end + 1] = cnt
@@ -189,7 +188,7 @@ def tobiiToBase(filename, stim_list=None, start='START', stop=None):
 
     Parameters
     ----------
-    filename : str 
+    filename : str
         Full file name (with path) of the data file
     
     stim_list : list (str)
@@ -203,15 +202,15 @@ def tobiiToBase(filename, stim_list=None, start='START', stop=None):
 
     Returns
     -------
-    df : pandas DataFrame  
-        Pandas dataframe of the data in the framework friendly base csv format 
+    df : pandas DataFrame
+        Pandas dataframe of the data in the framework friendly base csv format
     """
 
 
 def convertToBase(filename, sensor_type, device, stim_list=None, start='START', stop=None, eye='B'):
     """Master function that calls the different converter functions to convert to bas data format.
 
-    Internally invoked by `generateCompatibleFormats <#formatBridge.generateCompatibleFormat>`_. 
+    Internally invoked by `generateCompatibleFormats <#formatBridge.generateCompatibleFormat>`_.
 
     Parameters
     ----------
@@ -265,13 +264,13 @@ def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na
 	database_name: string
 		Name of the SQL database that is to be created
 	dtype_dictionary: dictionary
-		Dictionary mapping the names of the columns ot their data type 
-	na_strings: list 
+		Dictionary mapping the names of the columns ot their data type
+	na_strings: list
 		Is a list of the strings that are to be considered as null value
     
 	"""
     
-    all_files = os.listdir(source_folder) 
+    all_files = os.listdir(source_folder)
     
     newlist = []
     for names in all_files:
@@ -304,7 +303,7 @@ def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na
                     print("Dropped table as it existed previously and reinstantiated it: ", table_name)
                     break
         except ValueError:
-            note = "The database did not exist previously"
+            print("The database did not exist previously")
 
         chunksize = 100000
         i = 0
@@ -325,22 +324,22 @@ def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na
 
 
 def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START', stop=None, eye='B', reading_method="SQL"):
-    """Function to convert data into the base format before starting analysis and visualization. 
+    """Function to convert data into the base format before starting analysis and visualization.
     
     The function creates a directory called 'csv_files' inside the `Data` folder and stores the converted csv files in it. If `reading_method` is specified as 'SQL' then an SQL database is created inside the 'Data' folder but the user need not worry about it.
 
     Parameters
     ----------
     exp_path : str
-        Absolute path to the experiment folder. If the path is a folder, the framework will assume its being run in the *Experiment Design* mode. If it is a path to a single data file, then the *Stand-alone Design* mode is assumed. 
+        Absolute path to the experiment folder. If the path is a folder, the framework will assume its being run in the *Experiment Design* mode. If it is a path to a single data file, then the *Stand-alone Design* mode is assumed.
     device : str {'eyelink', 'smi', 'tobii'}
         Make of the sensor.
     stim_list_mode : str {'NA', 'common', 'diff'}
-        See the `Using PyTrack <https://pytrack-ntu.readthedocs.io/en/latest/Introduction.html#using-pytrack>`_ in the `Introduction <https://pytrack-ntu.readthedocs.io/en/latest/Introduction.html#>`_ for details on which of the three to suply. 
+        See the `Using PyTrack <https://pytrack-ntu.readthedocs.io/en/latest/Introduction.html#using-pytrack>`_ in the `Introduction <https://pytrack-ntu.readthedocs.io/en/latest/Introduction.html#>`_ for details on which of the three to suply.
     start : str
         The start of event marker in the data (Defaults to 'START').
     stop : str
-        The end of event marker in the data (Defaults to ``None``). If ``None``, start of new event will be considered as end of previous event. 
+        The end of event marker in the data (Defaults to ``None``). If ``None``, start of new event will be considered as end of previous event.
     eye : str {'B','L','R'}
 		Which eye is being tracked? Deafults to 'B'-Both. ['L'-Left, 'R'-Right, 'B'-Both]
     reading_method : str {'CSV', 'SQL'}
@@ -351,7 +350,7 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
     if os.path.isdir(exp_path):
 
         exp_info = exp_path + "/" + exp_path.split("/")[-1] + ".json"
-        data_path = exp_path + "/Data/"    
+        data_path = exp_path + "/Data/"
         if not os.path.isdir(data_path + "/csv_files/"):
             os.makedirs(data_path + "/csv_files/")
 
@@ -385,12 +384,12 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
             db_create(data_path, source_folder, json_data["Experiment_name"])
 
     else:
-        data_path = exp_path    
+        data_path = exp_path
         print("Converting to base csv formate: ", data_path.split("/")[-1])
 
         stim = None
         if stim_list_mode != "NA":
             stim = np.loadtxt("stim_file.txt", dtype=str)
-        
+
         df = convertToBase(data_path, sensor_type='EyeTracker', device=device, stim_list=stim, start=start, stop=stop, eye=eye)
         df.to_csv(data_path.split(".")[0] + ".csv")

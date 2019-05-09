@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import os
-import time
 import json
-import random
-import pickle
 import tkinter as tk
-from datetime import datetime
 from functools import partial
 import csv
 
@@ -18,8 +14,7 @@ from statsmodels.formula.api import ols
 from statsmodels.stats.anova import AnovaRM
 import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
-from matplotlib.widgets import RadioButtons, RectangleSelector
-from matplotlib.patches import Rectangle
+from matplotlib.widgets import RectangleSelector
 
 from PyTrack.Sensor import Sensor
 from PyTrack.Subject import Subject
@@ -83,7 +78,7 @@ class Visualize:
 				func = partial(self.button_click, sub)
 				bt = tk.Button(self.sub_frame, width=30, text=sub.name, command=func)
 				self.text.window_create(tk.END, window=bt)
-				self.text.insert(tk.END, "\n")	
+				self.text.insert(tk.END, "\n")
 
 		vsb = tk.Scrollbar(self.sub_frame, orient="vertical")
 		vsb.config(command=self.text.yview)
@@ -109,8 +104,7 @@ class Visualize:
 
 
 class Experiment:
-	""" This is class responsible for the analysis of data of an entire experiment. The creation of a an object of this class will subsequently create create objects for each 
-	`Subject <#module-Subject>`_. involved in the experiment (which in turn would create object for each `Stimulus <#module-Stimulus>`_ which is viewed by the subject). 
+	""" This is class responsible for the analysis of data of an entire experiment. The creation of a an object of this class will subsequently create create objects for each `Subject <#module-Subject>`_. involved in the experiment (which in turn would create object for each `Stimulus <#module-Stimulus>`_ which is viewed by the subject).
 
 	This class also contains the `analyse <#Experiment.Experiment.analyse>`_ function which is used for the statistical analysis of the data (eg: Mixed ANOVA, RM ANOVA etc).
 
@@ -128,7 +122,7 @@ class Experiment:
 
 	"""
 
-	def __init__(self, json_file, reading_method="SQL", sensors=["EyeTracker"], aoi="NA"):
+	def __init__(self, json_file, reading_method="SQL", aoi="NA"):
 
 		with open(json_file, "r") as json_f:
 			json_data = json.load(json_f)
@@ -136,11 +130,11 @@ class Experiment:
 		self.path = json_data["Path"]
 		self.name = json_data["Experiment_name"]
 		self.json_file = json_file #string
-		self.sensors = sensors
+		self.sensors = ["EyeTracker"]
 		
 		self.aoi_coords = None
 		# Setting AOI coordinates
-		if type(aoi) == str:
+		if isinstance(aoi, str):
 			if aoi == "draw":
 				self.aoi_coords = self.drawAOI()
 			else:
@@ -188,9 +182,10 @@ class Experiment:
 
 		for k in stimuli_data:
 
-			if(type(stimuli_data[k]) == list):
+			if isinstance(stimuli_data[k], list):
 				data_dict[k] = stimuli_data[k]
-			elif(type(stimuli_data[k]) == dict):
+			
+			elif isinstance(stimuli_data[k], dict):
 				#Need to create a list of names of the stimuli
 				list_stimuli = []
 				for _, value in enumerate(stimuli_data[k]):
@@ -198,7 +193,7 @@ class Experiment:
 
 				data_dict[k] = list_stimuli
 			else:
-				print("The Stimuli subsection of the json file is not defined properly")	
+				print("The Stimuli subsection of the json file is not defined properly")
 
 		return data_dict
 
@@ -209,7 +204,7 @@ class Experiment:
 		Parameters
 		----------
 		reading_method: str {'SQL','CSV'}
-			Specifies the database from which data extraction is to be done from	
+			Specifies the database from which data extraction is to be done from
 
 		Returns
 		-------
@@ -221,7 +216,7 @@ class Experiment:
 		with open(self.json_file) as json_f:
 			json_data = json.load(json_f)
 
-		subject_list = []	
+		subject_list = []
 
 		subject_data = json_data["Subjects"]
 
@@ -235,28 +230,27 @@ class Experiment:
 
 		for k in subject_data:
 
-			if(type(subject_data[k]) == list):
-
+			if isinstance(subject_data[k], list):
 				for subject_name in subject_data[k]:
 					subject_object = Subject(self.path, subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database, reading_method, self.aoi_coords)
 					subject_list.append(subject_object)
 
-			elif(type(subject_data[k]) == dict):
-				for subject_index, subject_name in enumerate(subject_data[k]):
+			elif isinstance(subject_data[k], dict) :
+				for _, subject_name in enumerate(subject_data[k]):
 					subject_object = Subject(self.path, subject_name, k, self.stimuli, self.columns, self.json_file, self.sensors, database, reading_method, self.aoi_coords)
 					subject_list.append(subject_object)
-			else:
-				print("The Subject subsection of the json file is not defined properly")	
-
 			
-		if reading_method == "SQL":	
+			else:
+				print("The Subject subsection of the json file is not defined properly")
+
+		if reading_method == "SQL":
 			database.dispose()
 
 		return subject_list
 
 
 	def columnsArrayInitialisation(self):
-		"""The functions extracts the names of the columns that are to be analysed 
+		"""The functions extracts the names of the columns that are to be analysed
 
 		Parameters
 		----------
@@ -294,7 +288,7 @@ class Experiment:
 
 		root = tk.Tk()
 		root.resizable(False, False)
-		viz = Visualize(root, self.subjects, self)
+		_ = Visualize(root, self.subjects, self)
 		root.mainloop()
 
 	
@@ -304,9 +298,9 @@ class Experiment:
 		Parameters
 		----------
 		standardise_flag: bool (optional)
-			Indicates whether the data being considered need to be standardised (by subtracting the control values/baseline value) 
+			Indicates whether the data being considered need to be standardised (by subtracting the control values/baseline value)
 		average_flag: bool (optional)
-			Indicates whether the data being considered should averaged across all stimuli of the same type 
+			Indicates whether the data being considered should averaged across all stimuli of the same type
 			NOTE: Averaging will reduce variability and noise in the data, but will also reduce the quantum of data being fed into the statistical test
 
 		"""
@@ -315,7 +309,7 @@ class Experiment:
 			for meta_col in Sensor.meta_cols[sensor_type]:
 				self.meta_matrix_dict[1].update({meta_col : np.ndarray((len(self.subjects), len(self.stimuli)), dtype=object)})
 
-		#Instantiation of the meta_matrix_dict database		
+		#Instantiation of the meta_matrix_dict database
 		for sub_index, sub in enumerate(self.subjects):
 			sub.subjectAnalysis(average_flag, standardise_flag)
 
@@ -368,23 +362,20 @@ class Experiment:
 			summation_array =  [-1]
 			sum_value = 0
 
-			#print(value_index)
-			#print(value_array)
-
-			for i in range(len(value_array)):
+			for i, _ in enumerate(value_array):
 
 				if value_array[i] == 0:
 					summation_array.append(-1)
-				else:	
+				else:
 					sum_value = sum_value + value_array[i]
-					summation_array.append(sum_value)	
+					summation_array.append(sum_value)
 
 			summation_index = -1
 			summation_array.append(10000)
 
 			#print(summation_array)
 
-			for i in range(len(summation_array)):
+			for i, _ in enumerate(summation_array):
 
 				if summation_array[i+1] == -1:
 					if value_index >= summation_array[i] and value_index < summation_array[i+2]:
@@ -411,13 +402,13 @@ class Experiment:
 			List of between group factors, by default it will only contain "Subject_type"
 			If any additional parameter (eg: Gender) needs to be considered, then the list will be: between_factor_list = ["Subject_type", "Gender"]
 			DO NOT FORGET TO INCLUDE "Subject_type", if you wish to consider "Subject_type" as a between group factor.
-			Eg: between_factor_list = ["factor_x"] will no longer consider "Subject_type" as a factor. 
+			Eg: between_factor_list = ["factor_x"] will no longer consider "Subject_type" as a factor.
 			Please go through the README FILE to understand how the JSON FILE is to be written for between group factors to be considered.
 		within_factor_list: list(str) (optional)
 			List of within group factors, by default it will only contain "Stimuli_type"
 			If any additional parameter, needs to be considered, then the list will be: between_factor_list = ["Subject_type", "factor_X"]
 			DO NOT FORGET TO INCLUDE "Stimuli_type", if you wish to consider "Stimuli_type" as a within group factor.
-			Eg: within_factor_list = ["factor_x"] will no longer consider "Stimuli_type" as a factor. 
+			Eg: within_factor_list = ["factor_x"] will no longer consider "Stimuli_type" as a factor.
 			Please go through how the README FILE to understand how the JSON FILE is to be written for within group factors to be considered.
 		statistical_test: str {"Mixed_anova","RM_anova","ttest","anova","None"} (optional)
 			Name of the statistical test that has to be performed.
@@ -425,7 +416,7 @@ class Experiment:
 				- ttest: There are 3 options for ttest, and your choice of factors must comply with one of those options, for more information, please see description of `ttest_type` variable given below.
 				- Mixed_anova: Only 1 between group factor and 1 within group factor can be considered at any point of time
 				- anova: Any number of between group factors can be considered for analysis
-				- RM_anova: Upto 2 within group factors can be considered at any point of time  
+				- RM_anova: Upto 2 within group factors can be considered at any point of time
 		file_creation: bool (optional)
 			Indicates whether a csv file containing the statistical results should be created.
 				NOTE:
@@ -445,7 +436,7 @@ class Experiment:
 		and considering Subject_type and Stimuli_type as between and within group factors respectively
 
 		>>> analyse(self, standardise_flag=False, average_flag=False, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation = True)
-		OR 
+		OR
 		>>> analyse(self, standardise_flag=True) (as many of the option are present by default)
 
 		For calculating 2-way ANOVA, for "blink_rate" and "avg_blink_duration", without standardisation with averaging across stimuli of the same type
@@ -479,7 +470,7 @@ class Experiment:
 			meta_not_to_be_considered.extend(["no_revisits", "first_pass", "second_pass"])
 
 
-		for sen in self.sensors: 
+		for sen in self.sensors:
 			for meta in Sensor.meta_cols[sen]:
 				if meta in meta_not_to_be_considered:
 					continue
@@ -488,7 +479,7 @@ class Experiment:
 					continue
 
 				print("\n\n")
-				print("\t\t\t\tAnalysis for ",meta)	
+				print("\t\t\t\tAnalysis for ",meta)
 
 				#For the purpose of statistical analysis, a pandas dataframe needs to be created that can be fed into the statistical functions
 				#The columns required are - meta (indicator), the between factors (eg: Subject type or Gender), the within group factor (eg: Stimuli Type), Subject name/id
@@ -507,12 +498,12 @@ class Experiment:
 				for sub_index, sub in enumerate(self.subjects):
 					#For each Question Type (NTBC: FIND OUT WHAT THE AGGREGATE_META CONTAINS)
 					for stimuli_index, stimuli_type in enumerate(sub.aggregate_meta):
-						#Value is an array (NTBC : Is it always an array or can it also be a single value?)	
+						#Value is an array (NTBC : Is it always an array or can it also be a single value?)
 						value_array = self.meta_matrix_dict[1][meta][sub_index,stimuli_index]
 						
 						index_extra = 0
 
-						for value_index in range(len(value_array)):
+						for value_index, _ in enumerate(value_array):
 
 							if meta in ["sacc_duration", "sacc_vel", "sacc_amplitude", "ms_duration", "ms_vel", "ms_amplitude"]:
 
@@ -538,7 +529,7 @@ class Experiment:
 								try:
 									row.append(json_data["Subjects"][sub.subj_type][sub.name][param])
 								except:
-									print("Between subject paramter: ", param, " not defined in the json file")	
+									print("Between subject paramter: ", param, " not defined in the json file")
 
 							for param in within_factor_list:
 								
@@ -579,7 +570,7 @@ class Experiment:
 
 						values_list = ["Mixed Anova: "]
 						values_list.append(meta)
-						writer.writerow(values_list)					
+						writer.writerow(values_list)
 						writer.writerow("\n")
 						aov.to_csv(csvFile)
 						writer.writerow("\n")
@@ -620,14 +611,14 @@ class Experiment:
 					length = len(between_factor_list)
 					model_equation = meta + " ~ C("
 
-					for factor_index in range(len(between_factor_list)):
+					for factor_index, _ in enumerate(between_factor_list):
 						if(factor_index<length-1):
 							model_equation = model_equation + between_factor_list[factor_index] + ")*C("
 						else:
 							model_equation = model_equation + between_factor_list[factor_index] + ")"
 
 					print("Including interaction effect")
-					print(model_equation)		
+					print(model_equation)
 					model = ols(model_equation, data).fit()
 					res = sm.stats.anova_lm(model, typ= 2)
 					print(res)
@@ -654,7 +645,7 @@ class Experiment:
 						values_list = ["Anova excluding interaction effect: "]
 						values_list.append(meta)
 						writer.writerow(values_list)
-						writer.writerow("\n")					
+						writer.writerow("\n")		
 						res.to_csv(csvFile)
 						writer.writerow("\n\n")
 
@@ -687,6 +678,7 @@ class Experiment:
 		if csvFile != None:
 			csvFile.close()
 
+
 	def getMetaData(self, sub, stim=None, sensor="EyeTracker"):
 		"""Function to return the extracted features for a given subject/participant.
 
@@ -695,7 +687,7 @@ class Experiment:
 		sub : str
 			Name of the subject/participant.
 		stim : str | ``None``
-			Name of the stimulus. If 'str', the features of the given stimulus will be returned. If ``None``, the features of all stimuli averaged for the different stimuli types (as mentoned in json file) is wanted. 
+			Name of the stimulus. If 'str', the features of the given stimulus will be returned. If ``None``, the features of all stimuli averaged for the different stimuli types (as mentoned in json file) is wanted.
 		sensor : str
 			Name of the sensor for which the features is wanted.
 		
@@ -705,9 +697,9 @@ class Experiment:
 			
 		Note
 		----
-		- If the `stim` is ``None``, the returned dictionary is organised as follows 
+		- If the `stim` is ``None``, the returned dictionary is organised as follows
 			{"Stim_TypeA": {"meta1":[], "meta2":[], ...}, "Stim_TypeB": {"meta1":[], "meta2":[], ...}, ...}
-		- If the `stim` is ``str``, the returned dictionary is organised as follows 
+		- If the `stim` is ``str``, the returned dictionary is organised as follows
 			{"meta1":[], "meta2":[], ...}
 			
 		To get the names of all the metadata/features extracted, look at the `Sensor <#module-Sensor>`_ class
@@ -779,8 +771,6 @@ class Experiment:
 			aoi_right_x, aoi_right_y = int(round(erelease.xdata)), int(round(erelease.ydata))
 			
 			print("Coordinates [(start_x, start_y), (end_x, end_y)]: ", "[(%6.2f, %6.2f), (%6.2f, %6.2f)]" % (aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y))
-			# rect = Rectangle((min(x1,x2),min(y1,y2)), np.abs(x1-x2), np.abs(y1-y2), color='r', fill=False)
-			# ax.add_patch(rect)
 
 		RS = RectangleSelector(ax, line_select_callback, drawtype='box', useblit=False, button=[1],  minspanx=5, minspany=5, spancoords='pixels',interactive=True)
 
