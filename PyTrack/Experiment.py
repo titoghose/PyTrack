@@ -148,6 +148,13 @@ class Experiment:
 		else:
 			self.aoi_coords = aoi
 		
+		json_data["Analysis_Params"]["EyeTracker"]["aoi_left_x"] = self.aoi_coords[0]
+		json_data["Analysis_Params"]["EyeTracker"]["aoi_left_y"] = self.aoi_coords[1] 
+		json_data["Analysis_Params"]["EyeTracker"]["aoi_right_x"] = self.aoi_coords[2]
+		json_data["Analysis_Params"]["EyeTracker"]["aoi_right_y"] = self.aoi_coords[3]
+		with open(self.json_file, "w") as f:
+			json.dump(json_data, f, indent=4)
+		
 		self.columns = self.columnsArrayInitialisation()
 		self.stimuli = self.stimuliArrayInitialisation() #dict of names of stimuli demarcated by category
 		self.subjects = self.subjectArrayInitialisation(reading_method) #list of subject objects
@@ -780,12 +787,5 @@ class Experiment:
 		RS.to_draw.set_visible(True)
 		
 		plt.show()
-
-		json_data["Analysis_Params"]["EyeTracker"]["aoi_left_x"] = aoi_left_x
-		json_data["Analysis_Params"]["EyeTracker"]["aoi_left_y"] = aoi_left_y 
-		json_data["Analysis_Params"]["EyeTracker"]["aoi_right_x"] = aoi_right_x
-		json_data["Analysis_Params"]["EyeTracker"]["aoi_right_y"] = aoi_right_y
-		with open(self.json_file, "w") as f:
-			json.dump(json_data, f, indent=4)
 		
 		return (aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y)

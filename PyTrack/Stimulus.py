@@ -1117,13 +1117,15 @@ class Stimulus:
 			ax.text(np.mean(x), np.mean(y), str(i), fontsize=10, color='w')
 			i += 1
 
-		if show_fig:
-			plt.show()
-		
 		if save_fig:
 			fig.savefig(self.path + "/Subjects/" + self.subject_name + "/gaze_plot_" + self.name + ".png", dpi=300)
 
-
+		if show_fig:
+			plt.show()
+		
+		plt.close(fig)
+		
+		
 	def gazeHeatMap(self, save_fig=False, show_fig=True):
 		"""Function to plot heat map of gaze.
 
@@ -1180,13 +1182,14 @@ class Stimulus:
 		ax.set_xlim(0, int(col_shape * downsample_fraction))
 		ax.set_ylim(int(row_shape * downsample_fraction), 0)
 
-		if show_fig:
-			plt.show()
-			plt.close(fig)
-
 		if save_fig:
 			fig.savefig(self.path + "/Subjects/" + self.subject_name + "/gaze_heatmap_" + self.name + ".png", dpi=300)
 
+		if show_fig:
+			plt.show()
+		
+		plt.close(fig)
+		
 
 	def visualize(self, show=True):
 		"""Function to create dynamic plot of gaze and pupil size.
@@ -1820,6 +1823,11 @@ def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 	ax.contourf(np.arange(0, int(row_shape*downsample_fraction), 1), np.arange(0, int(col_shape*downsample_fraction), 1), hist.T, cmap=mycmap)
 	ax.set_xlim(0, int(col_shape * downsample_fraction))
 	ax.set_ylim(int(row_shape * downsample_fraction), 0)
+
+	if save_fig:
+		if not os.path.isdir(path + "/Aggregate_Plots/"):
+			os.mkdir(path + "/Aggregate_Plots/")	
+		fig.savefig(path + "/Subjects/Aggregate_Plots"+ "/agg_gaze_heatmap_" + str(datetime.now().timestamp()).split(".")[0] + ".png", dpi=300)
 
 	plt.show()
 	plt.close(fig)
