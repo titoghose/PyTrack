@@ -453,6 +453,7 @@ class Experiment:
 		with open(self.json_file, "r") as json_f:
 			json_data = json.load(json_f)
 
+		csvFile = None
 		if file_creation:
 			directory_path = json_data["Path"] + "/Results"
 			if not os.path.isdir(directory_path):
@@ -461,9 +462,10 @@ class Experiment:
 			if not os.path.isdir(directory_path + '/Data/'):
 				os.mkdir(directory_path + '/Data/')
 
-			file_path = directory_path + "/" + statistical_test + ".csv"
-			csvFile = open(file_path, 'w')
-			writer = csv.writer(csvFile)
+			if statistical_test != None:
+				file_path = directory_path + "/" + statistical_test + ".csv"
+				csvFile = open(file_path, 'w')
+				writer = csv.writer(csvFile)
 	
 
 		meta_not_to_be_considered = ["pupil_size", "pupil_size_downsample"]
@@ -576,7 +578,7 @@ class Experiment:
 						writer.writerow("\n")
 						aov.to_csv(csvFile)
 						writer.writerow("\n")
-
+						
 					posthocs = pg.pairwise_ttests(dv=meta, within=within_factor_list[0], between=between_factor_list[0], subject='subject', data=data)
 					pg.print_table(posthocs)
 
@@ -676,7 +678,9 @@ class Experiment:
 						writer.writerow("\n")					
 						aov.to_csv(csvFile)
 						writer.writerow("\n\n")
-
+				
+				if csvFile != None:
+					csvFile.close()
 
 	def getMetaData(self, sub, stim=None, sensor="EyeTracker"):
 		"""Function to return the extracted features for a given subject/participant.

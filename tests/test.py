@@ -97,7 +97,7 @@ class TestMethods(unittest.TestCase):
                             start='12', 
                             stop='99')
             
-            temp_df = pd.read_csv(os.path.abspath("tests/NTU_Experiment/Data/smi_eyetracker_freeviewing.csv"))
+            temp_df = pd.read_csv(os.path.abspath("tests/NTU_Experiment/smi_eyetracker_freeviewing.csv"))
             del(temp_df)
             df = pd.read_csv(os.path.abspath("tests/NTU_Experiment/Data/sub_222.csv"))
             check = 1
