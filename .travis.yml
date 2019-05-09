@@ -19,5 +19,5 @@ after_success:
   - coverage combine
   - codecov
 branches:
-  only:
     - master
+    - tito
