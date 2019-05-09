@@ -77,6 +77,7 @@ class TestMethods(unittest.TestCase):
             single_meta = exp.getMetaData(sub=subject_name, stim=stimulus_name)
 
             agg_type_meta = exp.getMetaData(sub=subject_name, stim=None)
+            check = 1
         finally:
             self.assertEqual(check, 1)
 
@@ -89,6 +90,15 @@ class TestMethods(unittest.TestCase):
                             start='start_trial', 
                             stop='stop_trial', 
                             eye='B')
+            
+            generateCompatibleFormat(exp_path=os.path.abspath("tests/NTU_Experiment/smi_eyetracker_freeviewing.txt"),
+                            device="smi", 
+                            stim_list_mode='NA', 
+                            start='12', 
+                            stop='99')
+            
+            temp_df = pd.read_csv(os.path.abspath("tests/NTU_Experiment/Data/smi_eyetracker_freeviewing.csv"))
+            del(temp_df)
             df = pd.read_csv(os.path.abspath("tests/NTU_Experiment/Data/sub_222.csv"))
             check = 1
         finally:

@@ -2,7 +2,6 @@
 
 import os
 import json
-import warnings
 from datetime import datetime
 
 import numpy as np
@@ -90,9 +89,6 @@ class Stimulus:
 			self.width = sensor_names["EyeTracker"]["Display_width"]
 			self.height = sensor_names["EyeTracker"]["Display_height"]
 			self.data = self.getDataStandAlone(data, sensor_names)
-
-
-		warnings.filterwarnings("ignore")
 
 
 	def diff(self, series):
