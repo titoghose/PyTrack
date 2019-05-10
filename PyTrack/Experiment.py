@@ -389,6 +389,14 @@ class Experiment:
 			return summation_index
 
 
+	def fileWriting(self, writer, csvFile, pd_dataframe, values_list):
+
+		writer.writerow(values_list)
+		writer.writerow("\n")
+		pd_dataframe.to_csv(csvFile)
+		writer.writerow("\n")
+
+
 	def analyse(self, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation=True, ttest_type=1):
 		"""This function carries out the required statistical analysis.
 		
@@ -570,10 +578,7 @@ class Experiment:
 
 						values_list = ["Mixed Anova: "]
 						values_list.append(meta)
-						writer.writerow(values_list)
-						writer.writerow("\n")
-						aov.to_csv(csvFile)
-						writer.writerow("\n")
+						self.fileWriting(writer, csvFile, aov, values_list)
 						
 					posthocs = pg.pairwise_ttests(dv=meta, within=within_factor_list[0], between=between_factor_list[0], subject='subject', data=data)
 					pg.print_table(posthocs)
@@ -581,10 +586,7 @@ class Experiment:
 					if file_creation:
 						
 						values_list = ["Post Hoc Analysis"]
-						writer.writerow(values_list)
-						writer.writerow("\n")					
-						posthocs.to_csv(csvFile)
-						writer.writerow("\n\n")
+						self.fileWriting(writer, csvFile, posthocs, values_list)
 
 				elif statistical_test == "RM_anova":
 
@@ -599,11 +601,7 @@ class Experiment:
 						
 						values_list = ["Repeated Measures Anova: "]
 						values_list.append(meta)
-						writer.writerow(values_list)
-						writer.writerow("\n")					
-						aov.to_csv(csvFile)
-						writer.writerow("\n\n")
-
+						self.fileWriting(writer, csvFile, aov, values_list)
 
 				elif statistical_test == "anova":
 
@@ -627,11 +625,7 @@ class Experiment:
 						
 						values_list = ["Anova including interaction effect: "]
 						values_list.append(meta)
-						writer.writerow(values_list)
-						writer.writerow("\n")					
-						res.to_csv(csvFile)
-						writer.writerow("\n\n")
-
+						self.fileWriting(writer, csvFile, res, values_list)
 
 					print("\nExcluding interaction effect")
 					model_equation = model_equation.replace("*", "+")
@@ -644,10 +638,7 @@ class Experiment:
 						
 						values_list = ["Anova excluding interaction effect: "]
 						values_list.append(meta)
-						writer.writerow(values_list)
-						writer.writerow("\n")		
-						res.to_csv(csvFile)
-						writer.writerow("\n\n")
+						self.fileWriting(writer, csvFile, res, values_list)
 
 				elif statistical_test == "ttest":
 
@@ -670,11 +661,8 @@ class Experiment:
 						
 						values_list = ["Pairwise ttest: "]
 						values_list.append(meta)
-						writer.writerow(values_list)
-						writer.writerow("\n")					
-						aov.to_csv(csvFile)
-						writer.writerow("\n\n")
-				
+						self.fileWriting(writer, csvFile, aov, values_list)
+						
 		if csvFile != None:
 			csvFile.close()
 
