@@ -1,15 +1,18 @@
+|Codacy Badge| |Build Status| |codecov| |Documentation Status|
+
 PyTrack
 =======
 
 Table of Contents
 =================
 
-1. `Getting Started <#getting-started>`__
+1. `Documentation <#documentation>`__
+2. `Getting Started <#getting-started>`__
 
    1. `Prerequisites <#prerequisites>`__
    2. `Installing <#installing>`__
 
-2. `Running the tests <#running-the-tests>`__
+3. `Running the tests <#running-the-tests>`__
 
    1. `Experiment Design <#experiment-design>`__
 
@@ -20,9 +23,9 @@ Table of Contents
 
    2. `Stand-alone Design <#stand-alone-design>`__
 
-3. `Authors <#authors>`__
-4. `License <#license>`__
-5. `Acknowledgments <#acknowledgments>`__
+4. `Authors <#authors>`__
+5. `License <#license>`__
+6. `Acknowledgments <#acknowledgments>`__
 
 This is a framework to analyse and visualize eye tracking data. It
 offers 2 designs of analysis:
@@ -37,6 +40,12 @@ Tobii eye trackers. The framework contains a *formatBridge* function
 that converts these files into a base format and then performs analysis
 on it.
 
+Documentation
+-------------
+
+The detailed documentation of the project with explanation of all its
+modules can be found
+`here <https://pytrack-ntu.readthedocs.io/en/latest/>`__.
 
 Getting Started
 ---------------
@@ -59,7 +68,9 @@ step:
 
 ::
 
-   pip install PyTrack
+   pip install PyTrack-NTU
+
+PyTrack uses Python 3.x. Hence, use pip for Python 3.x.
 
 Running the tests
 -----------------
@@ -293,10 +304,7 @@ for a detailed understanding of each function.
 
    # Calling the function for the statistical analysis of the data
    # file_creation=True. Hence, the output of the data used to run the tests and the output of the tests will be stored in in the 'Results' folder inside your experiment folder
-   exp.analyse(parameter_list={"all"},
-               between_factor_list=["Subject_type"],
-               within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova",
-               file_creation=True)
+   exp.analyse(statistical_test="anova")
 
 **Visualizing the data:**
 
@@ -482,7 +490,8 @@ participated in this project.
 License
 -------
 
-This project is licensed under the GNU GPL v3 License - see `License <https://pytrack-ntu.readthedocs.io/en/latest/License.html>`__ for details
+This project is licensed under the GNU GPL v3 License - see the
+`LICENSE.txt <LICENSE.txt>`__ file for details
 
 Acknowledgments
 ---------------
@@ -503,3 +512,12 @@ Acknowledgments
    and the **Department of Computer Science and Information Systems BITS
    Pilani, Hyderabad Campus**
    `[link] <https://www.bits-pilani.ac.in/hyderabad/computerscience/ComputerScience>`__.
+
+.. |Codacy Badge| image:: https://api.codacy.com/project/badge/Grade/f57df86d1eb94be0b150f45e16977566
+   :target: https://app.codacy.com/app/titoghose/PyTrack?utm_source=github.com&utm_medium=referral&utm_content=titoghose/PyTrack&utm_campaign=Badge_Grade_Dashboard
+.. |Build Status| image:: https://travis-ci.org/titoghose/PyTrack.svg?branch=master
+   :target: https://travis-ci.org/titoghose/PyTrack
+.. |codecov| image:: https://codecov.io/gh/titoghose/PyTrack/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/titoghose/PyTrack
+.. |Documentation Status| image:: https://readthedocs.org/projects/pytrack-ntu/badge/
+   :target: https://pytrack-ntu.readthedocs.io/en/latest/

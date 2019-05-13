@@ -49,8 +49,10 @@ The framework uses Python 3.x. For systems running Linux or Mac OS, it should be
 To install ***PyTrack*** on your system, it can be done with one simple step:
 
 ```
-pip install PyTrack
+pip install PyTrack-NTU
 ```
+
+PyTrack uses Python 3.x. Hence, use pip for Python 3.x.
 
 ## Running the tests
 
@@ -211,7 +213,13 @@ exp.metaMatrixInitialisation(standardise_flag=False,
 # file_creation=True. Hence, the output of the data used to run the tests and the output of the tests will be stored in in the 'Results' folder inside your experiment folder
 exp.analyse(parameter_list={"all"},
             between_factor_list=["Subject_type"],
-            within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova",
+            within_factor_list=["Stimuli_type"],
+            statistical_test="anova",
+            file_creation=True)
+
+# Does not run any test. Just saves all the data as csv files.
+exp.analyse(parameter_list={"all"},
+            statistical_test="None",
             file_creation=True)
 
 ```
