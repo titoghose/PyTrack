@@ -65,7 +65,7 @@ Running the tests
 -----------------
 
 In order to test **PyTrack**, some sample data files can be found
-`here <https://drive.google.com/open?id=1N9ZrTO6Bikx3aI7BKivSFAp3vrLxSCM6>`__.
+`here <https://drive.google.com/open?id=1tWD69hurELVuVRFzizCbukWnr22RZrnp>`__.
 
 To get started, first you need to choose which design you want to run
 the framework in. If you wish to use the *Experiment Design*, see
@@ -94,7 +94,7 @@ for the listed directories to be present for the proper functioning of
    │   │   subject_001.[asc/txt/tsv/...]
    │   │   subject_002.[asc/txt/tsv/...]
    |   |__ ......
-   │   
+   │
    └── Stimulus/
    │   │   stim_1.[jpg/jpeg]
    │   │   stim_2.[jpg/jpeg]
@@ -272,10 +272,10 @@ for a detailed understanding of each function.
 
    # function to convert data to generate database in base format for experiment done using EyeLink on both eyes and the stimulus name specified in the message section
    generateCompatibleFormat(exp_path="abcd/efgh/NTU_Experiment/",
-                           device="eyelink", 
-                           stim_list_mode='NA', 
-                           start='start_trial', 
-                           stop='stop_trial', 
+                           device="eyelink",
+                           stim_list_mode='NA',
+                           start='start_trial',
+                           stop='stop_trial',
                            eye='B')
 
 **Running the analysis or extracting data:**
@@ -288,14 +288,14 @@ for a detailed understanding of each function.
    exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
 
    # Instantiate the meta_matrix_dict of an Experiment to find and extract all features from the raw data
-   exp.metaMatrixInitialisation(standardise_flag=False, 
+   exp.metaMatrixInitialisation(standardise_flag=False,
                                  average_flag=False)
 
    # Calling the function for the statistical analysis of the data
    # file_creation=True. Hence, the output of the data used to run the tests and the output of the tests will be stored in in the 'Results' folder inside your experiment folder
-   exp.analyse(parameter_list={"all"}, 
-               between_factor_list=["Subject_type"], 
-               within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", 
+   exp.analyse(parameter_list={"all"},
+               between_factor_list=["Subject_type"],
+               within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova",
                file_creation=True)
 
 **Visualizing the data:**
@@ -376,25 +376,25 @@ the same.
    exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
 
    # Instantiate the meta_matrix_dict of an Experiment to find and extract all features from the raw data
-   exp.metaMatrixInitialisation(standardise_flag=False, 
+   exp.metaMatrixInitialisation(standardise_flag=False,
                                  average_flag=False)
 
-   # Calling the function for advanced statistical analysis of the data 
+   # Calling the function for advanced statistical analysis of the data
    # file_creation=True. Hence, the output of the data used to run the tests and the output of the tests will be stored in in the 'Results' folder inside your experiment folder
 
    #############################################################
    ## 1. Running anova on advanced between and within factors ##
    #############################################################
-   exp.analyse(parameter_list={"all"}, 
+   exp.analyse(parameter_list={"all"},
                between_factor_list=["Subject_type", "Gender"],
                within_factor_list=["Stimuli_type", "Brightness"],
-               statistical_test="anova", 
+               statistical_test="anova",
                file_creation=True)
 
    #############################################################
    ## 2. Running no tests. Just storing analysis data in Results folder ##
    #############################################################
-   exp.analyse(statistical_test="None", 
+   exp.analyse(statistical_test="None",
                file_creation=True)
 
 
@@ -404,11 +404,11 @@ the same.
    stimulus_name = "Stim_1" #specify your own stimulus name (must be in json file)
 
    # Access metadata dictionary for particular subject and stimulus
-   single_meta = exp.getMetaData(sub=subject_name, 
+   single_meta = exp.getMetaData(sub=subject_name,
                                  stim=stimulus_name)
 
    # Access metadata dictionary for particular subject and averaged for stimulus types
-   agg_type_meta = exp.getMetaData(sub=subject_name, 
+   agg_type_meta = exp.getMetaData(sub=subject_name,
                                     stim=None)
 
 Stand-alone Design
@@ -431,10 +431,10 @@ data for only 1 subject on a particular stimulus. If not, look at
 
    # function to convert data to generate csv file for data file recorded using EyeLink on both eyes and the stimulus name specified in the message section
    generateCompatibleFormat(exp_path="/path/to/data/file/in/raw/format",
-                           device="eyelink", 
-                           stim_list_mode='NA', 
-                           start='start_trial', 
-                           stop='stop_trial', 
+                           device="eyelink",
+                           stim_list_mode='NA',
+                           start='start_trial',
+                           stop='stop_trial',
                            eye='B')
 
    df = pd.read_csv("/path/to/enerated/data/file/in/csv/format")
@@ -455,7 +455,7 @@ data for only 1 subject on a particular stimulus. If not, look at
 
    # Creating Stimulus object. See the documentation for advanced parameters.
    stim = Stimulus(path="path/to/experiment/folder",
-                  data=df, 
+                  data=df,
                   sensor_names=sensor_dict)
 
    # Some functionality usage. See documentation of Stimulus class for advanced use.

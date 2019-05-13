@@ -11,7 +11,8 @@ install:
   - pip3 install coverage>=4.4.0
   - pip3 install pytest>=3.6.0
   - pip3 install pytest-cov
-  - pip3 install Pillow
+  - chmod +x tests/data_download.sh
+  - ./tests/data_download.sh
 script:
   - coverage run tests/test.py
 after_success:

@@ -14,7 +14,7 @@
    1. [Experiment Design](#experiment-design)
       1. [Setup](#setup)
       2. [Using PyTrack](#using-pytrack)
-      3. [Example Use](#example-use) 
+      3. [Example Use](#example-use)
       4. [Advanced Functionality](#advanced-functionality)
    2. [Stand-alone Design](#stand-alone-design)
 4. [Authors](#authors)
@@ -24,10 +24,10 @@
 
 This is a framework to analyse and visualize eye tracking data. It offers 2 designs of analysis:
 * **Experiment Design**: Analyse an entire experiment with 1 or more subjects/participants presented with 1 or more stimuli.
-* **Stand-alone Design**: Analyse a single stimulus for a single person. 
+* **Stand-alone Design**: Analyse a single stimulus for a single person.
 
 
-As of now, it supports data collected using SR Research EyeLink, SMI and Tobii eye trackers. The framework contains a *formatBridge* function that converts these files into a base format and then performs analysis on it. 
+As of now, it supports data collected using SR Research EyeLink, SMI and Tobii eye trackers. The framework contains a *formatBridge* function that converts these files into a base format and then performs analysis on it.
 
 
 ## Documentation
@@ -54,15 +54,15 @@ pip install PyTrack
 
 ## Running the tests
 
-In order to test ***PyTrack***, some sample data files can be found [here](https://drive.google.com/open?id=1N9ZrTO6Bikx3aI7BKivSFAp3vrLxSCM6). 
+In order to test ***PyTrack***, some sample data files can be found [here](https://drive.google.com/open?id=1tWD69hurELVuVRFzizCbukWnr22RZrnp).
 
 To get started, first you need to choose which design you want to run the framework in. If you wish to use the *Experiment Design*, see [this](#experiment-design). If you wish to use the *Stand-alone Design* see [this](#stand-alone-design).
 
-### Experiment Design 
+### Experiment Design
 
 #### Setup
 
-Before running the framework, lets setup the folder so ***PyTrack*** can read and save all the generated figures in one central location and things are organised. 
+Before running the framework, lets setup the folder so ***PyTrack*** can read and save all the generated figures in one central location and things are organised.
 
 Create a directory structure like the one shown below. It is essential for the listed directories to be present for the proper functioning of ***PyTrack***.
 ```
@@ -72,7 +72,7 @@ Create a directory structure like the one shown below. It is essential for the l
 │   │   subject_001.[asc/txt/tsv/...]
 │   │   subject_002.[asc/txt/tsv/...]
 |   |__ ......
-│   
+│
 └── Stimulus/
 │   │   stim_1.[jpg/jpeg]
 │   │   stim_2.[jpg/jpeg]
@@ -81,7 +81,7 @@ Create a directory structure like the one shown below. It is essential for the l
 └── [Experiment-Name].json
 
 ```
-*[Experiment-Name]* stands for the name of your experiment. Lets assume that your experiment name is "*NTU_Experiment*". The rest of the steps will use this alias as the *[Experiment-Name]* folder. 
+*[Experiment-Name]* stands for the name of your experiment. Lets assume that your experiment name is "*NTU_Experiment*". The rest of the steps will use this alias as the *[Experiment-Name]* folder.
 
 Now, follow these steps:
 
@@ -93,14 +93,14 @@ Now, follow these steps:
 
     eg. *stim_1.jpg* or *random_picture.png*
 
-3. The last and final step to setup the experiment directory is to include the experiment description json file. This file should contain the essential details of your experiment. It contains specifications regarding your experiment suchas the stimuli you wish to analyse or the participants/subjects you wish to include. Mentioned below is the json file structure. The content below can be copied and pasted in a file called *NTU_Experiment*.json (basically the name of your experiment with a json extension). 
-    
+3. The last and final step to setup the experiment directory is to include the experiment description json file. This file should contain the essential details of your experiment. It contains specifications regarding your experiment suchas the stimuli you wish to analyse or the participants/subjects you wish to include. Mentioned below is the json file structure. The content below can be copied and pasted in a file called *NTU_Experiment*.json (basically the name of your experiment with a json extension).
+
     * "*Experiment_name*" should be the same name as the json file without the extension and "*Path*" should be the absolute path to your experiment directory without the final "/" at the end.
     * The subjects should be added under the "*Subjects*" field. You may specify one or more groups of division for your subjects (recommended for aggregate between group statistical analysis). **There must be atleast 1 group**.
     * The stimuli names should be added under the "*Stimuli*" field and again you may specify one or more types (recommended for aggregate between stimulus type statistical analysis). **There must be atleast 1 type**.
-    * The "*Control_Questions*" field is optional. In case you have some stimuli that should be used to standardise/normalise features extracted from all stimuli, sepcify the names here. **These stimuli must be present under the "*Stimuli*" field under one of the types**. 
-    * **The field marked "*Columns_of_interest*" should not be altered**. 
-    * Under "*Analysis_Params*", just change the values of "Sampling_Freq", "Display_height" and "Display_width" to match the values of your experiment. 
+    * The "*Control_Questions*" field is optional. In case you have some stimuli that should be used to standardise/normalise features extracted from all stimuli, sepcify the names here. **These stimuli must be present under the "*Stimuli*" field under one of the types**.
+    * **The field marked "*Columns_of_interest*" should not be altered**.
+    * Under "*Analysis_Params*", just change the values of "Sampling_Freq", "Display_height" and "Display_width" to match the values of your experiment.
 
     ***Note***: If you wish to analyse only a subset of your stimuli or subjects, specify only the ones of interest in the json file. The analysis and visualization will be done only for the ones mentioned in the json file.
 
@@ -161,7 +161,7 @@ Now, follow these steps:
 
 #### Using PyTrack
 
-This involves less than 10 lines of python code. However, in case you want to do more detailed analysis, it may involve a few more lines. 
+This involves less than 10 lines of python code. However, in case you want to do more detailed analysis, it may involve a few more lines.
 
 Using *formatBridge* majorly has 3 cases.:
 
@@ -176,7 +176,7 @@ Using *formatBridge* majorly has 3 cases.:
 3. **Do not sepcify any stimulus order list**. In this case, the output of the statistical analysis will be inconclusive and the visualization of gaze will be on a black screen instead of the stimulus image. The *stim_list_mode* parameter in the *generateCompatibleFormat* function needs to be set as "NA". However, you can still extract the metadata and features extracted for each participant but the names will not make any sense. ***WE DO NOT RECOMMEND THIS***.
 
 
-#### Example Use 
+#### Example Use
 
 See [documentation](https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html) for a detailed understanding of each function.
 
@@ -187,10 +187,10 @@ from PyTrack.formatBridge import generateCompatibleFormat
 
 # function to convert data to generate database in base format for experiment done using EyeLink on both eyes and the stimulus name specified in the message section
 generateCompatibleFormat(exp_path="abcd/efgh/NTU_Experiment/",
-                        device="eyelink", 
-                        stim_list_mode='NA', 
-                        start='start_trial', 
-                        stop='stop_trial', 
+                        device="eyelink",
+                        stim_list_mode='NA',
+                        start='start_trial',
+                        stop='stop_trial',
                         eye='B')
 
 ```
@@ -204,14 +204,14 @@ from PyTrack.Experiment import Experiment
 exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
 
 # Instantiate the meta_matrix_dict of an Experiment to find and extract all features from the raw data
-exp.metaMatrixInitialisation(standardise_flag=False, 
+exp.metaMatrixInitialisation(standardise_flag=False,
                               average_flag=False)
 
 # Calling the function for the statistical analysis of the data
 # file_creation=True. Hence, the output of the data used to run the tests and the output of the tests will be stored in in the 'Results' folder inside your experiment folder
-exp.analyse(parameter_list={"all"}, 
-            between_factor_list=["Subject_type"], 
-            within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", 
+exp.analyse(parameter_list={"all"},
+            between_factor_list=["Subject_type"],
+            within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova",
             file_creation=True)
 
 ```
@@ -239,7 +239,7 @@ The Experiment class contains a function called analyse() which is used to perfo
 * For example if Gender is to be considered as an additional between group factor then in the json file, under "Subjects", for each subject, a corresponding dicitionary must be created where you mention the factor name and the corresponding value (eg: Subject_name: {"Gender" : "M"}). Please also note that the square brackets ('[', ']') after group type need to be changed to curly brackets ('{', '}').
 * This must be similarly done for Stimuli, if any additional within group factor that describes the stimuli needs to be added. For example, if you are showing WORDS and PICTURES to elicit different responses from a user and you additonally have 2 different brightness levels ("High" and "Low") of the stimuli, you could consider Type1 and Type2 to be the PICTuRE and WORD gropus and mention Brightness as an additional within group factor.
 
-The below code snippet just shows the changes that are to be done for Subject and Stimuli sections of the json file, the other sections remain the same. 
+The below code snippet just shows the changes that are to be done for Subject and Stimuli sections of the json file, the other sections remain the same.
 
 ```json
 {
@@ -276,25 +276,25 @@ from PyTrack.Experiment import Experiment
 exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
 
 # Instantiate the meta_matrix_dict of an Experiment to find and extract all features from the raw data
-exp.metaMatrixInitialisation(standardise_flag=False, 
+exp.metaMatrixInitialisation(standardise_flag=False,
                               average_flag=False)
 
-# Calling the function for advanced statistical analysis of the data 
+# Calling the function for advanced statistical analysis of the data
 # file_creation=True. Hence, the output of the data used to run the tests and the output of the tests will be stored in in the 'Results' folder inside your experiment folder
 
 #############################################################
 ## 1. Running anova on advanced between and within factors ##
 #############################################################
-exp.analyse(parameter_list={"all"}, 
+exp.analyse(parameter_list={"all"},
             between_factor_list=["Subject_type", "Gender"],
             within_factor_list=["Stimuli_type", "Brightness"],
-            statistical_test="anova", 
+            statistical_test="anova",
             file_creation=True)
 
 #############################################################
 ## 2. Running no tests. Just storing analysis data in Results folder ##
 #############################################################
-exp.analyse(statistical_test="None", 
+exp.analyse(statistical_test="None",
             file_creation=True)
 
 
@@ -304,11 +304,11 @@ subject_name = "Sub_001" #specify your own subject's name (must be in json file)
 stimulus_name = "Stim_1" #specify your own stimulus name (must be in json file)
 
 # Access metadata dictionary for particular subject and stimulus
-single_meta = exp.getMetaData(sub=subject_name, 
+single_meta = exp.getMetaData(sub=subject_name,
                               stim=stimulus_name)
 
 # Access metadata dictionary for particular subject and averaged for stimulus types
-agg_type_meta = exp.getMetaData(sub=subject_name, 
+agg_type_meta = exp.getMetaData(sub=subject_name,
                                  stim=None)
 
 ```
@@ -329,10 +329,10 @@ import numpy as np
 
 # function to convert data to generate csv file for data file recorded using EyeLink on both eyes and the stimulus name specified in the message section
 generateCompatibleFormat(exp_path="/path/to/data/file/in/raw/format",
-                        device="eyelink", 
-                        stim_list_mode='NA', 
-                        start='start_trial', 
-                        stop='stop_trial', 
+                        device="eyelink",
+                        stim_list_mode='NA',
+                        start='start_trial',
+                        stop='stop_trial',
                         eye='B')
 
 df = pd.read_csv("/path/to/enerated/data/file/in/csv/format")
@@ -353,7 +353,7 @@ sensor_dict = {
 
 # Creating Stimulus object. See the documentation for advanced parameters.
 stim = Stimulus(path="path/to/experiment/folder",
-               data=df, 
+               data=df,
                sensor_names=sensor_dict)
 
 # Some functionality usage. See documentation of Stimulus class for advanced use.

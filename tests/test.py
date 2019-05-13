@@ -11,32 +11,31 @@ import numpy as np
 import json
 import unittest
 
-
 class TestMethods(unittest.TestCase):
-    
+
     def testExperimentDesign(self):
         check = 0
         try:
             generateCompatibleFormat(exp_path=os.path.abspath("tests/NTU_Experiment"),
-                                device="eyelink", 
-                                stim_list_mode='NA', 
-                                start='start_trial', 
-                                stop='stop_trial', 
+                                device="eyelink",
+                                stim_list_mode='NA',
+                                start='start_trial',
+                                stop='stop_trial',
                                 eye='B')
             check = 1
         finally:
             self.assertEqual(check, 1)
-        
+
         check = 0
         try:
             exp = Experiment(json_file=os.path.abspath("tests/NTU_Experiment/NTU_Experiment.json"))
             check = 1
         finally:
             self.assertEqual(check, 1)
-        
+
         check = 0
         try:
-            exp.metaMatrixInitialisation(standardise_flag=False, 
+            exp.metaMatrixInitialisation(standardise_flag=False,
                                     average_flag=False)
             check = 1
         finally:
@@ -44,31 +43,31 @@ class TestMethods(unittest.TestCase):
 
         check = 0
         try:
-            exp.analyse(parameter_list={"all"}, 
+            exp.analyse(parameter_list={"all"},
                         between_factor_list=["Subject_type", "Gender"],
                         within_factor_list=["Stimuli_type"],
-                        statistical_test="anova", 
+                        statistical_test="anova",
                         file_creation=True)
 
             exp.analyse(parameter_list={"all"},
-                        statistical_test="anova", 
+                        statistical_test="anova",
                         file_creation=True)
 
-            exp.analyse(parameter_list={"all"}, 
-                        statistical_test="ttest", 
+            exp.analyse(parameter_list={"all"},
+                        statistical_test="ttest",
                         file_creation=True)
 
-            exp.analyse(parameter_list={"all"}, 
-                        statistical_test="RM_anova", 
+            exp.analyse(parameter_list={"all"},
+                        statistical_test="RM_anova",
                         file_creation=True)
-            
-            exp.analyse(statistical_test="None", 
+
+            exp.analyse(statistical_test="None",
                         file_creation=True)
 
             check = 1
         finally:
             self.assertEqual(check, 1)
-        
+
         check = 0
         try:
             subject_name = "sub_222"
@@ -85,25 +84,25 @@ class TestMethods(unittest.TestCase):
         check = 0
         try:
             generateCompatibleFormat(exp_path=os.path.abspath("tests/NTU_Experiment/Data/sub_222.asc"),
-                            device="eyelink", 
-                            stim_list_mode='NA', 
-                            start='start_trial', 
-                            stop='stop_trial', 
+                            device="eyelink",
+                            stim_list_mode='NA',
+                            start='start_trial',
+                            stop='stop_trial',
                             eye='B')
-            
+
             generateCompatibleFormat(exp_path=os.path.abspath("tests/NTU_Experiment/smi_eyetracker_freeviewing.txt"),
-                            device="smi", 
-                            stim_list_mode='NA', 
-                            start='12', 
+                            device="smi",
+                            stim_list_mode='NA',
+                            start='12',
                             stop='99')
-            
+
             temp_df = pd.read_csv(os.path.abspath("tests/NTU_Experiment/smi_eyetracker_freeviewing.csv"))
             del(temp_df)
             df = pd.read_csv(os.path.abspath("tests/NTU_Experiment/Data/sub_222.csv"))
             check = 1
         finally:
             self.assertEqual(check, 1)
-        
+
         check = 0
         try:
             sensor_dict = {
@@ -120,11 +119,11 @@ class TestMethods(unittest.TestCase):
                         }
 
             stim = Stimulus(path=os.path.abspath("tests/NTU_Experiment"),
-                        data=df, 
+                        data=df,
                         sensor_names=sensor_dict,
                         start_time=0,
                         end_time=6000)
-            
+
             check = 1
         finally:
             self.assertEqual(check, 1)
