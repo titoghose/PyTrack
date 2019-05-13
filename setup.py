@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PyTrack-NTU",
-    version="0.0.7",
+    version="0.0.8",
     author="Upamanyu Ghose, Arvind Srinivasan",
     author_email="titoghose@gmail.com, 96arvind@gmail.com",
     description="A small example package",
@@ -19,12 +19,12 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "numpy",
-        "scipy",
+        "numpy==1.16.2",
+        "scipy==1.2.1",
         "pingouin",
         "sqlalchemy",
         "pandas",
-        "matplotlib",
+        "matplotlib==3.0.2",
         "statsmodels",
         "Pillow"
       ]
