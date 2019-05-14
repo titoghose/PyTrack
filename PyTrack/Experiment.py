@@ -14,7 +14,7 @@ from statsmodels.formula.api import ols
 from statsmodels.stats.anova import AnovaRM
 import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
-from matplotlib.widgets import RectangleSelector
+from matplotlib.widgets import RectangleSelector, PolygonSelector, EllipseSelector
 
 from PyTrack.Sensor import Sensor
 from PyTrack.Subject import Subject
@@ -117,8 +117,8 @@ class Experiment:
 	sensors: list(str) (optional)
 		Contains the names of the different sensors whose indicators are being analysed (currently only Eye Tracking can be done
 		However in future versions, analysis of ECG and EDA may be added)
-	aoi : str {'NA', 'draw'} | tuple (optional)
-		If 'NA' then AOI is the entire display size. If 'draw' then the user is prompted to draw an area of interest. If type is ``tuple``, user must specify the coordinates of AOI in the following order (start_x, start_y, end_x, end_y). Here, x is the horizontal axis and y is the vertical axis.
+	aoi : str {'NA', 'e', 'r', 'p'} | tuple (optional)
+		If 'NA' then AOI is the entire display size. If 'e' then draw ellipse, 'p' draw polygon and 'r' draw rectangle. If type is ``tuple``, user must specify the coordinates of AOI in the following order (start_x, start_y, end_x, end_y). Here, x is the horizontal axis and y is the vertical axis.
 
 	"""
 
@@ -131,21 +131,19 @@ class Experiment:
 		self.name = json_data["Experiment_name"]
 		self.json_file = json_file #string
 		self.sensors = ["EyeTracker"]
-
+		self.aoi = aoi
 		self.aoi_coords = None
 		# Setting AOI coordinates
 		if isinstance(aoi, str):
-			if aoi == "draw":
+			if aoi != "NA":
 				self.aoi_coords = self.drawAOI()
 			else:
 				self.aoi_coords = (0, 0, json_data["Analysis_Params"]["EyeTracker"]["Display_width"], json_data["Analysis_Params"]["EyeTracker"]["Display_height"])
 		else:
 			self.aoi_coords = aoi
 
-		json_data["Analysis_Params"]["EyeTracker"]["aoi_left_x"] = self.aoi_coords[0]
-		json_data["Analysis_Params"]["EyeTracker"]["aoi_left_y"] = self.aoi_coords[1]
-		json_data["Analysis_Params"]["EyeTracker"]["aoi_right_x"] = self.aoi_coords[2]
-		json_data["Analysis_Params"]["EyeTracker"]["aoi_right_y"] = self.aoi_coords[3]
+		json_data["Analysis_Params"]["EyeTracker"]["aoi"] = self.aoi_coords
+
 		with open(self.json_file, "w") as f:
 			json.dump(json_data, f, indent=4)
 
@@ -764,18 +762,57 @@ class Experiment:
 		fig.canvas.set_window_title("Draw AOI")
 		ax.imshow(img)
 
-		def line_select_callback(eclick, erelease):
-			nonlocal aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y
+		if self.aoi == "polygon":
 
-			aoi_left_x, aoi_left_y = int(round(eclick.xdata)), int(round(eclick.ydata))
-			aoi_right_x, aoi_right_y = int(round(erelease.xdata)), int(round(erelease.ydata))
+			def onselect(verts):
+				nonlocal vertices, canvas
+				print('\nSelected points:')
+				for i, j in vertices:
+					print(round(i, 3), ",", round(j, 3))
+				vertices = verts
+				canvas.draw_idle()
 
-			print("Coordinates [(start_x, start_y), (end_x, end_y)]: ", "[(%6.2f, %6.2f), (%6.2f, %6.2f)]" % (aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y))
+			canvas = ax.figure.canvas
+			PS = PolygonSelector(ax, onselect, lineprops=dict(color='r', linestyle='-', linewidth=2, alpha=0.5), markerprops=dict(marker='o', markersize=7, mec='r', mfc='k', alpha=0.5))
+			vertices = []
 
-		RS = RectangleSelector(ax, line_select_callback, drawtype='box', useblit=False, button=[1],  minspanx=5, minspany=5, spancoords='pixels',interactive=True)
+			print("1) 'esc' KEY: START A NEW POLYGON")
+			print("2) 'shift' KEY: MOVE ALL VERTICES BY DRAGGING ANY EDGE")
+			print("3) 'ctrl' KEY: MOVE A SINGLE VERTEX")
 
-		RS.to_draw.set_visible(True)
+			plt.show()
 
-		plt.show()
+			return vertices
 
-		return (aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y)
+		elif self.aoi == "rectangle":
+			def line_select_callback(eclick, erelease):
+				nonlocal aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y
+				aoi_left_x, aoi_left_y = int(round(eclick.xdata)), int(round(eclick.ydata))
+				aoi_right_x, aoi_right_y = int(round(erelease.xdata)), int(round(erelease.ydata))
+				print("Coordinates [(start_x, start_y), (end_x, end_y)]: ", "[(%6.2f, %6.2f), (%6.2f, %6.2f)]" % (aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y))
+
+			RS = RectangleSelector(ax, line_select_callback, drawtype='box', useblit=False, interactive=True)
+			RS.to_draw.set_visible(True)
+
+			plt.show()
+
+			return [aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y]
+
+		elif self.aoi == "ellipse":
+			x_dia = 0
+			y_dia = 0
+			centre = (0,0)
+			def onselect(eclick, erelease):
+				nonlocal x_dia, y_dia, centre
+				x_dia = (erelease.xdata - eclick.xdata)
+				y_dia = (erelease.ydata - eclick.ydata)
+				centre = [round(eclick.xdata + x_dia/2., 3), round(eclick.ydata + y_dia/2., 3)]
+				print("Centre: ", centre)
+				print("X Diameter: ", x_dia)
+				print("Y Diameter: ", y_dia)
+				print()
+
+			ES = EllipseSelector(ax, onselect, drawtype='box', interactive=True, lineprops=dict(color='g', linestyle='-', linewidth=2, alpha=0.5), marker_props=dict(marker='o', markersize=7, mec='g', mfc='k', alpha=0.5))
+			plt.show()
+
+			return [centre, x_dia, y_dia]

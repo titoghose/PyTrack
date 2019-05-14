@@ -8,7 +8,8 @@ import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
+from matplotlib import Path
+from matplotlib.patches import Ellipse, Rectangle, Polygon
 from matplotlib.widgets import Slider, CheckButtons
 import matplotlib.animation as animation
 import matplotlib.cm as cm
@@ -85,7 +86,7 @@ class Stimulus:
 
 		# Experiment json file does not exist so stimulus is being created as a stand alone object
 		else:
-			self.aoi_coords = (sensor_names["EyeTracker"]["aoi_left_x"], sensor_names["EyeTracker"]["aoi_left_y"], sensor_names["EyeTracker"]["aoi_right_x"], sensor_names["EyeTracker"]["aoi_right_y"])
+			self.aoi_coords = sensor_names["EyeTracker"]["aoi"]
 			self.width = sensor_names["EyeTracker"]["Display_width"]
 			self.height = sensor_names["EyeTracker"]["Display_height"]
 			self.data = self.getDataStandAlone(data, sensor_names)
@@ -1088,9 +1089,28 @@ class Stimulus:
 
 		ax = plt.gca()
 		ax.imshow(img)
-		rect = mpl.patches.Rectangle((self.aoi_coords[0], self.aoi_coords[1]), self.aoi_coords[2]-self.aoi_coords[0], self.aoi_coords[3]-self.aoi_coords[1],
-										color='r', fill=False, linestyle='--')
-		ax.add_patch(rect)
+
+		# Rectangle AOI
+		if len(self.aoi_coords) == 4:
+			rect = Rectangle((self.aoi_coords[0], self.aoi_coords[1]),
+									(self.aoi_coords[2] - self.aoi_coords[0]),
+									(self.aoi_coords[3] - self.aoi_coords[1]),
+									color='r', fill=False, linestyle='--')
+			ax.add_patch(rect)
+
+		# Circle AOI
+		elif len(self.aoi_coords) == 3:
+			ellipse = Ellipse((self.aoi_coords[0][0], self.aoi_coords[0][1]),
+								self.aoi_coords[1],
+								self.aoi_coords[2],
+								color='r', fill=False, linestyle='--')
+			ax.add_patch(ellipse)
+
+		# Polygon AOI
+		else:
+			xy = np.asarray(self.aoi_coords)
+			poly = Polygon(xy, color='r', fill=False, linestyle='--')
+			ax.add_patch(poly)
 
 
 		fixation_dict = self.findFixations()
@@ -1175,9 +1195,30 @@ class Stimulus:
 		mycmap._lut[:,-1] = np.linspace(0, 0.8, 255+4)
 		img = misc.imresize(img, size=downsample_fraction, interp='lanczos')
 		ax.imshow(img)
-		rect = mpl.patches.Rectangle((self.aoi_coords[0]*downsample_fraction, self.aoi_coords[1]*downsample_fraction), downsample_fraction*(self.aoi_coords[2]-self.aoi_coords[0]), downsample_fraction*(self.aoi_coords[3]-self.aoi_coords[1]),
-										color='r', fill=False, linestyle='--')
-		ax.add_patch(rect)
+
+		# Rectangle AOI
+		if len(self.aoi_coords) == 4:
+			rect = Rectangle((downsample_fraction*self.aoi_coords[0], downsample_fraction*self.aoi_coords[1]),
+									downsample_fraction*(self.aoi_coords[2] - self.aoi_coords[0]),
+									downsample_fraction*(self.aoi_coords[3] - self.aoi_coords[1]),
+									color='r', fill=False, linestyle='--')
+			ax.add_patch(rect)
+
+		# Circle AOI
+		elif len(self.aoi_coords) == 3:
+			ellipse = Ellipse((downsample_fraction*self.aoi_coords[0][0], downsample_fraction*self.aoi_coords[0][1]),
+								downsample_fraction*self.aoi_coords[1],
+								downsample_fraction*self.aoi_coords[2],
+								color='r', fill=False, linestyle='--')
+			ax.add_patch(ellipse)
+
+		# Polygon AOI
+		else:
+			xy = np.asarray(self.aoi_coords)*downsample_fraction
+			poly = Polygon(xy, color='r', fill=False, linestyle='--')
+			ax.add_patch(poly)
+
+
 		ax.contourf(np.arange(0, int(row_shape*downsample_fraction), 1), np.arange(0, int(col_shape*downsample_fraction), 1), hist.T, cmap=mycmap)
 		ax.set_xlim(0, int(col_shape * downsample_fraction))
 		ax.set_ylim(int(row_shape * downsample_fraction), 0)
@@ -1217,9 +1258,27 @@ class Stimulus:
 				img = np.zeros((self.height, self.width))
 
 		ax.imshow(img)
-		rect = mpl.patches.Rectangle((self.aoi_coords[0], self.aoi_coords[1]), self.aoi_coords[2]-self.aoi_coords[0], self.aoi_coords[3]-self.aoi_coords[1],
-										color='r', fill=False, linestyle='--')
-		ax.add_patch(rect)
+		# Rectangle AOI
+		if len(self.aoi_coords) == 4:
+			rect = Rectangle((self.aoi_coords[0], self.aoi_coords[1]),
+									(self.aoi_coords[2] - self.aoi_coords[0]),
+									(self.aoi_coords[3] - self.aoi_coords[1]),
+									color='r', fill=False, linestyle='--')
+			ax.add_patch(rect)
+
+		# Circle AOI
+		elif len(self.aoi_coords) == 3:
+			ellipse = Ellipse((self.aoi_coords[0][0], self.aoi_coords[0][1]),
+								self.aoi_coords[1],
+								self.aoi_coords[2],
+								color='r', fill=False, linestyle='--')
+			ax.add_patch(ellipse)
+
+		# Polygon AOI
+		else:
+			xy = np.asarray(self.aoi_coords)
+			poly = Polygon(xy, color='r', fill=False, linestyle='--')
+			ax.add_patch(poly)
 
 		if self.data["InterpGaze"] != None:
 			total_range = range(len(self.data["ETRows"]))
@@ -1728,13 +1787,34 @@ class Stimulus:
 			Modified gaze_aoi column with the mask for points inside and outside the AOI.
 
 		"""
+		patch = None
+		# Rectangle AOI
+		if len(self.aoi_coords) == 4:
+			patch = Rectangle((self.aoi_coords[0], self.aoi_coords[1]),
+									(self.aoi_coords[2] - self.aoi_coords[0]),
+									(self.aoi_coords[3] - self.aoi_coords[1]),
+									color='r', fill=False, linestyle='--')
+
+		# Circle AOI
+		elif len(self.aoi_coords) == 3:
+			patch = Ellipse((self.aoi_coords[0][0], self.aoi_coords[0][1]),
+								self.aoi_coords[1],
+								self.aoi_coords[2],
+								color='r', fill=False, linestyle='--')
+
+		# Polygon AOI
+		else:
+			xy = np.asarray(self.aoi_coords)
+			patch = Polygon(xy, color='r', fill=False, linestyle='--')
 
 		gaze_aoi = data[0]
 		x = data[1]
 		y = data[2]
 
-		gaze_aoi_new = gaze_aoi
-		gaze_aoi_new[np.where((x >= self.aoi_coords[0]) & (y >= self.aoi_coords[1]) & (x <= self.aoi_coords[2]) & (y <= self.aoi_coords[3]))[0]] = 1
+		points = np.transpose(np.vstack((x, y)))
+		contains = patch.contains_points(points)
+		gaze_aoi_new = np.asarray(contains, dtype=int)
+		gaze_aoi_new[np.where(gaze_aoi_new == 0)[0]] = -1
 
 		return gaze_aoi_new
 
@@ -1787,10 +1867,7 @@ def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 		path = json_data["Path"]
 		width = json_data["Analysis_Params"]["EyeTracker"]["Display_width"]
 		height = json_data["Analysis_Params"]["EyeTracker"]["Display_height"]
-		aoi_left_x = json_data["Analysis_Params"]["EyeTracker"]["aoi_left_x"]
-		aoi_left_y = json_data["Analysis_Params"]["EyeTracker"]["aoi_left_y"]
-		aoi_right_x = json_data["Analysis_Params"]["EyeTracker"]["aoi_right_x"]
-		aoi_right_y = json_data["Analysis_Params"]["EyeTracker"]["aoi_right_y"]
+		aoi_coords = json_data["Analysis_Params"]["EyeTracker"]["aoi"]
 
 	try:
 		img = plt.imread(path + "/Stimuli/" + sub_list[0].stimulus[stim_type][stim_num].name + ".jpg")
@@ -1814,11 +1891,27 @@ def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 	img = misc.imresize(img, size=downsample_fraction, interp='lanczos')
 	ax.imshow(img)
 
-	rect = mpl.patches.Rectangle((downsample_fraction*aoi_left_x, downsample_fraction*aoi_left_y),
-								downsample_fraction*(aoi_right_x-aoi_left_x),
-								downsample_fraction*(aoi_right_y-aoi_left_y),
+	# Rectangle AOI
+	if len(aoi_coords) == 4:
+		rect = Rectangle((downsample_fraction*aoi_coords[0], downsample_fraction*aoi_coords[1]),
+								downsample_fraction*(aoi_coords[2]-aoi_coords[0]),
+								downsample_fraction*(aoi_coords[3]-aoi_coords[1]),
 										color='r', fill=False, linestyle='--')
-	ax.add_patch(rect)
+		ax.add_patch(rect)
+
+	# Circle AOI
+	elif len(aoi_coords) == 3:
+		ellipse = Ellipse((downsample_fraction*aoi_coords[0][0], downsample_fraction*aoi_coords[0][1]),
+								downsample_fraction*(aoi_coords[1]),
+								downsample_fraction*(aoi_coords[2]),
+										color='r', fill=False, linestyle='--')
+		ax.add_patch(ellipse)
+
+	# Polygon AOI
+	else:
+		xy = np.asarray(aoi_coords) * downsample_fraction
+		poly = Polygon(xy, color='r', fill=False, linestyle='--')
+		ax.add_patch(poly)
 
 	ax.contourf(np.arange(0, int(row_shape*downsample_fraction), 1), np.arange(0, int(col_shape*downsample_fraction), 1), hist.T, cmap=mycmap)
 	ax.set_xlim(0, int(col_shape * downsample_fraction))
