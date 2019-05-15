@@ -22,12 +22,12 @@ exp.analyse(between_factor_list = ["Subject_type", "G"],  statistical_test = "tt
 exp.analyse(statistical_test = "ttest")
 '''
 
-exp = Experiment("/home/arvind/Desktop/NTU_Experiment/NTU_Experiment.json","SQL")
-#exp.visualizeData()
-exp.metaMatrixInitialisation(average_flag = True)
+exp = Experiment("/home/arvind/Desktop/Pytrack_testing/PyTrack_sample_data/NTU_Experiment/NTU_Experiment.json")
+exp.visualizeData()
+exp.metaMatrixInitialisation()
 
 #Testing analyse
-exp.analyse(statistical_test = "Mixed_anova")
+exp.analyse(statistical_test="Mixed_anova")
 # exp.analyse(statistical_test = "anova")
 # exp.analyse(statistical_test = "RM_anova")
 # exp.analyse(statistical_test = "ttest")

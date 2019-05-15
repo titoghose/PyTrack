@@ -16,33 +16,33 @@ from scipy import signal, io, stats, misc
 from scipy.ndimage.filters import gaussian_filter
 import math
 
-from PyTrack.Sensor import Sensor
+from Sensor import Sensor
 
 class Stimulus:
-	"""This is the main class that performs analysis and visualization of data collected during presentation of various stimuli during the experiment. 
+	"""This is the main class that performs analysis and visualization of data collected during presentation of various stimuli during the experiment.
 
-	If the framework is used in the *Experiment Design* objects of this class are created implicitly and the user need not worry about the internal functioning of the class methods. However, if using the *Stand-alone Design*, the user needs to explicitly create an object of the class and invoke the functions based on what is needed. 
+	If the framework is used in the *Experiment Design* objects of this class are created implicitly and the user need not worry about the internal functioning of the class methods. However, if using the *Stand-alone Design*, the user needs to explicitly create an object of the class and invoke the functions based on what is needed.
 
 	Parameters
 	----------
 	path : str
 		This parameter is the absolute path to the experiment directory containing the json file, stimuli folder with pictures etc. For the *Experiment Design*, this parameter is internally handled. In the *Stand-alone Design*, this parameter needs to be specified while creating the object. All data and plots, if saved, will be stored in folders in this location.
-	name : str 
+	name : str
 		The name of the stimulus. For the *Experiment Design*, this parameter is internally handled. If using in *Stand-alone Design*, this parameter is optional and will default to `id_rather_not`.
-	stim_type : str	
+	stim_type : str
 		The type of stimulus, if there are different classes of stimulus in the experiment. For the *Experiment Design*, this parameter is internally handled. If using in *Stand-alone Design*, this parameter is optional and will default to `doesnt_matter`.
 	sensor_names : list(str) | dict
-		In the *Experiment Design* `sensor_names` will default to the sensors being used (as mentioned in the json_file). As of now this only supports EyeTracker. If using in *Stand-alone Design*, this parameter must be a dictionary of dictionaries with the details of the sensors and their attributes. The framework as of now just supports Eye Tracking so in the *Stand-alone Design*, `sensor_names` should be in this format (edit the value of the "Sampling_Freq" according to your eye tracker's value): 
+		In the *Experiment Design* `sensor_names` will default to the sensors being used (as mentioned in the json_file). As of now this only supports EyeTracker. If using in *Stand-alone Design*, this parameter must be a dictionary of dictionaries with the details of the sensors and their attributes. The framework as of now just supports Eye Tracking so in the *Stand-alone Design*, `sensor_names` should be in this format (edit the value of the "Sampling_Freq" according to your eye tracker's value):
 		{"EyeTracker": {"Sampling_Freq":1000}}
 	data : pandas DataFrame
 		The data for this stimulus as a Pandas DataFrame. For the *Experiment Design*, this parameter is internally handled. In the *Stand-alone Design* use the `formatBridge.generateCompatibleFormat` module to convert your data into the accepted format and then pass the csv file as a Pandas DataFrame to `data`. This should be the data for just a single stimulus or else the features extracted will not make sense to you. In case you wish to analyse all stimuli for 1 subject, we suggest using the *Experiment Design*.
 	start_time : int
-		The onset of stimulus. For the *Experiment Design*, this parameter is internally handled and if -1, it implies that data for stimulus is missing. In the *Stand-alone Design*, this parameter is optional (0 by default) and need not be mentioned. However, if supplying an entire dataframe and it is desired to analyse data in a given range, supply the index value to start from. Also specify `end_time` or else -1 is used by default i.e end of DataFrame. 
+		The onset of stimulus. For the *Experiment Design*, this parameter is internally handled and if -1, it implies that data for stimulus is missing. In the *Stand-alone Design*, this parameter is optional (0 by default) and need not be mentioned. However, if supplying an entire dataframe and it is desired to analyse data in a given range, supply the index value to start from. Also specify `end_time` or else -1 is used by default i.e end of DataFrame.
 	end_time : int
 		The offset of stimulus. For the *Experiment Design*, this parameter is internally handled and if -1, it implies that data for stimulus is missing. In the *Stand-alone Design*, this parameter is optional (-1 by default) and need not be mentioned. However, if supplying an entire dataframe and it is desired to analyse data in a given range, supply the index value to end at. Also specify `start_time` or else 0 is used by default i.e start of DataFrame.
 	roi_time : int
 
-	json_file : str 
+	json_file : str
 		Desciption of experiment as JSON file. For the *Experiment Design*, this parameter is internally handled. In the *Stand-alone Design* it is not required (leave as ``None``).
 	subject_name : str (optional)
 		Name of the subject being analysed. For the *Experiment Design*, this parameter is internally handled. In the *Stand-alone Design* it is optional (Defaults to buttersnaps).
@@ -82,7 +82,7 @@ class Stimulus:
 				self.data = None
 			else:
 				self.data = self.getData(data, sensor_names)
-		
+
 		# Experiment json file does not exist so stimulus is being created as a stand alone object
 		else:
 			self.aoi_coords = (sensor_names["EyeTracker"]["aoi_left_x"], sensor_names["EyeTracker"]["aoi_left_y"], sensor_names["EyeTracker"]["aoi_right_x"], sensor_names["EyeTracker"]["aoi_right_y"])
@@ -92,8 +92,8 @@ class Stimulus:
 
 
 	def diff(self, series):
-		"""Python implementation of Matlab's 'diff' function. 
-		
+		"""Python implementation of Matlab's 'diff' function.
+
 		Computes the difference between (n+1)th and (n)th elements of array. Returns (a[n+1] - a[n]) for all n.
 
 		Parameters
@@ -112,7 +112,7 @@ class Stimulus:
 
 	def smooth(self, x, window_len):
 		"""Smoothing function to compute running average.
-		
+
 		Computes the running average for a window size of `window_len`. For the boundary values (`window_len`-1 values at start and end) the window length is reduced to accommodate no padding.
 
 		Parameters
@@ -125,10 +125,10 @@ class Stimulus:
 		Returns
 		-------
 		y : list | array (numeric)
-			Smoothed version `x`. 
-			
+			Smoothed version `x`.
+
 		"""
-		
+
 		# Running average smoothing
 		if window_len < 3:
 			return x
@@ -136,7 +136,7 @@ class Stimulus:
 		# Window length must be odd
 		if window_len%2 == 0:
 			window_len += 1
-		
+
 		w = np.ones(window_len)
 		y = np.convolve(w, x, mode='valid') / len(w)
 		y = np.hstack((x[:window_len//2], y, x[len(x)-window_len//2:]))
@@ -151,62 +151,62 @@ class Stimulus:
 
 
 	def findBlinks(self, pupil_size, gaze=None, sampling_freq=1000, concat=False, concat_gap_interval=100, interpolate=False):
-		"""Finds indices of occurances of blinks and interpolates pupil size and gaze data. 
-		
-		Function to find blinks and return blink onset, offset indices and interpolated pupil size data. 
-		Adapted from: R. Hershman, A. Henik, and N. Cohen, “A novel blink detection method based on pupillometry noise," Behav. Res. Methods, vol. 50, no. 1, pp. 107-114, 2018. 
-		Goto https://osf.io/jyz43/ for R and Matlab implementation. 
-		
+		"""Finds indices of occurances of blinks and interpolates pupil size and gaze data.
+
+		Function to find blinks and return blink onset, offset indices and interpolated pupil size data.
+		Adapted from: R. Hershman, A. Henik, and N. Cohen, “A novel blink detection method based on pupillometry noise," Behav. Res. Methods, vol. 50, no. 1, pp. 107-114, 2018.
+		Goto https://osf.io/jyz43/ for R and Matlab implementation.
+
 		Parameters
 		----------
 		pupil_size : array | list
 			Pupil size data for left or right eye
 		gaze : dict of list
-			Gaze in x and y direction. {"x" : list , "y" : list } 
+			Gaze in x and y direction. {"x" : list , "y" : list }
 		sampling_freq : float
 			Sampling frequency of eye tracking hardware (Defaults to 1000).
-		concat : bool 
-			Concatenate close blinks/missing trials or not. ``False`` by default. See R. Hershman et. al. for more information 
-		concat_gap_interval : float 
+		concat : bool
+			Concatenate close blinks/missing trials or not. ``False`` by default. See R. Hershman et. al. for more information
+		concat_gap_interval : float
 			Minimum interval between successive missing samples/blinks to consider for concatenation. If `concat` is ``False`` this parameter does not matter. Default value is 100.
 		interpolate : bool
 			Interpolate pupil and gaze data durig blinks (Defaults to `False``).
 
 		Returns
-		-------	
+		-------
 		blinks : dict
-			Blink onset and offset indices. {"blink_onset" : list , "blink_offset" : list} 
-		interp_pupil_size : array | list 
+			Blink onset and offset indices. {"blink_onset" : list , "blink_offset" : list}
+		interp_pupil_size : array | list
 			Interpolated pupil size data for left or right eye after fixing blinks. If `interpolate`=``False``, this is the same as `pupil_size` supplied to the function.
 		new_gaze : dict
-			Interpolated gaze in x and y direction after fixing blinks. If `interpolate`=``False``, this is the same as `gaze` supplied to the function. {"x" : list, "y" : list} 
+			Interpolated gaze in x and y direction after fixing blinks. If `interpolate`=``False``, this is the same as `gaze` supplied to the function. {"x" : list, "y" : list}
 
 		"""
-		
+
 		blink_onset = []
 		blink_offset = []
 		blinks = {"blink_onset": blink_onset, "blink_offset": blink_offset}
-		
+
 		sampling_interval = 1000 // sampling_freq
-		
+
 		missing_data = np.array(pupil_size == -1, dtype="float32")
 		difference = self.diff(missing_data)
-		
+
 		blink_onset = np.where(difference == 1)[0]
 		blink_offset = np.where(difference == -1)[0] + 1
-		
+
 		blink_onset = sorted(blink_onset)
 		blink_offset = sorted(blink_offset)
 
 		length_blinks = len(blink_offset) + len(blink_onset)
-		
+
 		if (length_blinks == 0):
 			return blinks, pupil_size, gaze
 
 		# Edge Case 2: the data starts with a blink. In this case, blink onset will be defined as the first missing value.
-		if ((len(blink_onset) > 0 and blink_onset[0] > 0) or (len(blink_onset) < len(blink_offset))) and pupil_size[0] == -1: 
+		if ((len(blink_onset) > 0 and blink_onset[0] > 0) or (len(blink_onset) < len(blink_offset))) and pupil_size[0] == -1:
 			blink_onset = np.hstack((0, blink_onset))
-		
+
 		# Edge Case 3: the data ends with a blink. In this case, blink offset will be defined as the last missing sample
 		if (len(blink_offset) < len(blink_onset)) and pupil_size[-1] == -1:
 			blink_offset = np.hstack((blink_offset, len(pupil_size) - 1))
@@ -214,13 +214,13 @@ class Stimulus:
 		ms_4_smoothing = 10
 		samples2smooth = ms_4_smoothing // sampling_interval
 		smooth_pupil_size = np.array(self.smooth(pupil_size, samples2smooth), dtype='float32')
-		
+
 		smooth_pupil_size[np.where(smooth_pupil_size == -1)[0]] = float('nan')
 		smooth_pupil_size_diff = self.diff(smooth_pupil_size)
-		
+
 		monotonically_dec = smooth_pupil_size_diff <= 0
 		monotonically_inc = smooth_pupil_size_diff >= 0
-		
+
 		for i in range(len(blink_onset)):
 			# Edge Case 2: If data starts with blink we do not update it and let starting blink index be 0
 			if blink_onset[i] != 0:
@@ -228,7 +228,7 @@ class Stimulus:
 				while j > 0 and monotonically_dec[j] == True:
 					j -= 1
 				blink_onset[i] = j + 1
-				
+
 			# Edge Case 3: If data ends with blink we do not update it and let ending blink index be the last index of the data
 			if blink_offset[i] != len(pupil_size) - 1:
 				j = blink_offset[i]
@@ -252,7 +252,7 @@ class Stimulus:
 			temp = np.reshape(c, (-1, 2), order='C')
 			blink_onset = np.array(temp[:, 0], dtype=int)
 			blink_offset = np.array(temp[:, 1], dtype=int)
-		
+
 		blinks["blink_onset"] = blink_onset
 		blinks["blink_offset"] = blink_offset
 
@@ -260,9 +260,9 @@ class Stimulus:
 
 			pupil_size_no_blinks = []
 			pupil_size_no_blinks_indices = []
-			
+
 			prev = 0
-			
+
 			for i in range(len(blink_onset)):
 				if i == 0:
 					pupil_size_no_blinks_indices = np.arange(prev, blink_onset[i])
@@ -271,21 +271,21 @@ class Stimulus:
 					prev = blink_offset[i - 1]
 					pupil_size_no_blinks_indices = np.hstack((pupil_size_no_blinks_indices, np.arange(prev, blink_onset[i])))
 					pupil_size_no_blinks = np.hstack((pupil_size_no_blinks, pupil_size[range(prev, blink_onset[i])]))
-			
+
 			pupil_size_no_blinks_indices = np.hstack(
 				(pupil_size_no_blinks_indices, np.arange(blink_offset[i], len(pupil_size))))
 			pupil_size_no_blinks = np.hstack((pupil_size_no_blinks, pupil_size[range(blink_offset[i], len(pupil_size))]))
-			
-			
+
+
 			interp_pupil_size = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices),
 										  pupil_size_no_blinks)
-			
+
 			if gaze != None:
 				new_gaze = {"left" : None, "right" : None}
 				for eye in ["left", "right"]:
 					gaze_x = gaze[eye]["x"]
 					gaze_y = gaze[eye]["y"]
-					
+
 					gaze_x_no_blinks = gaze_x[pupil_size_no_blinks_indices]
 					gaze_y_no_blinks = gaze_y[pupil_size_no_blinks_indices]
 
@@ -310,7 +310,7 @@ class Stimulus:
 
 	def findFixations(self):
 		"""Function to extract indices of fixation sequences.
-		
+
 		Internal function of class that uses its `data` member variable to compute indices. Does not take any input and can be invoked by an object of the class. Serves as a helper function.
 
 		Returns
@@ -322,9 +322,9 @@ class Stimulus:
 
 		fixation_onset = []
 		fixation_offset = []
-	
+
 		i = 0
-	
+
 		while i < len(self.data["FixationSeq"]):
 			if self.data["FixationSeq"][i] != -1:
 				curr = self.data["FixationSeq"][i]
@@ -334,7 +334,7 @@ class Stimulus:
 				fixation_offset.append(i-1)
 			else:
 				i += 1
-	
+
 		fixation_indices = {"start": fixation_onset, "end": fixation_offset}
 
 		return fixation_indices
@@ -342,7 +342,7 @@ class Stimulus:
 
 	def findSaccades(self):
 		"""Function to extract indices of saccade sequences.
-		
+
 		Saccades are assumed to be interspersed between fixations. Internal function of class that uses its `data` member variable to compute indices. Does not take any input and can be invoked by an object of the class. Serves as a helper function.
 
 		Returns
@@ -351,10 +351,10 @@ class Stimulus:
 			Indices of start and end of saccades. {"start": saccade_onset list, "end": saccade_offset list}
 
 		"""
-	
+
 		saccade_onset = []
 		saccade_offset = []
-	
+
 		i = 0
 		while i < len(self.data["FixationSeq"]):
 			if self.data["FixationSeq"][i] == -1:
@@ -364,7 +364,7 @@ class Stimulus:
 				saccade_offset.append(i-1)
 			else:
 				i += 1
-	
+
 		saccade_indices = {"start": saccade_onset, "end": saccade_offset}
 
 		return saccade_indices
@@ -372,66 +372,66 @@ class Stimulus:
 
 	def position2Velocity(self, gaze, sampling_freq):
 		"""Function to calculate velocity for a gaze point based on a 6 sample window.
-		
+
 		Serves as a helper function. See `findMicrosaccades <#Stimulus.Stimulus.findMicrosaccades>`_.
 
 		Parameters
 		----------
-		gaze : array | list 
+		gaze : array | list
 			Gaze positons in x or y direction.
 		sampling_freq : float
 			Sampling Frequency of eye tracker.
 
 		Returns
 		-------
-		velocity : array | list 
+		velocity : array | list
 			Gaze velocities in x or y direction.
 
 		"""
-	
+
 		n = len(gaze)
 		velocity = np.zeros(gaze.shape)
-	
+
 		velocity[2:n-2] = (gaze[4:n] + gaze[3:n-1] - gaze[1:n-3] - gaze[0:n-4]) * (sampling_freq/6.0)
 		velocity[1] = (gaze[2] - gaze[0]) * (sampling_freq/2.0)
 		velocity[n-2] = (gaze[n-1] - gaze[n-3]) * (sampling_freq/2.0)
-	
+
 		return velocity
 
 
 	def smoothGaze(self, vel, gaze, sampling_freq):
 		"""Function to smoothen gaze positions using running average method.
-		
+
 		Serves as a helper function. See `findMicrosaccades <#Stimulus.Stimulus.findMicrosaccades>`_
- 
+
 		Parameters
 		----------
-		vel : array | list 
+		vel : array | list
 			Gaze velocities in x or y direction
-		gaze : array | list 
+		gaze : array | list
 			Gaze positons in x or y direction
 		sampling_freq : float
 			Sampling Frequency of eye tracker
-		
+
 		Returns
 		-------
-		smooth_gaze : array | list 
+		smooth_gaze : array | list
 			Smoothened gaze positons in x or y direction
 
 		"""
-	
+
 		smooth_gaze = np.zeros(gaze.shape)
-	
+
 		smooth_gaze[0] = gaze[0]
 		vel[1] = vel[1] + smooth_gaze[0]
 		smooth_gaze = np.cumsum(vel)
-	
+
 		return smooth_gaze
 
 
 	def calculateMSThreshold(self, vel, sampling_freq, VFAC=5.0):
 		"""Function to calculate velocity threshold value for X and Y directions to classify point as a microsaccade point.
-	
+
 		Serves as a helper function. See `findMicrosaccades <#Stimulus.Stimulus.findMicrosaccades>`_
 
 		Parameters
@@ -442,20 +442,20 @@ class Stimulus:
 			Sampling frequency of the eye tracking device
 		VFAC : float
 			Scalar constant used to find threshold (Defaults to 5.0). See R. Engbert and K. Mergenthaler, “Microsaccades are triggered by low retinal image slip,” Proc. Natl. Acad. Sci., vol. 103, no. 18, pp. 7192–7197, 2006.
-		
+
 		Returns
 		-------
 		radius : float
 			Threshold radius in x or y direction
 
 		"""
-	
+
 		medx = np.median(vel)
 		msdx = np.sqrt(np.median((vel-medx)**2))
-	
+
 		if msdx<1e-10:
 			msdx = np.sqrt(np.mean(vel**2) - (np.mean(vel))**2)
-	
+
 		radius = VFAC * msdx
 		return radius
 
@@ -476,13 +476,13 @@ class Stimulus:
 		-------
 		ms : dict
 			Dictionary of values containing the number of binary microsaccades, number of left eye microsaccades, number of right eye microsaccades, binary microsaccades list, left microsaccades list and right microsaccades list.
-			- "NB" : int 
-			- "NR" : int 
+			- "NB" : int
+			- "NR" : int
 			- "NL" : int
-			- "bin" : array | list (num_ms, 18) 
-			- "left" : array | list (num_ms, 9) 
+			- "bin" : array | list (num_ms, 18)
+			- "left" : array | list (num_ms, 9)
 			- "right" : array | list (num_ms, 9)
-		
+
 		"""
 
 		numr = len(msl)
@@ -501,7 +501,7 @@ class Stimulus:
 			TR = np.max(msr[:, 1])
 			TB = int(np.max((TL, TR)))
 			s = np.zeros(TB+2)
-			
+
 			for left_coords in msl:
 				s[int(left_coords[0]) : int(left_coords[1]) + 1] = 1
 
@@ -562,9 +562,9 @@ class Stimulus:
 
 		ms = {"NB" : NB, "NR" : NR, "NL" : NL, "bin" : bin_ms, "left" : monol, "right" : monor}
 
-		return ms	
+		return ms
 
-	
+
 	def findMonocularMS(self, gaze, vel, sampling_freq=1000):
 		"""Function to find binocular microsaccades from monocular microsaccades.
 
@@ -572,9 +572,9 @@ class Stimulus:
 
 		Parameters
 		----------
-		gaze : array | list 
+		gaze : array | list
 			Gaze positons in x or y direction
-		vel : array | list 
+		vel : array | list
 			Gaze velocities in x or y direction
 		sampling_freq : float
 			Sampling Frequency of eye tracker (Defaults to 1000)
@@ -597,7 +597,7 @@ class Stimulus:
 			Number of microsaccades
 		ms_duration : list(int)
 			List of duration of each microsaccade. Contains as many values as `ms_count`
-		
+
 		"""
 
 		MINDUR = int((sampling_freq / 1000) * 6)
@@ -619,7 +619,7 @@ class Stimulus:
 		# for ind, msi in enumerate(ms_indices):
 		# 	print(ind, msi)
 
-		N = len(ms_indices) 
+		N = len(ms_indices)
 		num_ms = 0
 		MS = np.zeros((1, 9))
 		duration = 1
@@ -641,7 +641,7 @@ class Stimulus:
 					else:
 						new_ms = np.array([ms_indices[a], ms_indices[b], 0, 0, 0, 0, 0, 0, 0])
 						MS = np.vstack((MS, new_ms))
-				
+
 				a = k+1
 				duration = 1
 
@@ -661,7 +661,7 @@ class Stimulus:
 		if num_ms>0:
 			# Compute peak velocity, horiztonal and vertical components
 			for s in range(num_ms):
-				
+
 				# Onset and offset for saccades
 				a = int(MS[s][0])
 				b = int(MS[s][1])
@@ -705,7 +705,7 @@ class Stimulus:
 
 	def findMicrosaccades(self, sampling_freq=1000, plot_ms=False):
 		"""Function to detect microsaccades within fixations.
-		
+
 		Adapted from R. Engbert and K. Mergenthaler, “Microsaccades are triggered by low retinal image slip,” Proc. Natl. Acad. Sci., vol. 103, no. 18, pp. 7192–7197, 2006.
 
 		Parameters
@@ -723,7 +723,7 @@ class Stimulus:
 			Total count of all binocular and monocular microsaccades.
 		ms_duration : list(sloat)
 			List of durations of all microsaccades.
-		temp_vel : list(float) 
+		temp_vel : list(float)
 			List of peak velocities of all microsaccades.
 		temp_amp : list(float)
 			List of amplitudes of all microsaccades.
@@ -760,10 +760,10 @@ class Stimulus:
 
 			MS = self.findBinocularMS(all_MS["left"], all_MS["right"])
 			all_bin_MS.append(MS)
-			
+
 
 			if plot_ms:
-				
+
 				# Plot gaze and velocity with thresholds
 				fig = plt.figure()
 				a1 = fig.add_subplot(1, 2, 1)
@@ -784,9 +784,9 @@ class Stimulus:
 				a2.set_ylabel("vel-y")
 				a2.set_title("gaze velocity plot")
 				for i in range(len(MS["bin"])):
-					a2.plot(vel["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], vel["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r') 
+					a2.plot(vel["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], vel["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r')
 
-				
+
 				if not os.path.isdir(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/"):
 					os.makedirs(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/")
 
@@ -805,7 +805,7 @@ class Stimulus:
 						amp = (np.sqrt(ms["bin"][i, 5]**2 + ms["bin"][i, 6]**2) + np.sqrt(ms["bin"][i, 13]**2 + ms["bin"][i, 14]**2))/2
 
 						plt.scatter(amp, peak_vel, marker='o', facecolors='none', edgecolors='r')
-				
+
 				plt.savefig(self.path + "/Subjects/" + self.subject_name + "/ms_main_seq" + self.name + ".png", dpi=200)
 				plt.close(fig2)
 
@@ -822,36 +822,36 @@ class Stimulus:
 						# Appending peak velocity for binary microsaccade
 						vel_val = (m[2] + m[11]) / 2.
 						temp_vel = np.hstack((temp_vel, vel_val))
-					
+
 						# Appending amplitude for binary microsaccade
 						amp_val = (np.sqrt(m[5]**2 + m[6]**2) + np.sqrt(m[13]**2 + m[14]**2)) / 2.
 						temp_amp = np.hstack((temp_amp, amp_val))
 
 						# Appending durations for binary microsaccade
 						dur_val = ((m[1] - m[0]) + (m[10] - m[9])) / 2.
-						ms_duration = np.hstack((ms_duration, dur_val))	
-			
+						ms_duration = np.hstack((ms_duration, dur_val))
+
 			# if ms["NL"] != 0:
 			# 	for m in ms["left"]:
 			# 		if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
 			# 			ms_count += 1
 			# 			# Appending peak velocity for left eye microsaccade
 			# 			temp_vel = np.hstack((temp_vel, m[2]))
-						
+
 			# 			# Appending amplitude for left eye microsaccade
 			# 			temp_amp = np.hstack((temp_amp, np.sqrt(m[5]**2 + m[6]**2)))
 
 			# 			# Appending durations for left eye microsaccade
 			# 			dur_val = m[1] - m[0]
 			# 			ms_duration = np.hstack((ms_duration, dur_val))
-			
+
 			# if ms["NR"] != 0:
 			# 	for m in ms["right"]:
 			# 		if len(np.where(self.data["GazeAOI"][int(m[0]) : int(m[1])] == 1)[0]) > int(0.9 * (m[1] - m[0])):
 			# 			ms_count += 1
 			# 			# Appending peak velocity for left eye microsaccade
 			# 			temp_vel = np.hstack((temp_vel, m[2]))
-						
+
 			# 			# Appending amplitude for left eye microsaccade
 			# 			temp_amp = np.hstack((temp_amp, np.sqrt(m[5]**2 + m[6]**2)))
 
@@ -863,7 +863,7 @@ class Stimulus:
 			ms_duration = [0, 0]
 			temp_vel = [0, 0]
 			temp_amp = [0, 0]
-			
+
 		return all_bin_MS, ms_count, ms_duration[1:], temp_vel[1:], temp_amp[1:]
 
 
@@ -883,24 +883,24 @@ class Stimulus:
 			Tuple consisting of (saccade_count, saccade_duration, saccade_peak_vel, saccade_amplitude).
 
 		"""
-		
+
 		saccade_indices = self.findSaccades()
 		saccade_onset = saccade_indices["start"]
 		saccade_offset = saccade_indices["end"]
 
 		saccade_count = 0
 		saccade_duration = []
-		
+
 		saccade_peak_vel = []
 		saccade_amplitude = []
 
 		for start, end in zip(saccade_onset, saccade_offset):
-			
+
 			if (end-start) < 6:
 				continue
-			
+
 			if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)):
-				
+
 				saccade_count += 1
 
 				saccade_duration.append(end-start)
@@ -924,7 +924,7 @@ class Stimulus:
 				dX = np.sign(ix2 - ix1) * (maxx - minx)
 				dY = np.sign(iy2 - iy1) * (maxy - miny)
 				saccade_amplitude.append(np.sqrt(dX**2 + dY**2))
-		
+
 		if saccade_count == 0:
 			saccade_duration = [0]
 			saccade_peak_vel = [0]
@@ -942,15 +942,15 @@ class Stimulus:
 		----------
 		sampling_freq : float
 			Sampling Frequency of eye tracker (Defaults to 1000)
-		
+
 		Returns
 		-------
 		float
 			Response time in milliseconds
-		
+
 		"""
 		return len(self.data["ETRows"] * (1000/sampling_freq))
-	
+
 
 	def findFixationParams(self):
 		"""Function to find fixation parameters like count, max duration and average duration.
@@ -966,7 +966,7 @@ class Stimulus:
 
 		inside_aoi = [0, 0, 0]
 
-		fix_num, fix_ind, fix_cnt = np.unique(self.data["FixationSeq"], return_index=True, return_counts=True)	
+		fix_num, fix_ind, fix_cnt = np.unique(self.data["FixationSeq"], return_index=True, return_counts=True)
 		fixation_count = len(fix_num) - 1
 
 		if fixation_count != 0:
@@ -976,7 +976,9 @@ class Stimulus:
 				if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)):
 					inside_aoi[0] += 1
 					temp1.append(end - start)
-			
+				else:
+					print("Hello")
+
 			if len(temp1) != 0:
 				inside_aoi[1] = np.max(temp1)
 				inside_aoi[2] = np.mean(temp1)
@@ -1007,7 +1009,7 @@ class Stimulus:
 		while index < length:
 			if pupil_size[index] < 0:
 				pupil_AUC += abs(pupil_size[index])
-			index += 1			
+			index += 1
 
 		# Finding slope of regression line fit on pupil_size data
 		x = np.array([i for i in range(1500)])
@@ -1015,7 +1017,7 @@ class Stimulus:
 		pupil_slope, _, _, _, _ = stats.linregress(x[:len(y)],y)
 
 		# Finding mean of pupil_size data
-		pupil_mean = np.mean(pupil_size)		
+		pupil_mean = np.mean(pupil_size)
 
 		# Finding decimated pupil_size value (at 60Hz)
 		frequency = 60
@@ -1023,11 +1025,11 @@ class Stimulus:
 		index = 0
 		pupil_size_downsample = []
 		while index < length:
-			pupil_size_downsample.append(pupil_size[index])	
-			index += downsample_stride	
+			pupil_size_downsample.append(pupil_size[index])
+			index += downsample_stride
 
 		return (pupil_size, peak_pupil, time_to_peak, pupil_AUC, pupil_slope, pupil_mean, pupil_size_downsample)
-		
+
 
 	def findBlinkParams(self):
 		"""Function to find blink parameters like count, duration and average duration
@@ -1071,7 +1073,7 @@ class Stimulus:
 			Display the gaze plot figure or not (Defaults to ``True``).
 
 		"""
-		
+
 		if self.data == None:
 			return
 
@@ -1085,7 +1087,7 @@ class Stimulus:
 				img = plt.imread(self.path + "/Stimuli/" + self.name + ".jpeg")
 			except:
 				img = np.zeros((self.height, self.width))
-		
+
 		ax = plt.gca()
 		ax.imshow(img)
 		rect = mpl.patches.Rectangle((self.aoi_coords[0], self.aoi_coords[1]), self.aoi_coords[2]-self.aoi_coords[0], self.aoi_coords[3]-self.aoi_coords[1],
@@ -1099,7 +1101,7 @@ class Stimulus:
 
 		gaze_x = np.array(np.split(self.data["InterpGaze"]["left"]["x"], fixation_indices))
 		gaze_y = np.array(np.split(self.data["InterpGaze"]["left"]["y"], fixation_indices))
-		
+
 		fixation_mask = np.arange(start=1, stop=len(gaze_x), step=2)
 		saccade_mask = np.arange(start=0, stop=len(gaze_x), step=2)
 
@@ -1124,8 +1126,8 @@ class Stimulus:
 			fig.savefig(self.path + "/Subjects/" + self.subject_name + "/gaze_plot_" + self.name + ".png", dpi=300)
 
 		plt.close(fig)
-		
-		
+
+
 	def gazeHeatMap(self, save_fig=False, show_fig=True):
 		"""Function to plot heat map of gaze.
 
@@ -1137,7 +1139,7 @@ class Stimulus:
 			Save the heat map figure or not (Defaults to ``False``). If ``True``, will be saved in the Subjects folder of the experiment folder
 		show_fig : bool
 			Display the heat map figure or not (Defaults to ``True``).
-		
+
 		"""
 
 		if self.data == None:
@@ -1145,12 +1147,12 @@ class Stimulus:
 
 		fig = plt.figure()
 		fig.canvas.set_window_title("Gaze Heat Map: " + self.name)
-		
+
 		ax = plt.gca()
-		
+
 		x = self.data["InterpGaze"]["left"]["x"]
 		y = self.data["InterpGaze"]["left"]["y"]
-		
+
 		# In order to get more intense values for the heatmap (ratio of points is unaffected)
 		x = np.repeat(x, 5)
 		y = np.repeat(y, 5)
@@ -1184,30 +1186,30 @@ class Stimulus:
 
 		if show_fig:
 			plt.show()
-		
+
 		if save_fig:
 			fig.savefig(self.path + "/Subjects/" + self.subject_name + "/gaze_heatmap_" + self.name + ".png", dpi=300)
 
 		plt.close(fig)
-		
+
 
 	def visualize(self, show=True):
 		"""Function to create dynamic plot of gaze and pupil size.
-		
+
 		Internal function of class that uses its `data` member variable. Does not take any input and can be invoked by an object of the class.
-		
+
 		"""
 		if self.data == None:
 			return
 
 		total_range = None
-		
+
 		# Initialising Plots
 		fig = plt.figure()
 		fig.canvas.set_window_title(self.name)
 		ax = fig.add_subplot(2, 1, 1)
 		ax2 = fig.add_subplot(2, 1, 2)
-	
+
 		try:
 			img = plt.imread(self.path + "/Stimuli/" + self.name + ".jpg")
 		except:
@@ -1215,11 +1217,11 @@ class Stimulus:
 				img = plt.imread(self.path + "/Stimuli/" + self.name + ".jpeg")
 			except:
 				img = np.zeros((self.height, self.width))
-				
+
 		ax.imshow(img)
 		rect = mpl.patches.Rectangle((self.aoi_coords[0], self.aoi_coords[1]), self.aoi_coords[2]-self.aoi_coords[0], self.aoi_coords[3]-self.aoi_coords[1],
 										color='r', fill=False, linestyle='--')
-		ax.add_patch(rect)										
+		ax.add_patch(rect)
 
 		if self.data["InterpGaze"] != None:
 			total_range = range(len(self.data["ETRows"]))
@@ -1227,7 +1229,7 @@ class Stimulus:
 			line, = ax.plot(self.data["InterpGaze"]["left"]["x"][:1], self.data["InterpGaze"]["left"]["y"][:1], 'r-', alpha=1)
 			circle, = ax.plot(self.data["InterpGaze"]["left"]["x"][1], self.data["InterpGaze"]["left"]["y"][1], 'go', markersize=10, alpha=0.7)
 			ax.set_title("Gaze")
-		
+
 			# Plot for pupil size
 			line3, = ax2.plot(total_range[:1], self.data["InterpPupilSize"][:1])
 			ax2.set_xlim([0, len(total_range)])
@@ -1239,7 +1241,7 @@ class Stimulus:
 			for i in range(len(self.data["BlinksLeft"]["blink_onset"])):
 				plt.axvline(x=self.data["BlinksLeft"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
 				plt.axvline(x=self.data["BlinksLeft"]["blink_offset"][i], linestyle="--", color="g", alpha=0.6)
-			
+
 				plt.axvline(x=self.data["BlinksLeft"]["blink_onset"][i], linestyle="--", color="r", alpha=0.4)
 				plt.axvline(x=self.data["BlinksLeft"]["blink_offset"][i], linestyle="--", color="g", alpha=0.6)
 
@@ -1260,18 +1262,18 @@ class Stimulus:
 			"""
 			"""
 			i = int(i)
-			
+
 			if self.data["InterpGaze"] != None:
 				line.set_xdata(self.data["InterpGaze"]["left"]["x"][:i])
 				line.set_ydata(self.data["InterpGaze"]["left"]["y"][:i])
-			
+
 				circle.set_xdata(self.data["InterpGaze"]["left"]["x"][i])
 				circle.set_ydata(self.data["InterpGaze"]["left"]["y"][i])
-				
+
 				line3.set_xdata(total_range[:i])
 				line3.set_ydata(self.data["InterpPupilSize"][:i])
-				ax2.set_ylim([min(self.data["InterpPupilSize"][:i]) - 5, max(self.data["InterpPupilSize"][:i]) + 5])      
-		
+				ax2.set_ylim([min(self.data["InterpPupilSize"][:i]) - 5, max(self.data["InterpPupilSize"][:i]) + 5])
+
 			fig.canvas.draw_idle()
 
 		def update_plot(i):
@@ -1285,9 +1287,9 @@ class Stimulus:
 			samp.set_val(i)
 			is_manual = False # the above line called update_slider, so we need to reset this
 			fig.canvas.draw_idle()
-			
+
 			return [line, circle, line3]
-			
+
 
 		def on_click(event):
 			"""
@@ -1309,166 +1311,107 @@ class Stimulus:
 		ani = animation.FuncAnimation(fig, update_plot, interval=1)
 
 		if show:
-			plt.show()		
+			plt.show()
 
 
-	def numberRevisits(self, data_array):
+	def numberRevisits(self):
 		"""Calculates the number of times the eye revisits within the region of interest, each instance should atleast be 4 milliseconds long
 
-		Parameters
-		----------
-		data_array: numpy array
-			Is a column that contains the whether the eye is present in the region of interest or not
-
 		Returns
 		-------
-		no_q_roi: int
-			Number of times the eye revisit on the region of interest for question region
+		num_readings: int
+			Number of times the subject revisits the Area of Interest (1 revisit is consecutive fixations within AOI) 
 
-		no_r_roi: int
-			Number of times the eye revisit on the region of interst for response region
-		
 		"""
 
-		frequency = self.sensors["EyeTracker"].sampling_freq
-		
-		#To find number of rows that is equal to 4 ms, however if that is less than 4 rows then atleast 4 rows will be considered
-		no_rows = (frequency*4)/1000
+		num_readings = 0
+		flag = 0
 
-		no_rows = math.ceil(no_rows)	
+		fix_num, fix_ind, fix_cnt = np.unique(self.data["FixationSeq"], return_index=True, return_counts=True)
+		fixation_count = len(fix_num) - 1
 
-		if(no_rows < 4):
-			no_rows = 4
+		if fixation_count != 0:
+			temp1 = []
+			fix_ind_end = np.array(fix_ind[1:]) + np.array(fix_cnt[1:])
+			for start, end in zip(fix_ind[1:], fix_ind_end):
+				
+				if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)) and flag==0:
+					num_readings += 1
+					flag = 1
+				elif len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) < int(0.9 * (end-start)):
+					flag = 0
 
-		no_revisits = 0
-
-		previous_flag = -1
-		present_flag = -1
-
-		length = len(data_array)
-
-		for i in range(length):
-
-			s1 = data_array[i]
-
-			#Calculation of present flag
-
-			if(s1 == -1): #-1 stands for nan
-				present_flag = -1
-			elif(s1 == 1): #1 stands for Question
-				present_flag = 1
-			else:
-				present_flag = -1
-
-			if present_flag != previous_flag:
-
-				try:
-					if len(np.unique(np.array(data_array[i : i + no_rows], dtype = str))) == 1:
-
-						if(present_flag == 1):
-							no_revisits += 1
-				except TypeError:
-					print(data_array[i : i + no_rows])
-
-			#change the value of the previous_flag only if the next no_rows values are the same
-
-			if len(np.unique(np.array(data_array[i : i + no_rows], dtype = str))) == 1:
-				previous_flag = present_flag
-
-		return no_revisits
+		return num_readings			
 
 
-	def passDurationCalculation(self, data_array):
+	def passDurationCalculation(self):
 		"""Calculates the amount of time spent during the first and second revisit in the region of interest
 
-		Parameters
-		----------
-		data_array: numpy array
-			Is a column that contains the whether the eye is present in the region of interest or not
-
 		Returns
 		-------
-		first_pass: int
-			time spent on first visit of the region of interest
-		second_pass: int
-			time spent on the second revisit of the region of interest
+		first_pass_duration: int
+			duration spent on first visit to the Area of Interest
+		second_pass_duration: int
+			duration spent on the second revisit of the Area of Interest
 
 		"""
 
-		frequency = self.sensors["EyeTracker"].sampling_freq
-		
-		#To find number of rows that is equal to 4 ms, however if that is less than 4 rows then atleast 4 rows will be considered
-		no_rows = (frequency*4)/1000
+		first_pass_duration = 0
+		second_pass_duration = 0
+		num_readings = 0
+		flag = 0
 
-		no_rows = math.ceil(no_rows)	
 
-		if(no_rows < 4):
-			no_rows = 4
+		fix_num, fix_ind, fix_cnt = np.unique(self.data["FixationSeq"], return_index=True, return_counts=True)
+		fixation_count = len(fix_num) - 1
 
-		no_revisits = 0
+		if fixation_count != 0:
+			temp1 = []
+			fix_ind_end = np.array(fix_ind[1:]) + np.array(fix_cnt[1:])
+			for start, end in zip(fix_ind[1:], fix_ind_end):
+				if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)) and flag==0:
+					num_readings += 1
+					flag = 1
 
-		previous_flag = -1
-		present_flag = -1
-
-		first_pass = -1
-		second_pass = -1
-
-		length = len(data_array)
-
-		for i in range(length):
-
-			s1 = data_array[i]
-
-			#Calculation of present flag
-
-			if(s1 == -1): # -1 is nan
-				present_flag = -1
-			elif(s1 == 1): # 1 is inside Region of interest
-				present_flag = 1
-			else: 
-				present_flag = -1
-
-			if present_flag != previous_flag and present_flag == 1:
-
-				if len(np.unique(np.array(data_array[i : i+no_rows], dtype = str))) == 1:
-
-					no_revisits += 1
-
-					if(no_revisits == 1):
-						first_pass = i
-					elif(no_revisits == 2):
-						second_pass = i
-
-			if present_flag != previous_flag and previous_flag == 1:
-
-					if(no_revisits == 1):
-						first_pass = i - first_pass
-					elif(no_revisits == 2):
-						second_pass = i - second_pass
+					if num_readings == 1:
+						first_pass_duration = end - start
+					elif num_readings == 2:
+						second_pass_duration = end - start
+					elif num_readings == 3:
 						break
+				elif len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)) and flag==1:
+					if num_readings == 1:
+						first_pass_duration = end - start
+					elif num_readings == 2:
+						second_pass_duration = end - start
+				elif len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) < int(0.9 * (end-start)):
+					flag = 0
 
-			if len(np.unique(np.array(data_array[i : i+no_rows], dtype = str))) == 1:			
-				previous_flag = present_flag
-
-		#converting rows into milliseconds
-		first_pass = (1000/frequency)*first_pass
-		second_pass = (1000/frequency)*second_pass
-
-		return first_pass, second_pass
+				# if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)) and flag==1:
+				# 	first_pass_duration = first_pass_duration + end - start
+				# elif flag==1 and first_pass_duration>0:
+				# 	flag = 2
+				# 	break
+				# elif len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)) and flag==2:
+				# 	second_pass_duration = second_pass_duration + end - start
+				# elif flag==2 and second_pass_duration>0:
+				# 	break
+					
+		return first_pass_duration, second_pass_duration			
 
 
 	def findEyeMetaData(self, sampling_freq=1000):
 		"""Function to find all metadata/features of eye tracking data.
 
-		Internal function of class that uses its `data` member variable. Can be invoked by an object of the class. The metadata is stored in the sensor object of the class and can be accessed in the following manner. 
+		Internal function of class that uses its `data` member variable. Can be invoked by an object of the class. The metadata is stored in the sensor object of the class and can be accessed in the following manner.
 
 		Examples
 		--------
 		The following code will return the metadata dictionary containing all meta features extracted.
-		
+
 		>>> stim_obj.findEyeMetaData()
 		>>> stim_obj.sensors["EyeTracker"].metadata
-		
+
 		This segment allows you to extract individual features
 
 		>>> stim_obj.sensors["EyeTracker"].metadata["pupil_slope"]
@@ -1478,15 +1421,15 @@ class Stimulus:
 
 		self.response_time = self.findResponseTime()
 		self.sensors["EyeTracker"].metadata["response_time"] = self.response_time
-	
+
 		# Pupil Features
 		pupil_size, peak_pupil, time_to_peak, pupil_AUC, pupil_slope, pupil_mean, pupil_size_downsample = self.findPupilParams()
 		self.sensors["EyeTracker"].metadata["pupil_size"] = pupil_size
 		self.sensors["EyeTracker"].metadata["peak_pupil"] = peak_pupil
 		self.sensors["EyeTracker"].metadata["time_to_peak_pupil"] = time_to_peak
-		self.sensors["EyeTracker"].metadata["pupil_area_curve"] = pupil_AUC	
+		self.sensors["EyeTracker"].metadata["pupil_area_curve"] = pupil_AUC
 		self.sensors["EyeTracker"].metadata["pupil_slope"] = pupil_slope
-		self.sensors["EyeTracker"].metadata["pupil_mean"] = pupil_mean		
+		self.sensors["EyeTracker"].metadata["pupil_mean"] = pupil_mean
 		self.sensors["EyeTracker"].metadata["pupil_size_downsample"] = pupil_size_downsample
 
 		# Blink Features
@@ -1494,7 +1437,7 @@ class Stimulus:
 		self.sensors["EyeTracker"].metadata["blink_rate"] = blink_cnt / self.response_time
 		self.sensors["EyeTracker"].metadata["peak_blink_duration"] = peak_blink
 		self.sensors["EyeTracker"].metadata["avg_blink_duration"] = avg_blink
-		
+
 		# Fixation Features
 		fix_cnt, max_fix_cnt, avg_fix_cnt = self.findFixationParams()
 		self.sensors["EyeTracker"].metadata["fixation_count"] = fix_cnt
@@ -1516,24 +1459,18 @@ class Stimulus:
 		self.sensors["EyeTracker"].metadata["ms_amplitude"] = ms_amp
 
 		# ROI Features
-		
-		no_revisits = self.numberRevisits(self.data["GazeAOI"])
-		first_pass,second_pass = self.passDurationCalculation(self.data["GazeAOI"])
 
-		if first_pass == -1:
-			first_pass = 0
+		num_revisits = self.numberRevisits()
+		first_pass_duration,second_pass_duration = self.passDurationCalculation()
 
-		if second_pass == -1:
-			second_pass = 0
-
-		self.sensors["EyeTracker"].metadata["no_revisits"] = no_revisits
-		self.sensors["EyeTracker"].metadata["first_pass"] = first_pass
-		self.sensors["EyeTracker"].metadata["second_pass"] = second_pass
+		self.sensors["EyeTracker"].metadata["num_revisits"] = num_revisits
+		self.sensors["EyeTracker"].metadata["first_pass_duration"] = first_pass_duration
+		self.sensors["EyeTracker"].metadata["second_pass_duration"] = second_pass_duration
 
 
 	def getData(self, data, sensor_names):
 		"""Function to extract data and store in local format.
-		
+
 		It is invoked by `__init__` when the object of the class is created. This function is used in the *Experiment Design*.
 
 		Parameters
@@ -1545,7 +1482,7 @@ class Stimulus:
 
 		Returns
 		-------
-		extracted_data : dict 
+		extracted_data : dict
 			Dictionary of extracted data to be used by the functions of the class.
 			- "ETRows" : list,
 			- "FixationSeq" : list,
@@ -1554,11 +1491,11 @@ class Stimulus:
 			- "InterpGaze" : dict,
 			- "BlinksLeft" : dict,
 			- "BlinksRight" : dict
-		
+
 		"""
-		
+
 		# Extracting data for particular stimulus
-		
+
 		with open(self.json_file) as jf:
 			contents = json.load(jf)
 
@@ -1572,7 +1509,7 @@ class Stimulus:
 							"BlinksLeft" : None,
 							"BlinksRight" : None,
 							"GazeAOI" : None}
-							
+
 		for col_class in sensor_names:
 			if col_class == "EyeTracker":
 				et_sfreq = contents["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
@@ -1586,7 +1523,7 @@ class Stimulus:
 				pupil_size_l_df = np.array(data.PupilLeft)
 				pupil_size_r_df = np.array(data.PupilRight)
 				gaze_aoi_df = np.array(data.GazeAOI)
-					
+
 				# Extracting fixation sequences
 				et_rows = np.where(data.EventSource.str.contains("ET"))[0]
 				fixation_seq_df = np.array(data.FixationSeq.fillna(-1), dtype='float32')
@@ -1600,11 +1537,11 @@ class Stimulus:
 				r_gaze_y = np.squeeze(np.array([r_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
 				r_gaze = {"x": r_gaze_x, "y": r_gaze_y}
 				gaze = {"left" : l_gaze, "right" : r_gaze}
-				
+
 				# Extracting Pupil Size Data
 				pupil_size_r = np.squeeze(np.array([pupil_size_r_df[i] for i in sorted(et_rows)], dtype="float32"))
 				pupil_size_l = np.squeeze(np.array([pupil_size_l_df[i] for i in sorted(et_rows)], dtype="float32"))
-				
+
 				# Fixing Blinks and interpolating pupil size and gaze data
 				blinks_l, interp_pupil_size_l, new_gaze_l = self.findBlinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
 				blinks_r, interp_pupil_size_r, new_gaze_r = self.findBlinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
@@ -1626,7 +1563,7 @@ class Stimulus:
 
 	def getDataStandAlone(self, data, sensor_names):
 		"""Function to extract data and store in local format.
-		
+
 		It is invoked by `__init__` when the object of the class is created. This function is used in the *Stand-alone Design*.
 
 		Parameters
@@ -1638,7 +1575,7 @@ class Stimulus:
 
 		Returns
 		-------
-		extracted_data : dict 
+		extracted_data : dict
 			Dictionary of extracted data to be used by the functions of the class.
 			- "ETRows" : list,
 			- "FixationSeq" : list,
@@ -1647,7 +1584,7 @@ class Stimulus:
 			- "InterpGaze" : dict,
 			- "BlinksLeft" : dict,
 			- "BlinksRight" : dict
-		
+
 		"""
 
 		extracted_data = {	"ETRows" : None,
@@ -1666,7 +1603,7 @@ class Stimulus:
 				et_sfreq = sensor_names[sen]["Sampling_Freq"]
 
 				self.sensors.update({sen : Sensor(sen, et_sfreq)})
-				
+
 				data = data[self.start_time : self.end_time + 1]
 
 				l_gazex_df = np.array(data.GazeLeftx)
@@ -1681,7 +1618,7 @@ class Stimulus:
 				et_rows = np.where(data.EventSource.str.contains("ET"))[0]
 				fixation_seq_df = np.array(data.FixationSeq.fillna(-1), dtype='float32')
 				fixation_seq = np.squeeze(np.array([fixation_seq_df[i] for i in sorted(et_rows)], dtype="float32"))
-				
+
 				# Extracting the eye gaze data
 				l_gaze_x = np.squeeze(np.array([l_gazex_df[i] for i in sorted(et_rows)], dtype="float32"))
 				l_gaze_y = np.squeeze(np.array([l_gazey_df[i] for i in sorted(et_rows)], dtype="float32"))
@@ -1694,7 +1631,7 @@ class Stimulus:
 				# Extracting Pupil Size Data
 				pupil_size_r = np.squeeze(np.array([pupil_size_r_df[i] for i in sorted(et_rows)], dtype="float32"))
 				pupil_size_l = np.squeeze(np.array([pupil_size_l_df[i] for i in sorted(et_rows)], dtype="float32"))
-				
+
 				# Fixing Blinks and interpolating pupil size and gaze data
 				blinks_l, interp_pupil_size_l, new_gaze_l = self.findBlinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
 				blinks_r, interp_pupil_size_r, new_gaze_r = self.findBlinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
@@ -1721,7 +1658,7 @@ class Stimulus:
 		---------
 		data : list
 			List of size 3 containing gaze_aoi, gaze_x and gaze_y column data.
-		
+
 		Returns
 		-------
 		gaze_aoi_new : list
@@ -1732,7 +1669,7 @@ class Stimulus:
 		gaze_aoi = data[0]
 		x = data[1]
 		y = data[2]
-		
+
 		gaze_aoi_new = gaze_aoi
 		gaze_aoi_new[np.where((x >= self.aoi_coords[0]) & (y >= self.aoi_coords[1]) & (x <= self.aoi_coords[2]) & (y <= self.aoi_coords[3]))[0]] = 1
 
@@ -1759,9 +1696,9 @@ def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 
 	fig = plt.figure()
 	fig.canvas.set_window_title("Aggregate Gaze Heat Map")
-	
+
 	ax = plt.gca()
-	
+
 	x = []
 	y = []
 	stim_type, stim_num = stim_name.popitem()
@@ -1776,8 +1713,8 @@ def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 
 	if cnt == len(sub_list):
 		plt.close(fig)
-		return		
-	
+		return
+
 	# In order to get more intense values for the heatmap (ratio of points is unaffected)
 	x = np.repeat(x, 5)
 	y = np.repeat(y, 5)
@@ -1800,7 +1737,7 @@ def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 		except:
 			img = np.zeros((height, width))
 
-	
+
 	downsample_fraction = 0.25
 	col_shape = img.shape[1]
 	row_shape = img.shape[0]
@@ -1814,11 +1751,11 @@ def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 	img = misc.imresize(img, size=downsample_fraction, interp='lanczos')
 	ax.imshow(img)
 
-	rect = mpl.patches.Rectangle((downsample_fraction*aoi_left_x, downsample_fraction*aoi_left_y), 
-								downsample_fraction*(aoi_right_x-aoi_left_x), 
+	rect = mpl.patches.Rectangle((downsample_fraction*aoi_left_x, downsample_fraction*aoi_left_y),
+								downsample_fraction*(aoi_right_x-aoi_left_x),
 								downsample_fraction*(aoi_right_y-aoi_left_y),
 										color='r', fill=False, linestyle='--')
-	ax.add_patch(rect)		
+	ax.add_patch(rect)
 
 	ax.contourf(np.arange(0, int(row_shape*downsample_fraction), 1), np.arange(0, int(col_shape*downsample_fraction), 1), hist.T, cmap=mycmap)
 	ax.set_xlim(0, int(col_shape * downsample_fraction))
@@ -1826,9 +1763,9 @@ def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 
 	if save_fig:
 		if not os.path.isdir(path + "/Aggregate_Plots/"):
-			os.mkdir(path + "/Aggregate_Plots/")	
-		fig.savefig(path + "/Subjects/Aggregate_Plots"+ "/agg_gaze_heatmap_" + str(datetime.now().timestamp()).split(".")[0] + ".png", dpi=300)
-		with open(path + "/Subjects/Aggregate_Plots"+ "/agg_gaze_heatmap_" + str(datetime.now().timestamp()).split(".")[0] + ".txt", "w") as f:
+			os.mkdir(path + "/Aggregate_Plots/")
+		fig.savefig(path + "/Aggregate_Plots"+ "/agg_gaze_heatmap_" + str(datetime.now().timestamp()).split(".")[0] + ".png", dpi=300)
+		with open(path + "/Aggregate_Plots"+ "/agg_gaze_heatmap_" + str(datetime.now().timestamp()).split(".")[0] + ".txt", "w") as f:
 			for sub in sub_list:
 				f.write(sub.name + "\n")
 
