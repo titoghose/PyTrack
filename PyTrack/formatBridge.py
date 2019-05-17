@@ -16,21 +16,25 @@ def getColHeaders():
     return ["Timestamp", "StimulusName", "EventSource", "GazeLeftx", "GazeRightx", "GazeLefty", "GazeRighty", "PupilLeft", "PupilRight", "FixationSeq", "SaccadeSeq", "Blink", "GazeAOI"]
 
 
-def eyeLinkToBase(filename, stim_list=None, start='START', stop=None, eye='B'):
-    """Bridge function that converts ASCII (asc) EyeLink eye tracking data files to the base CSV format that the framework uses.
+def toBase(et_type, filename, stim_list=None, start='START', stop=None, eye='B'):
+    """Bridge function that converts SMI, Eyelink or Tobii raw eye tracking data files to the base CSV format that the framework uses.
 
     Parameters
     ----------
+    et_type : str {"smi","tobii", "eyelink"}
+        Which eye tracker
+
     filename : str
         Full file name (with path) of the data file
+
     stim_list : list (str)
         Name of stimuli as a list of strings. If there are n trials/events found in the data, the length of stim_list should be n containing the names of stimuli for each trial/event.
+
     start : str
         Marker for start of event in the .asc file. Default value is 'START'.
+
     stop : str
         Marker for end of event in the .asc file. Default value is None. If None, new event/trial will start when start trigger is detected again.
-    eye : str {'B','L','R'}
-		Which eye is being tracked? Deafults to 'B'-Both. ['L'-Left, 'R'-Right, 'B'-Both]
 
     Returns
     -------
@@ -40,9 +44,15 @@ def eyeLinkToBase(filename, stim_list=None, start='START', stop=None, eye='B'):
 
     col_headers = getColHeaders()
 
-    print("Converting EyeLink ASC file to Pandas CSV: ", filename.split("/")[-1])
+    print("Converting file to Pandas CSV: ", filename.split("/")[-1])
 
-    data = read_edf(filename, start=start, stop=stop, missing=-1)
+    if et_type == "smi":
+        data = read_idf(filename, start=start, stop=stop, missing=-1.0)
+    elif et_type == "eyelink":
+        data = read_edf(filename, start=start, stop=stop, missing=-1.0, eye=eye)
+    elif et_type == "tobii":
+        data = read_tobii(filename, start=start, stop=stop, missing=-1.0)
+
     df = pd.DataFrame(columns=col_headers)
 
     i = 0
@@ -68,19 +78,35 @@ def eyeLinkToBase(filename, stim_list=None, start='START', stop=None, eye='B'):
         temp_dict['Blink'] = np.ones(len(temp_dict['Timestamp'])) * -1
         temp_dict['GazeAOI'] = np.ones(len(temp_dict['Timestamp'])) * -1
 
-        cnt = 0
-        for e in d['events']['Efix']:
-            ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
-            ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
-            temp_dict['FixationSeq'][ind_start : ind_end + 1] = cnt
-            cnt += 1
 
-        cnt = 0
-        for e in d['events']['Esac']:
-            ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
-            ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
-            temp_dict['SaccadeSeq'][ind_start : ind_end + 1] = cnt
-            cnt += 1
+        if et_type != "eyelink":
+            fix_cnt = 0
+            sac_cnt = 0
+            prev_end = 0
+            for e in d['events']['Efix']:
+                ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
+                ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
+                temp_dict['FixationSeq'][ind_start : ind_end + 1] = fix_cnt
+                fix_cnt += 1
+                if prev_end != ind_start:
+                    temp_dict['SaccadeSeq'][prev_end + 1 : ind_start + 1] = sac_cnt
+                    sac_cnt += 1
+                prev_end = ind_end
+
+        else:
+            cnt = 0
+            for e in d['events']['Efix']:
+                ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
+                ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
+                temp_dict['FixationSeq'][ind_start : ind_end + 1] = cnt
+                cnt += 1
+
+            cnt = 0
+            for e in d['events']['Esac']:
+                ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
+                ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
+                temp_dict['SaccadeSeq'][ind_start : ind_end + 1] = cnt
+                cnt += 1
 
         cnt = 0
         for e in d['events']['Eblk']:
@@ -100,111 +126,6 @@ def eyeLinkToBase(filename, stim_list=None, start='START', stop=None, eye='B'):
         i += 1
 
     return df
-
-
-def smiToBase(filename, stim_list=None, start='START', stop=None):
-    """Bridge function that converts SMI (text ascii generated from idf) raw eye tracking data files to the base CSV format that the framework uses.
-
-    Parameters
-    ----------
-    filename : str
-        Full file name (with path) of the data file
-
-    stim_list : list (str)
-        Name of stimuli as a list of strings. If there are n trials/events found in the data, the length of stim_list should be n containing the names of stimuli for each trial/event.
-
-    start : str
-        Marker for start of event in the .asc file. Default value is 'START'.
-
-    stop : str
-        Marker for end of event in the .asc file. Default value is None. If None, new event/trial will start when start trigger is detected again.
-
-    Returns
-    -------
-    df : pandas DataFrame
-        Pandas dataframe of the data in the framework friendly base csv format
-    """
-
-    col_headers = getColHeaders()
-
-    print("Converting SMI IDF file to Pandas CSV: ", filename.split("/")[-1])
-
-    data = read_idf(filename, start=start, stop=stop, missing=-1.0)
-    df = pd.DataFrame(columns=col_headers)
-
-    i = 0
-    for d in data:
-        temp_dict = dict.fromkeys(col_headers)
-
-        temp_dict['Timestamp'] = d['trackertime']
-
-        if stim_list == None:
-            temp_dict['StimulusName'] = ['stimulus_' + str(i)] * len(temp_dict['Timestamp'])
-        else:
-            temp_dict['StimulusName'] = [stim_list[i]] * len(temp_dict['Timestamp'])
-
-        temp_dict['EventSource'] = ['ET'] * len(temp_dict['Timestamp'])
-        temp_dict['GazeLeftx'] = d['x_l']
-        temp_dict['GazeRightx'] = d['x_r']
-        temp_dict['GazeLefty'] = d['y_l']
-        temp_dict['GazeRighty'] = d['y_r']
-        temp_dict['PupilLeft'] = d['size_l']
-        temp_dict['PupilRight'] = d['size_r']
-        temp_dict['FixationSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
-        temp_dict['SaccadeSeq'] = np.ones(len(temp_dict['Timestamp'])) * -1
-        temp_dict['Blink'] = np.ones(len(temp_dict['Timestamp'])) * -1
-        temp_dict['GazeAOI'] = np.ones(len(temp_dict['Timestamp'])) * -1
-
-        fix_cnt = 0
-        sac_cnt = 0
-        prev_end = 0
-        for e in d['events']['Efix']:
-            ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
-            ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
-            temp_dict['FixationSeq'][ind_start : ind_end + 1] = fix_cnt
-            fix_cnt += 1
-            if prev_end != ind_start:
-                temp_dict['SaccadeSeq'][prev_end + 1 : ind_start + 1] = sac_cnt
-                sac_cnt += 1
-            prev_end = ind_end
-
-        cnt = 0
-        for e in d['events']['Eblk']:
-            ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
-            ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
-            temp_dict['Blink'][ind_start : ind_end + 1] = cnt
-            cnt += 1
-
-        df = df.append(pd.DataFrame.from_dict(temp_dict, orient='index').transpose(), ignore_index=True, sort=False)
-        del(temp_dict)
-
-        i += 1
-
-    return df
-
-
-def tobiiToBase(filename, stim_list=None, start='START', stop=None):
-    """Bridge function that converts Tobii eye tracking data files to the base CSV format that the framework uses.
-
-    Parameters
-    ----------
-    filename : str
-        Full file name (with path) of the data file
-
-    stim_list : list (str)
-        Name of stimuli as a list of strings. If there are n trials/events found in the data, the length of stim_list should be n containing the names of stimuli for each trial/event.
-
-    start : str
-        Marker for start of event in the .asc file. Default value is 'START'.
-
-    stop : str
-        Marker for end of event in the .asc file. Default value is None. If None, new event/trial will start when start trigger is detected again.
-
-    Returns
-    -------
-    df : pandas DataFrame
-        Pandas dataframe of the data in the framework friendly base csv format
-    """
 
 
 def convertToBase(filename, sensor_type, device, stim_list=None, start='START', stop=None, eye='B'):
@@ -237,21 +158,16 @@ def convertToBase(filename, sensor_type, device, stim_list=None, start='START', 
     """
 
     if sensor_type == 'EyeTracker':
-        if device == 'eyelink':
-            return eyeLinkToBase(filename, stim_list, start=start, stop=stop, eye=eye)
-
-        elif device == 'smi':
-            return smiToBase(filename, stim_list, start=start, stop=stop)
-
-        elif device == 'tobii':
-            return tobiiToBase(filename, stim_list, start=start, stop=stop)
-
-        else:
-            print("Sorry " + sensor_type + " data format not supported!\n")
+        try:
+            return toBase(device, filename, stim_list, start=start, stop=stop, eye=eye)
+        except Exception as e:
+            print("Sorry " + sensor_type + " data format not supported! The following exception was thrown: \n")
+            print(e)
             return
 
     else:
         print("Sorry " + sensor_type + " not supported!\n")
+        return
 
 
 def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na_strings=None):
@@ -385,7 +301,7 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
 
     else:
         data_path = exp_path
-        print("Converting to base csv formate: ", data_path.split("/")[-1])
+        print("Converting to base csv format: ", data_path.split("/")[-1])
 
         stim = None
         if stim_list_mode != "NA":

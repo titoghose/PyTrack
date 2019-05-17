@@ -252,9 +252,6 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 
 	"""
 
-	# # # # #
-	# debug mode
-
 	if debug:
 		def message(msg):
 			print(msg)
@@ -305,7 +302,8 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 
 	timei = None
 	typei = None
-	msgi = -1
+	msgi = None
+	eventi = None
 	xi = {'L':None, 'R':None}
 	yi = {'L':None, 'R':None}
 	sizei = {'L':None, 'R':None}
@@ -326,7 +324,12 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 
 			timei = line.index("Time")
 			typei = line.index("Type")
-			msgi = -1
+			eventi = line.index("Trigger")
+			if eventi == len(line) - 1:
+				msgi = eventi
+			else:
+				msgi = -1
+
 			xi = {'L':None, 'R':None}
 			yi = {'L':None, 'R':None}
 			sizei = {'L':None, 'R':None}
@@ -350,12 +353,12 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 		if started:
 			# only check for stop if there is one
 			if stop != None:
-				if stop in line[msgi] or i == len(raw)-1:
+				if (stop in line[eventi] or stop in line[msgi]) or i == len(raw)-1:
 					started = False
 					trialend = True
 			# check for new start otherwise
 			else:
-				if start in line or i == len(raw)-1:
+				if (start in line[eventi] or start in line[msgi]) or i == len(raw)-1:
 					started = True
 					trialend = True
 
@@ -400,7 +403,7 @@ def read_idf(filename, start, stop=None, missing=0.0, debug=False):
 
 		# check if the current line contains start message
 		else:
-			if start in line[msgi]:
+			if start in line[eventi] or start in line[msgi]:
 				message("trialstart %d" % len(data))
 				# set started to True
 				started = True
@@ -828,4 +831,218 @@ def read_tobii(filename, start, stop=None, missing=0.0, debug=False):
 		5. events -dict {Sfix, Ssac, Sblk, Efix, Esac, Eblk, msg}
 
 	"""
-	return
+
+	if debug:
+		def message(msg):
+			print(msg)
+	else:
+		def message(msg):
+			pass
+
+
+	# # # # #
+	# file handling
+
+	# check if the file exists
+	if os.path.isfile(filename):
+		# open file
+		message("opening file '%s'" % filename)
+		f = open(filename, 'r')
+	# raise exception if the file does not exist
+	else:
+		raise Exception("Error in read_tobii: file '%s' does not exist" % filename)
+
+	# read file contents
+	message("reading file '%s'" % filename)
+	raw = f.readlines()
+
+	# close file
+	message("closing file '%s'" % filename)
+	f.close()
+
+
+	# # # # #
+	# parse lines
+
+	# variables
+	data = []
+	x_l = []
+	y_l = []
+	x_r = []
+	y_r = []
+	size_l = []
+	size_r = []
+	trackertime = []
+	events = {'Sfix':[],'Ssac':[],'Sblk':[],'Efix':[],'Esac':[],'Eblk':[],'msg':[]}
+	starttime = 0
+	started = False
+	trialend = False
+	filestarted = False
+
+	timei = None
+	msgi = -1
+	eventi = -1
+	xi = {'L':None, 'R':None}
+	yi = {'L':None, 'R':None}
+	sizei = {'L':None, 'R':None}
+
+	# loop through all lines
+	for i in range(len(raw)):
+
+		# string to list
+		line = raw[i].replace('\n','').replace('\r','').split('\t')
+
+		if not filestarted:
+			# check the indexes for several key things we want to extract
+			# (we need to do this, because ASCII outputs of the IDF reader
+			# are different, based on whatever the user wanted to extract)
+
+			timei = line.index("Recording timestamp")
+			msgi = line.index("Event message")
+			eventi = line.index("Event value")
+			xi = {'L':None, 'R':None}
+			yi = {'L':None, 'R':None}
+			sizei = {'L':None, 'R':None}
+			if "Gaze2d_Left.x" in line:
+				xi['L']  = line.index("Gaze2d_Left.x")
+			if "Gaze2d_Right.x" in line:
+				xi['R']  = line.index("Gaze2d_Right.x")
+			if "Gaze2d_Left.y" in line:
+				yi['L']  = line.index("Gaze2d_Left.y")
+			if "Gaze2d_Right.y" in line:
+				yi['R']  = line.index("Gaze2d_Right.y")
+			if "PupilDiam_Left" in line:
+				sizei['L']  = line.index("PupilDiam_Left")
+			if "PupilDiam_Right" in line:
+				sizei['R']  = line.index("PupilDiam_Right")
+			# set filestarted to True, so we don't attempt to extract
+			# this info on all consecutive lines
+			filestarted = True
+
+		# check if trial has already started
+		if started:
+			# only check for stop if there is one
+			if stop != None:
+				if (stop in line[eventi] or stop in line[msgi]) or i == len(raw)-1:
+					started = False
+					trialend = True
+			# check for new start otherwise
+			else:
+				if (start in line[eventi] or start in line[msgi]) or i == len(raw)-1:
+					started = True
+					trialend = True
+
+			# # # # #
+			# trial ending
+
+			if trialend:
+				message("trialend %d; %d samples found" % (len(data),len(x_l)))
+				# message("trialend %d; %d x_r samples found" % (len(data),len(x_r)))
+				# message("trialend %d; %d y_l samples found" % (len(data),len(y_l)))
+				# message("trialend %d; %d y_r samples found" % (len(data),len(y_r)))
+				# message("trialend %d; %d size_l samples found" % (len(data),len(size_l)))
+				# message("trialend %d; %d size_r samples found" % (len(data),len(size_r)))
+				# trial dict
+				trial = {}
+				trial['x_l'] = numpy.array(x_l)
+				trial['y_l'] = numpy.array(y_l)
+				trial['x_r'] = numpy.array(x_r)
+				trial['y_r'] = numpy.array(y_r)
+				trial['size_l'] = numpy.array(size_l)
+				trial['size_r'] = numpy.array(size_r)
+				trial['trackertime'] = numpy.array(trackertime)
+				trial['events'] = copy.deepcopy(events)
+				# events
+				trial['events']['Sblk'], trial['events']['Eblk'] = blink_detection(trial['x_l'],trial['y_l'],trial['trackertime'],missing=missing)
+				trial['events']['Sfix'], trial['events']['Efix'] = fixation_detection(trial['x_l'],trial['y_l'],trial['trackertime'],missing=missing)
+				trial['events']['Ssac'], trial['events']['Esac'] = saccade_detection(trial['x_l'],trial['y_l'],trial['trackertime'],missing=missing)
+				# add trial to data
+				data.append(trial)
+				# reset stuff
+				x_l = []
+				y_l = []
+				x_r = []
+				y_r = []
+				size_l = []
+				size_r = []
+				time = []
+				trackertime = []
+				events = {'Sfix':[],'Ssac':[],'Sblk':[],'Efix':[],'Esac':[],'Eblk':[],'msg':[]}
+				trialend = False
+
+		# check if the current line contains start message
+		else:
+			if start in line[eventi] or start in line[msgi]:
+				message("trialstart %d" % len(data))
+				# set started to True
+				started = True
+				# find starting time
+				starttime = int(line[timei])
+
+		# # # # #
+		# parse line
+
+		if started:
+			# message lines will usually start with a timestamp, followed
+			# by 'MSG', the trial number and the actual message, e.g.:
+			#	"7818328012	MSG	1	# Message: 3"
+			if line[msgi] != "0":
+				t = int(line[timei]) # time
+				m = line[msgi] # message
+				events['msg'].append([t,m])
+
+			# regular lines will contain tab separated values, beginning with
+			# a timestamp, follwed by the values that were chosen to be
+			# extracted by the IDF converter
+			else:
+				# see if current line contains relevant data
+				try:
+					# extract data on POR and pupil size
+					vi = None
+					for ind, var in enumerate([xi, yi, sizei]):
+						vi = var
+						val_l = -1
+						val_r = -1
+						# nothing
+						if vi['L'] == None and vi['R'] == None:
+							continue
+						# only left eye
+						elif vi['L'] != None and vi['R'] == None:
+							if float(line[vi['L']]) == 0:
+								line[vi['L']] = str(missing)
+							val_l = float(line[vi['L']])
+							val_r = val_l
+						# only right eye
+						elif vi['L'] == None and vi['R'] != None:
+							if float(line[vi['R']]) == 0:
+								line[vi['R']] = str(missing)
+							val_r = float(line[vi['R']])
+							val_l = val_r
+						# average the two eyes, but only if they both
+						# contain valid data
+						elif vi['L'] != None and vi['R'] != None:
+							if float(line[vi['R']]) == 0:
+								line[vi['R']] = str(missing)
+							if float(line[vi['L']]) == 0:
+								line[vi['L']] = str(missing)
+							val_r = float(line[vi['R']])
+							val_l = float(line[vi['L']])
+
+						if ind == 0:
+							x_l.append(val_l)
+							x_r.append(val_r)
+						elif ind == 1:
+							y_l.append(val_l)
+							y_r.append(val_r)
+						elif ind == 2:
+							size_l.append(val_l)
+							size_r.append(val_r)
+
+					# extract time data
+					trackertime.append(int(line[timei]))
+
+				except:
+					message("line '%s' could not be parsed" % line)
+					continue # skip this line
+
+	return data
