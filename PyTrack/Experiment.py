@@ -14,6 +14,7 @@ from statsmodels.formula.api import ols
 import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
 from matplotlib.widgets import RectangleSelector
+from scipy import stats
 
 from Sensor import Sensor
 from Subject import Subject
@@ -364,6 +365,46 @@ class Experiment:
 		writer.writerow("\n")
 
 
+	def welch_ttest(self, dv, factor, subject, data):
+
+		#Find number of unique values in the factor
+
+		list_values = data[factor].unique()
+
+		column_results=["Factor1","Factor2","dof","t-stastistic","p-value"]
+		results = pd.DataFrame(columns=column_results)
+
+		column_normality=["Factor","W test statistic","p-value"]
+		normality = pd.DataFrame(columns=column_normality)
+	
+		#Calculating the normality of different values	
+		for value in list_values:
+			row =[value]
+			x=data[data[factor] == value]
+			x=x[dv]
+			w,p =stats.shapiro(x)
+			row.extend([w,p])
+			normality.loc[len(normality)] = row
+
+		#Find the pariwise ttest for all of them
+		for i,_ in enumerate(list_values):
+			for j,_ in enumerate(list_values):
+
+				if(i<j):
+
+					row =[list_values[i],list_values[j]]
+					x=data[data[factor] == list_values[i]]
+					x=x[dv]
+					y=data[data[factor] == list_values[j]]
+					y=y[dv]
+					t,p = stats.ttest_ind(x,y, equal_var = False)
+					dof = (x.var()/x.size + y.var()/y.size)**2 / ((x.var()/x.size)**2 / (x.size-1) + (y.var()/y.size)**2 / (y.size-1))
+					row.extend([dof,t,p])
+					results.loc[len(results)] = row
+
+		return normality,results
+
+
 	def analyse(self, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation=True, ttest_type=1):
 		"""This function carries out the required statistical analysis.
 
@@ -439,7 +480,7 @@ class Experiment:
 				writer = csv.writer(csvFile)
 
 
-		meta_not_to_be_considered = ["pupil_size", "pupil_size_downsample"]
+		meta_not_to_be_considered = ["pupil_size", "pupil_size_downsample","num_revisits", "first_pass_duration", "second_pass_duration"]
 
 		# if "GazeAOI" not in json_data["Columns_of_interest"]["EyeTracker"]:
 		# 	meta_not_to_be_considered.extend(["num_revisits", "first_pass_duration", "second_pass_duration"])
@@ -528,7 +569,7 @@ class Experiment:
 
 				data.to_csv(directory_path + '/Data/' + meta + "_data.csv")
 
-				print(data)
+				#print(data)
 
 				#Depending on the parameter, choose the statistical test to be done
 				if statistical_test == "Mixed_anova":
@@ -630,6 +671,29 @@ class Experiment:
 						values_list = ["Pairwise ttest: "]
 						values_list.append(meta)
 						self.fileWriting(writer, csvFile, aov, values_list)
+
+				elif statistical_test == "welch_ttest":
+
+					print(meta, ":\tWelch t test")
+
+					if ttest_type==1:							
+						normality,aov = self.welch_ttest(dv=meta, factor=between_factor_list[0], subject='subject', data=data)
+						pg.print_table(normality)
+						pg.print_table(aov)
+					elif ttest_type==2:
+						normality,aov = self.welch_ttest(dv=meta, factor=within_factor_list[0], subject='subject', data=data)
+						pg.print_table(normality)
+						pg.print_table(aov)
+					else:
+						print("The value given to ttest_type for welch test is not acceptable, it must be either 1 or 2")
+
+					if file_creation:
+
+						values_list = ["Welch Pairwise ttest: "]
+						values_list.append(meta)
+						self.fileWriting(writer, csvFile, normality, values_list)
+						self.fileWriting(writer, csvFile, aov, values_list)
+
 						
 		if csvFile != None:
 			csvFile.close()
