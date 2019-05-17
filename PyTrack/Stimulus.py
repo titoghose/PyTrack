@@ -991,6 +991,8 @@ class Stimulus:
 				if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)):
 					inside_aoi[0] += 1
 					temp1.append(end - start)
+				else:
+					print("Hello")
 
 			if len(temp1) != 0:
 				inside_aoi[1] = np.max(temp1)
@@ -1391,149 +1393,90 @@ class Stimulus:
 			plt.show()
 
 
-	def numberRevisits(self, data_array):
+	def numberRevisits(self):
 		"""Calculates the number of times the eye revisits within the region of interest, each instance should atleast be 4 milliseconds long
 
-		Parameters
-		----------
-		data_array: numpy array
-			Is a column that contains the whether the eye is present in the region of interest or not
-
 		Returns
 		-------
-		no_q_roi: int
-			Number of times the eye revisit on the region of interest for question region
-
-		no_r_roi: int
-			Number of times the eye revisit on the region of interst for response region
+		num_readings: int
+			Number of times the subject revisits the Area of Interest (1 revisit is consecutive fixations within AOI)
 
 		"""
 
-		frequency = self.sensors["EyeTracker"].sampling_freq
+		num_readings = 0
+		flag = 0
 
-		#To find number of rows that is equal to 4 ms, however if that is less than 4 rows then atleast 4 rows will be considered
-		no_rows = (frequency*4)/1000
+		fix_num, fix_ind, fix_cnt = np.unique(self.data["FixationSeq"], return_index=True, return_counts=True)
+		fixation_count = len(fix_num) - 1
 
-		no_rows = math.ceil(no_rows)
+		if fixation_count != 0:
+			temp1 = []
+			fix_ind_end = np.array(fix_ind[1:]) + np.array(fix_cnt[1:])
+			for start, end in zip(fix_ind[1:], fix_ind_end):
 
-		if(no_rows < 4):
-			no_rows = 4
+				if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)) and flag==0:
+					num_readings += 1
+					flag = 1
+				elif len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) < int(0.9 * (end-start)):
+					flag = 0
 
-		no_revisits = 0
-
-		previous_flag = -1
-		present_flag = -1
-
-		length = len(data_array)
-
-		for i in range(length):
-
-			s1 = data_array[i]
-
-			#Calculation of present flag
-
-			if(s1 == -1): #-1 stands for nan
-				present_flag = -1
-			elif(s1 == 1): #1 stands for Question
-				present_flag = 1
-			else:
-				present_flag = -1
-
-			if present_flag != previous_flag:
-
-				try:
-					if len(np.unique(np.array(data_array[i : i + no_rows], dtype = str))) == 1:
-
-						if(present_flag == 1):
-							no_revisits += 1
-				except TypeError:
-					print(data_array[i : i + no_rows])
-
-			#change the value of the previous_flag only if the next no_rows values are the same
-
-			if len(np.unique(np.array(data_array[i : i + no_rows], dtype = str))) == 1:
-				previous_flag = present_flag
-
-		return no_revisits
+		return num_readings
 
 
-	def passDurationCalculation(self, data_array):
+	def passDurationCalculation(self):
 		"""Calculates the amount of time spent during the first and second revisit in the region of interest
 
-		Parameters
-		----------
-		data_array: numpy array
-			Is a column that contains the whether the eye is present in the region of interest or not
-
 		Returns
 		-------
-		first_pass: int
-			time spent on first visit of the region of interest
-		second_pass: int
-			time spent on the second revisit of the region of interest
+		first_pass_duration: int
+			duration spent on first visit to the Area of Interest
+		second_pass_duration: int
+			duration spent on the second revisit of the Area of Interest
 
 		"""
 
-		frequency = self.sensors["EyeTracker"].sampling_freq
+		first_pass_duration = 0
+		second_pass_duration = 0
+		num_readings = 0
+		flag = 0
 
-		#To find number of rows that is equal to 4 ms, however if that is less than 4 rows then atleast 4 rows will be considered
-		no_rows = (frequency*4)/1000
 
-		no_rows = math.ceil(no_rows)
+		fix_num, fix_ind, fix_cnt = np.unique(self.data["FixationSeq"], return_index=True, return_counts=True)
+		fixation_count = len(fix_num) - 1
 
-		if(no_rows < 4):
-			no_rows = 4
+		if fixation_count != 0:
+			temp1 = []
+			fix_ind_end = np.array(fix_ind[1:]) + np.array(fix_cnt[1:])
+			for start, end in zip(fix_ind[1:], fix_ind_end):
+				if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)) and flag==0:
+					num_readings += 1
+					flag = 1
 
-		no_revisits = 0
-
-		previous_flag = -1
-		present_flag = -1
-
-		first_pass = -1
-		second_pass = -1
-
-		length = len(data_array)
-
-		for i in range(length):
-
-			s1 = data_array[i]
-
-			#Calculation of present flag
-
-			if(s1 == -1): # -1 is nan
-				present_flag = -1
-			elif(s1 == 1): # 1 is inside Region of interest
-				present_flag = 1
-			else:
-				present_flag = -1
-
-			if present_flag != previous_flag and present_flag == 1:
-
-				if len(np.unique(np.array(data_array[i : i+no_rows], dtype = str))) == 1:
-
-					no_revisits += 1
-
-					if(no_revisits == 1):
-						first_pass = i
-					elif(no_revisits == 2):
-						second_pass = i
-
-			if present_flag != previous_flag and previous_flag == 1:
-
-					if(no_revisits == 1):
-						first_pass = i - first_pass
-					elif(no_revisits == 2):
-						second_pass = i - second_pass
+					if num_readings == 1:
+						first_pass_duration = end - start
+					elif num_readings == 2:
+						second_pass_duration = end - start
+					elif num_readings == 3:
 						break
+				elif len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)) and flag==1:
+					if num_readings == 1:
+						first_pass_duration = end - start
+					elif num_readings == 2:
+						second_pass_duration = end - start
+				elif len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) < int(0.9 * (end-start)):
+					flag = 0
 
-			if len(np.unique(np.array(data_array[i : i+no_rows], dtype = str))) == 1:
-				previous_flag = present_flag
+				# if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)) and flag==1:
+				# 	first_pass_duration = first_pass_duration + end - start
+				# elif flag==1 and first_pass_duration>0:
+				# 	flag = 2
+				# 	break
+				# elif len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)) and flag==2:
+				# 	second_pass_duration = second_pass_duration + end - start
+				# elif flag==2 and second_pass_duration>0:
+				# 	break
 
-		#converting rows into milliseconds
-		first_pass = (1000/frequency)*first_pass
-		second_pass = (1000/frequency)*second_pass
-
-		return first_pass, second_pass
+		return first_pass_duration, second_pass_duration
 
 
 	def findEyeMetaData(self, sampling_freq=1000):
@@ -1596,18 +1539,12 @@ class Stimulus:
 
 		# ROI Features
 
-		no_revisits = self.numberRevisits(self.data["GazeAOI"])
-		first_pass,second_pass = self.passDurationCalculation(self.data["GazeAOI"])
+		num_revisits = self.numberRevisits()
+		first_pass_duration,second_pass_duration = self.passDurationCalculation()
 
-		if first_pass == -1:
-			first_pass = 0
-
-		if second_pass == -1:
-			second_pass = 0
-
-		self.sensors["EyeTracker"].metadata["no_revisits"] = no_revisits
-		self.sensors["EyeTracker"].metadata["first_pass"] = first_pass
-		self.sensors["EyeTracker"].metadata["second_pass"] = second_pass
+		self.sensors["EyeTracker"].metadata["num_revisits"] = num_revisits
+		self.sensors["EyeTracker"].metadata["first_pass_duration"] = first_pass_duration
+		self.sensors["EyeTracker"].metadata["second_pass_duration"] = second_pass_duration
 
 
 	def getData(self, data, sensor_names):

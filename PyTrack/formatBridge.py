@@ -175,6 +175,8 @@ def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na
 
 	Parameters
 	---------
+	data_path: string
+		Path to the directory where the database is to be located
 	source_folder: string
 		Name of folder that contains the csv files
 	database_name: string
@@ -219,7 +221,7 @@ def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na
                     print("Dropped table as it existed previously and reinstantiated it: ", table_name)
                     break
         except ValueError:
-            print("The database did not exist previously")
+            print("The csv file: ", file_name_no_extension, " is getting converted")
 
         chunksize = 100000
         i = 0

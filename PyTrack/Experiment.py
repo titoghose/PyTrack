@@ -9,11 +9,11 @@ import csv
 import numpy as np
 import pandas as pd
 import pingouin as pg
+from scipy import stats
 import statsmodels.api as sm
-from statsmodels.formula.api import ols
-from statsmodels.stats.anova import AnovaRM
 import matplotlib.pyplot as plt
 from sqlalchemy import create_engine
+from statsmodels.formula.api import ols
 from matplotlib.widgets import RectangleSelector, PolygonSelector, EllipseSelector
 
 from PyTrack.Sensor import Sensor
@@ -322,69 +322,85 @@ class Experiment:
 	def return_index(self, meta, value_index,sub_index,stimuli_index):
 
 		if meta in ["sacc_duration", "sacc_vel", "sacc_amplitude"]:
-
-			value_array = self.meta_matrix_dict[1]["sacc_count"][sub_index,stimuli_index]
-
-			summation_array =  [-1]
-			sum_value = 0
-
-			for i in range(len(value_array)):
-
-				if value_array[i] == 0:
-					summation_array.append(-1)
-				else:
-					sum_value = sum_value + value_array[i]
-					summation_array.append(sum_value)
-
-			summation_array.append(10000)
-
-			summation_index = -1
-
-			for i in range(len(summation_array)):
-
-				if summation_array[i+1] == -1:
-					if value_index >= summation_array[i] and value_index < summation_array[i+2]:
-						summation_index = i
-						break
-				else:
-					if value_index >= summation_array[i] and value_index < summation_array[i+1]:
-						summation_index = i
-						break
-
-			return summation_index
-
+			meta_col = "sacc_count"
 		elif meta in ["ms_duration", "ms_vel", "ms_amplitude"]:
+			meta_col = "ms_count"
 
-			value_array = self.meta_matrix_dict[1]["ms_count"][sub_index,stimuli_index]
+		value_array = self.meta_matrix_dict[1][meta_col][sub_index,stimuli_index]
 
-			summation_array =  [-1]
-			sum_value = 0
+		summation_array =  [-1]
+		sum_value = 0
 
-			for i, _ in enumerate(value_array):
+		for i, _ in enumerate(value_array):
 
-				if value_array[i] == 0:
-					summation_array.append(-1)
-				else:
-					sum_value = sum_value + value_array[i]
-					summation_array.append(sum_value)
+			if value_array[i] == 0:
+				summation_array.append(-1)
+			else:
+				sum_value = sum_value + value_array[i]
+				summation_array.append(sum_value)
 
-			summation_index = -1
-			summation_array.append(10000)
+		summation_array.append(10000)
+		summation_index = -1
 
-			#print(summation_array)
+		for i, _ in enumerate(summation_array):
 
-			for i, _ in enumerate(summation_array):
+			if summation_array[i+1] == -1:
+				if value_index >= summation_array[i] and value_index < summation_array[i+2]:
+					summation_index = i
+					break
+			else:
+				if value_index >= summation_array[i] and value_index < summation_array[i+1]:
+					summation_index = i
+					break
 
-				if summation_array[i+1] == -1:
-					if value_index >= summation_array[i] and value_index < summation_array[i+2]:
-						summation_index = i
-						break
-				else:
-					if value_index >= summation_array[i] and value_index < summation_array[i+1]:
-						summation_index = i
-						break
+		return summation_index
 
-			return summation_index
+	def fileWriting(self, writer, csvFile, pd_dataframe, values_list):
+
+		writer.writerow(values_list)
+		writer.writerow("\n")
+		pd_dataframe.to_csv(csvFile)
+		writer.writerow("\n")
+
+
+	def welch_ttest(self, dv, factor, subject, data):
+
+		#Find number of unique values in the factor
+
+		list_values = data[factor].unique()
+
+		column_results=["Factor1","Factor2","dof","t-stastistic","p-value"]
+		results = pd.DataFrame(columns=column_results)
+
+		column_normality=["Factor","W test statistic","p-value"]
+		normality = pd.DataFrame(columns=column_normality)
+
+		#Calculating the normality of different values
+		for value in list_values:
+			row =[value]
+			x=data[data[factor] == value]
+			x=x[dv]
+			w,p =stats.shapiro(x)
+			row.extend([w,p])
+			normality.loc[len(normality)] = row
+
+		#Find the pariwise ttest for all of them
+		for i,_ in enumerate(list_values):
+			for j,_ in enumerate(list_values):
+
+				if(i<j):
+
+					row =[list_values[i],list_values[j]]
+					x=data[data[factor] == list_values[i]]
+					x=x[dv]
+					y=data[data[factor] == list_values[j]]
+					y=y[dv]
+					t,p = stats.ttest_ind(x,y, equal_var = False)
+					dof = (x.var()/x.size + y.var()/y.size)**2 / ((x.var()/x.size)**2 / (x.size-1) + (y.var()/y.size)**2 / (y.size-1))
+					row.extend([dof,t,p])
+					results.loc[len(results)] = row
+
+		return normality,results
 
 
 	def analyse(self, parameter_list={"all"}, between_factor_list=["Subject_type"], within_factor_list=["Stimuli_type"], statistical_test="Mixed_anova", file_creation=True, ttest_type=1):
@@ -462,11 +478,10 @@ class Experiment:
 				writer = csv.writer(csvFile)
 
 
-		meta_not_to_be_considered = ["pupil_size", "pupil_size_downsample"]
+		meta_not_to_be_considered = ["pupil_size", "pupil_size_downsample","num_revisits", "first_pass_duration", "second_pass_duration"]
 
-		if "GazeAOI" not in json_data["Columns_of_interest"]["EyeTracker"]:
-			meta_not_to_be_considered.extend(["no_revisits", "first_pass", "second_pass"])
-
+		# if "GazeAOI" not in json_data["Columns_of_interest"]["EyeTracker"]:
+		# 	meta_not_to_be_considered.extend(["num_revisits", "first_pass_duration", "second_pass_duration"])
 
 		for sen in self.sensors:
 			for meta in Sensor.meta_cols[sen]:
@@ -552,6 +567,8 @@ class Experiment:
 
 				data.to_csv(directory_path + '/Data/' + meta + "_data.csv")
 
+				#print(data)
+
 				#Depending on the parameter, choose the statistical test to be done
 				if statistical_test == "Mixed_anova":
 
@@ -568,10 +585,7 @@ class Experiment:
 
 						values_list = ["Mixed Anova: "]
 						values_list.append(meta)
-						writer.writerow(values_list)
-						writer.writerow("\n")
-						aov.to_csv(csvFile)
-						writer.writerow("\n")
+						self.fileWriting(writer, csvFile, aov, values_list)
 
 					posthocs = pg.pairwise_ttests(dv=meta, within=within_factor_list[0], between=between_factor_list[0], subject='subject', data=data)
 					pg.print_table(posthocs)
@@ -579,10 +593,7 @@ class Experiment:
 					if file_creation:
 
 						values_list = ["Post Hoc Analysis"]
-						writer.writerow(values_list)
-						writer.writerow("\n")
-						posthocs.to_csv(csvFile)
-						writer.writerow("\n\n")
+						self.fileWriting(writer, csvFile, posthocs, values_list)
 
 				elif statistical_test == "RM_anova":
 
@@ -597,11 +608,7 @@ class Experiment:
 
 						values_list = ["Repeated Measures Anova: "]
 						values_list.append(meta)
-						writer.writerow(values_list)
-						writer.writerow("\n")
-						aov.to_csv(csvFile)
-						writer.writerow("\n\n")
-
+						self.fileWriting(writer, csvFile, aov, values_list)
 
 				elif statistical_test == "anova":
 
@@ -625,11 +632,7 @@ class Experiment:
 
 						values_list = ["Anova including interaction effect: "]
 						values_list.append(meta)
-						writer.writerow(values_list)
-						writer.writerow("\n")
-						res.to_csv(csvFile)
-						writer.writerow("\n\n")
-
+						self.fileWriting(writer, csvFile, res, values_list)
 
 					print("\nExcluding interaction effect")
 					model_equation = model_equation.replace("*", "+")
@@ -642,10 +645,7 @@ class Experiment:
 
 						values_list = ["Anova excluding interaction effect: "]
 						values_list.append(meta)
-						writer.writerow(values_list)
-						writer.writerow("\n")
-						res.to_csv(csvFile)
-						writer.writerow("\n\n")
+						self.fileWriting(writer, csvFile, res, values_list)
 
 				elif statistical_test == "ttest":
 
@@ -668,10 +668,30 @@ class Experiment:
 
 						values_list = ["Pairwise ttest: "]
 						values_list.append(meta)
-						writer.writerow(values_list)
-						writer.writerow("\n")
-						aov.to_csv(csvFile)
-						writer.writerow("\n\n")
+						self.fileWriting(writer, csvFile, aov, values_list)
+
+				elif statistical_test == "welch_ttest":
+
+					print(meta, ":\tWelch t test")
+
+					if ttest_type==1:
+						normality,aov = self.welch_ttest(dv=meta, factor=between_factor_list[0], subject='subject', data=data)
+						pg.print_table(normality)
+						pg.print_table(aov)
+					elif ttest_type==2:
+						normality,aov = self.welch_ttest(dv=meta, factor=within_factor_list[0], subject='subject', data=data)
+						pg.print_table(normality)
+						pg.print_table(aov)
+					else:
+						print("The value given to ttest_type for welch test is not acceptable, it must be either 1 or 2")
+
+					if file_creation:
+
+						values_list = ["Welch Pairwise ttest: "]
+						values_list.append(meta)
+						self.fileWriting(writer, csvFile, normality, values_list)
+						self.fileWriting(writer, csvFile, aov, values_list)
+
 
 		if csvFile != None:
 			csvFile.close()
