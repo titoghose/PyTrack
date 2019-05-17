@@ -96,6 +96,10 @@ class TestMethods(unittest.TestCase):
                             start='12',
                             stop='99')
 
+            generateCompatibleFormat(exp_path=os.path.abspath("tests/NTU_Experiment/tobii_sceneviewing_eyetrack_ascii.txt"),
+                            device="tobii",
+                            start='MYKEYWORD')
+
             temp_df = pd.read_csv(os.path.abspath("tests/NTU_Experiment/smi_eyetracker_freeviewing.csv"))
             del(temp_df)
             df = pd.read_csv(os.path.abspath("tests/NTU_Experiment/Data/sub_222.csv"))
