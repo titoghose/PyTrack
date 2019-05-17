@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.pylab as pl
+from matplotlib.colors import ListedColormap
 from matplotlib import Path
 from matplotlib.patches import Ellipse, Rectangle, Polygon
 from matplotlib.widgets import Slider, CheckButtons
@@ -733,6 +735,9 @@ class Stimulus:
 		fixation_indices = self.findFixations()
 		all_bin_MS = []
 
+		if plot_ms:
+			fig2 = plt.figure()
+
 		for fix_ind in range(len(fixation_indices["start"])):
 
 			all_MS = {"left" : None, "right" : None}
@@ -770,34 +775,42 @@ class Stimulus:
 				a1 = fig.add_subplot(1, 2, 1)
 				a2 = fig.add_subplot(1, 2, 2)
 
+				plt.subplots_adjust(wspace=0.5)
+
 				a1.plot(smooth_gaze["left"]["x"][1:], smooth_gaze["left"]["y"][1:])
 				a1.set_xlabel("x")
 				a1.set_ylabel("y")
 				a1.set_title("gaze plot")
+				flag = -1
 				for i in range(len(MS["bin"])):
 					a1.plot(smooth_gaze["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], smooth_gaze["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r')
+					flag += 1
+
 
 				e = Ellipse((0, 0), 2*MS["bin"][0, 7], 2*MS["bin"][0, 8], linestyle='--', color='g', fill=False)
 				a2.add_artist(e)
-
 				a2.plot(vel["left"]["x"], vel["left"]["y"], alpha=0.5)
 				a2.set_xlabel("vel-x")
 				a2.set_ylabel("vel-y")
 				a2.set_title("gaze velocity plot")
+				flag = -1
 				for i in range(len(MS["bin"])):
 					a2.plot(vel["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], vel["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r')
+					flag += 1
 
 
 				if not os.path.isdir(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/"):
 					os.makedirs(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/")
 
-				plt.savefig(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/" + self.name + "_" + str(fix_ind) + ".png", dpi=200)
+				if flag != -1:
+					fig.savefig(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/" + self.name + "_" + str(fix_ind) + ".png", dpi=200)
+
+
 				plt.close(fig)
 
 
 			if plot_ms:
 				# Plot main sequence i.e peak velocity vs peak amplitude
-				fig2 = plt.figure()
 				plt.xlabel("Amplitude (deg)")
 				plt.ylabel("Peak Velocity (deg/s)")
 				for ms in all_bin_MS:
@@ -807,8 +820,9 @@ class Stimulus:
 
 						plt.scatter(amp, peak_vel, marker='o', facecolors='none', edgecolors='r')
 
-				plt.savefig(self.path + "/Subjects/" + self.subject_name + "/ms_main_seq" + self.name + ".png", dpi=200)
-				plt.close(fig2)
+		if plot_ms:
+			fig2.savefig(self.path + "/Subjects/" + self.subject_name + "/ms_main_seq" + self.name + ".png", dpi=200)
+			plt.close(fig2)
 
 		ms_count = 0
 		ms_duration = np.zeros(1, dtype='float32')
@@ -1091,7 +1105,7 @@ class Stimulus:
 		ax.imshow(img)
 
 		# Rectangle AOI
-		if len(self.aoi_coords) == 4:
+		if len(self.aoi_coords) == 4 and isinstance(self.aoi_coords[0], float):
 			rect = Rectangle((self.aoi_coords[0], self.aoi_coords[1]),
 									(self.aoi_coords[2] - self.aoi_coords[0]),
 									(self.aoi_coords[3] - self.aoi_coords[1]),
@@ -1137,6 +1151,9 @@ class Stimulus:
 			ax.text(np.mean(x), np.mean(y), str(i), fontsize=10, color='w')
 			i += 1
 
+		ax.set_xlim(0, int(self.width))
+		ax.set_ylim(int(self.height), 0)
+
 		if show_fig:
 			plt.show()
 
@@ -1172,8 +1189,8 @@ class Stimulus:
 		y = self.data["InterpGaze"]["left"]["y"]
 
 		# In order to get more intense values for the heatmap (ratio of points is unaffected)
-		x = np.repeat(x, 5)
-		y = np.repeat(y, 5)
+		x = np.repeat(x, 10)
+		y = np.repeat(y, 10)
 
 		try:
 			img = plt.imread(self.path + "/Stimuli/" + self.name + ".jpg")
@@ -1187,41 +1204,44 @@ class Stimulus:
 		col_shape = img.shape[1]
 		row_shape = img.shape[0]
 
-		hist, _, _ = np.histogram2d(x, y, bins=[int(row_shape*downsample_fraction), int(col_shape*downsample_fraction)], range=[[0, int(row_shape)],[0, int(col_shape)]])
+		hist, _, _ = np.histogram2d(y, x, bins=[int(col_shape*downsample_fraction), int(row_shape*downsample_fraction)], range=[[0, int(col_shape)], [0, int(row_shape)]])
 		hist = gaussian_filter(hist, sigma=12)
+		hist = hist.repeat(int(1/downsample_fraction), axis=0).repeat(int(1/downsample_fraction), axis=1)
 
-		mycmap = cm.GnBu
-		mycmap._init()
-		mycmap._lut[:,-1] = np.linspace(0, 0.8, 255+4)
-		img = misc.imresize(img, size=downsample_fraction, interp='lanczos')
+		cmap = pl.cm.jet
+		my_cmap = cmap(np.arange(cmap.N))
+		my_cmap[:cmap.N//4, -1] = 0
+		my_cmap[cmap.N//4:, -1] = np.linspace(0.2, 0.4, cmap.N - cmap.N//4)
+		my_cmap = ListedColormap(my_cmap)
+
 		ax.imshow(img)
 
 		# Rectangle AOI
-		if len(self.aoi_coords) == 4:
-			rect = Rectangle((downsample_fraction*self.aoi_coords[0], downsample_fraction*self.aoi_coords[1]),
-									downsample_fraction*(self.aoi_coords[2] - self.aoi_coords[0]),
-									downsample_fraction*(self.aoi_coords[3] - self.aoi_coords[1]),
+		if len(self.aoi_coords) == 4 and isinstance(self.aoi_coords[0], float):
+			rect = Rectangle((self.aoi_coords[0], self.aoi_coords[1]),
+									(self.aoi_coords[2] - self.aoi_coords[0]),
+									(self.aoi_coords[3] - self.aoi_coords[1]),
 									color='r', fill=False, linestyle='--')
 			ax.add_patch(rect)
 
 		# Circle AOI
 		elif len(self.aoi_coords) == 3:
-			ellipse = Ellipse((downsample_fraction*self.aoi_coords[0][0], downsample_fraction*self.aoi_coords[0][1]),
-								downsample_fraction*self.aoi_coords[1],
-								downsample_fraction*self.aoi_coords[2],
+			ellipse = Ellipse((self.aoi_coords[0][0], self.aoi_coords[0][1]),
+								self.aoi_coords[1],
+								self.aoi_coords[2],
 								color='r', fill=False, linestyle='--')
 			ax.add_patch(ellipse)
 
 		# Polygon AOI
 		else:
-			xy = np.asarray(self.aoi_coords)*downsample_fraction
+			xy = np.asarray(self.aoi_coords)
 			poly = Polygon(xy, color='r', fill=False, linestyle='--')
 			ax.add_patch(poly)
 
 
-		ax.contourf(np.arange(0, int(row_shape*downsample_fraction), 1), np.arange(0, int(col_shape*downsample_fraction), 1), hist.T, cmap=mycmap)
-		ax.set_xlim(0, int(col_shape * downsample_fraction))
-		ax.set_ylim(int(row_shape * downsample_fraction), 0)
+		ax.contourf(np.arange(0, int(row_shape), 1), np.arange(0, int(col_shape), 1), hist, cmap=my_cmap)
+		ax.set_xlim(0, int(col_shape))
+		ax.set_ylim(int(row_shape), 0)
 
 		if show_fig:
 			plt.show()
@@ -1259,7 +1279,7 @@ class Stimulus:
 
 		ax.imshow(img)
 		# Rectangle AOI
-		if len(self.aoi_coords) == 4:
+		if len(self.aoi_coords) == 4 and isinstance(self.aoi_coords[0], float):
 			rect = Rectangle((self.aoi_coords[0], self.aoi_coords[1]),
 									(self.aoi_coords[2] - self.aoi_coords[0]),
 									(self.aoi_coords[3] - self.aoi_coords[1]),
@@ -1726,7 +1746,7 @@ class Stimulus:
 
 				self.sensors.update({sen : Sensor(sen, et_sfreq)})
 
-				data = data[self.start_time : self.end_time + 1]
+				data = data[self.start_time : self.end_time]
 
 				l_gazex_df = np.array(data.GazeLeftx)
 				l_gazey_df = np.array(data.GazeLefty)
@@ -1789,7 +1809,7 @@ class Stimulus:
 		"""
 		patch = None
 		# Rectangle AOI
-		if len(self.aoi_coords) == 4:
+		if len(self.aoi_coords) == 4 and isinstance(self.aoi_coords[0], float):
 			patch = Rectangle((self.aoi_coords[0], self.aoi_coords[1]),
 									(self.aoi_coords[2] - self.aoi_coords[0]),
 									(self.aoi_coords[3] - self.aoi_coords[1]),
@@ -1882,40 +1902,43 @@ def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 	col_shape = img.shape[1]
 	row_shape = img.shape[0]
 
-	hist, _, _ = np.histogram2d(x, y, bins=[int(row_shape*downsample_fraction), int(col_shape*downsample_fraction)], range=[[0, int(row_shape)],[0, int(col_shape)]])
+	hist, _, _ = np.histogram2d(y, x, bins=[int(col_shape*downsample_fraction), int(row_shape*downsample_fraction)], range=[[0, int(col_shape)], [0, int(row_shape)]])
 	hist = gaussian_filter(hist, sigma=12)
+	hist = hist.repeat(int(1/downsample_fraction), axis=0).repeat(int(1/downsample_fraction), axis=1)
 
-	mycmap = cm.GnBu
-	mycmap._init()
-	mycmap._lut[:,-1] = np.linspace(0, 0.8, 255+4)
-	img = misc.imresize(img, size=downsample_fraction, interp='lanczos')
+	cmap = pl.cm.jet
+	my_cmap = cmap(np.arange(cmap.N))
+	my_cmap[:cmap.N//4, -1] = 0
+	my_cmap[cmap.N//4:, -1] = np.linspace(0.2, 0.4, cmap.N - cmap.N//4)
+	my_cmap = ListedColormap(my_cmap)
+
 	ax.imshow(img)
 
 	# Rectangle AOI
-	if len(aoi_coords) == 4:
-		rect = Rectangle((downsample_fraction*aoi_coords[0], downsample_fraction*aoi_coords[1]),
-								downsample_fraction*(aoi_coords[2]-aoi_coords[0]),
-								downsample_fraction*(aoi_coords[3]-aoi_coords[1]),
+	if len(aoi_coords) == 4 and isinstance(aoi_coords[0], float):
+		rect = Rectangle((aoi_coords[0], aoi_coords[1]),
+								(aoi_coords[2]-aoi_coords[0]),
+								(aoi_coords[3]-aoi_coords[1]),
 										color='r', fill=False, linestyle='--')
 		ax.add_patch(rect)
 
 	# Circle AOI
 	elif len(aoi_coords) == 3:
-		ellipse = Ellipse((downsample_fraction*aoi_coords[0][0], downsample_fraction*aoi_coords[0][1]),
-								downsample_fraction*(aoi_coords[1]),
-								downsample_fraction*(aoi_coords[2]),
+		ellipse = Ellipse((aoi_coords[0][0], aoi_coords[0][1]),
+								(aoi_coords[1]),
+								(aoi_coords[2]),
 										color='r', fill=False, linestyle='--')
 		ax.add_patch(ellipse)
 
 	# Polygon AOI
 	else:
-		xy = np.asarray(aoi_coords) * downsample_fraction
+		xy = np.asarray(aoi_coords)
 		poly = Polygon(xy, color='r', fill=False, linestyle='--')
 		ax.add_patch(poly)
 
-	ax.contourf(np.arange(0, int(row_shape*downsample_fraction), 1), np.arange(0, int(col_shape*downsample_fraction), 1), hist.T, cmap=mycmap)
-	ax.set_xlim(0, int(col_shape * downsample_fraction))
-	ax.set_ylim(int(row_shape * downsample_fraction), 0)
+	ax.contourf(np.arange(0, int(row_shape), 1), np.arange(0, int(col_shape), 1), hist, cmap=my_cmap)
+	ax.set_xlim(0, int(col_shape))
+	ax.set_ylim(int(row_shape), 0)
 
 	if save_fig:
 		if not os.path.isdir(path + "/Aggregate_Plots/"):

@@ -138,7 +138,7 @@ class Experiment:
 			if aoi != "NA":
 				self.aoi_coords = self.drawAOI()
 			else:
-				self.aoi_coords = (0, 0, json_data["Analysis_Params"]["EyeTracker"]["Display_width"], json_data["Analysis_Params"]["EyeTracker"]["Display_height"])
+				self.aoi_coords = [0.0, 0.0, float(json_data["Analysis_Params"]["EyeTracker"]["Display_width"]), float(json_data["Analysis_Params"]["EyeTracker"]["Display_height"])]
 		else:
 			self.aoi_coords = aoi
 
@@ -762,13 +762,18 @@ class Experiment:
 		fig.canvas.set_window_title("Draw AOI")
 		ax.imshow(img)
 
-		if self.aoi == "polygon":
+		if self.aoi == "p":
 
 			def onselect(verts):
 				nonlocal vertices, canvas
 				print('\nSelected points:')
+				x = []
+				y = []
 				for i, j in vertices:
 					print(round(i, 3), ",", round(j, 3))
+					x.append(i)
+					y.append(j)
+
 				vertices = verts
 				canvas.draw_idle()
 
@@ -781,24 +786,22 @@ class Experiment:
 			print("3) 'ctrl' KEY: MOVE A SINGLE VERTEX")
 
 			plt.show()
-
 			return vertices
 
-		elif self.aoi == "rectangle":
+		elif self.aoi == "r":
 			def line_select_callback(eclick, erelease):
 				nonlocal aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y
-				aoi_left_x, aoi_left_y = int(round(eclick.xdata)), int(round(eclick.ydata))
-				aoi_right_x, aoi_right_y = int(round(erelease.xdata)), int(round(erelease.ydata))
+				aoi_left_x, aoi_left_y = round(eclick.xdata, 3), round(eclick.ydata, 3)
+				aoi_right_x, aoi_right_y = round(erelease.xdata, 3), round(erelease.ydata, 3)
 				print("Coordinates [(start_x, start_y), (end_x, end_y)]: ", "[(%6.2f, %6.2f), (%6.2f, %6.2f)]" % (aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y))
 
 			RS = RectangleSelector(ax, line_select_callback, drawtype='box', useblit=False, interactive=True)
 			RS.to_draw.set_visible(True)
 
 			plt.show()
-
 			return [aoi_left_x, aoi_left_y, aoi_right_x, aoi_right_y]
 
-		elif self.aoi == "ellipse":
+		elif self.aoi == "e":
 			x_dia = 0
 			y_dia = 0
 			centre = (0,0)
