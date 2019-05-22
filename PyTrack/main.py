@@ -34,7 +34,7 @@ generateCompatibleFormat(exp_path="/home/arvind/Desktop/Pytrack_testing/PyTrack_
                         eye='B')
 '''
 exp = Experiment("/home/arvind/Desktop/Experiment1/Experiment1.json")
-#exp.visualizeData()
+exp.visualizeData()
 exp.metaMatrixInitialisation(average_flag=True)
 
 # #Testing analyse

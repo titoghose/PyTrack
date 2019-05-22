@@ -221,7 +221,7 @@ def db_create(data_path, source_folder, database_name, dtype_dictionary=None, na
                     print("Dropped table as it existed previously and reinstantiated it: ", table_name)
                     break
         except ValueError:
-            print("The csv file: ", file_name_no_extension, " is getting converted")
+            print("A new SQL database is being created")
 
         chunksize = 100000
         i = 0

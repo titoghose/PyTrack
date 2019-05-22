@@ -320,6 +320,25 @@ class Experiment:
 
 
 	def return_index(self, meta, value_index,sub_index,stimuli_index):
+		"""This function is used in helping to find the corresponding stimuli for data points in certain parameters, that more than one value for a specific stimuli
+
+		Parameters
+		----------
+		meta: str
+			Is the parameter that is being considered
+		value_index: int 
+			Index of an instance of the parameter in the value array of the meta_matrix_dict
+		sub_index: int
+			Is the index of subject with regard to meta_matrix_dict 
+		stimuli_index: int
+			Is the index of the stimuli with regard to meta_matrix_dict  
+
+		Returns
+		-------
+		summation_index: int
+			Is the index of the stimuli to which an instance of the parameter corresponds to
+
+		"""
 
 		if meta in ["sacc_duration", "sacc_vel", "sacc_amplitude"]:
 			meta_col = "sacc_count"
@@ -356,6 +375,21 @@ class Experiment:
 		return summation_index
 
 	def fileWriting(self, writer, csvFile, pd_dataframe, values_list):
+		"""This function is used to write the statistical results into a csv file
+
+		Parameters
+		----------
+
+		writer: file object
+			File object that is used to write into a csv file 
+		csvFile: str
+			Name of the csv file
+		pd_dataframe: pandas DataFrame
+			Statistical results
+		values_list: list
+			Used for labelling the results
+
+		"""
 
 		writer.writerow(values_list)
 		writer.writerow("\n")
@@ -364,6 +398,27 @@ class Experiment:
 
 
 	def welch_ttest(self, dv, factor, subject, data):
+		"""This funtion is used to calculate the welch ttest (used when unequal variance of 2 samples exists)
+
+		Parameters
+		----------
+		dv: str
+			Name of the parameter that is being considered for statistical analysis
+		factor: str
+			Name of the factor on which statistical analysis is being done
+		subject: str
+			Name of the subject
+		data: pandas DataFrame
+			Data on which the Welch t-test is to be performed
+		
+		Returns
+		-------
+		normality: pandas DataFrame
+			Data regarding normality of the different categories of the 'factor' 
+		results: pandas DataFrame
+			Data containing the results of the Welch t-test
+
+		"""
 
 		#Find number of unique values in the factor
 
