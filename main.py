@@ -1,9 +1,9 @@
-from Experiment import Experiment
+from PyTrack.Experiment import Experiment
 from datetime import datetime
 import warnings
 
 
-from formatBridge import generateCompatibleFormat
+from PyTrack.formatBridge import generateCompatibleFormat
 
 warnings.filterwarnings("ignore")
 

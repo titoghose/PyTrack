@@ -319,24 +319,55 @@ class Experiment:
 					self.meta_matrix_dict[1][meta][sub_index, stim_index] = sub.aggregate_meta[stimuli_type][meta]
 
 
-	def return_index(self, meta, value_index,sub_index,stimuli_index):
+	def return_index(self, value_index, summation_array):
 		"""This function is used in helping to find the corresponding stimuli for data points in certain parameters, that more than one value for a specific stimuli
 
 		Parameters
 		----------
-		meta: str
-			Is the parameter that is being considered
+		
 		value_index: int 
 			Index of an instance of the parameter in the value array of the meta_matrix_dict
-		sub_index: int
-			Is the index of subject with regard to meta_matrix_dict 
-		stimuli_index: int
-			Is the index of the stimuli with regard to meta_matrix_dict  
+		summation_array: list
+			list of values whose index will indicate which stimuli an instance will correspond to
 
 		Returns
 		-------
 		summation_index: int
 			Is the index of the stimuli to which an instance of the parameter corresponds to
+
+		"""
+
+		summation_index = -1
+
+		for i, _ in enumerate(summation_array):
+
+			if summation_array[i+1] == -1:
+				if value_index >= summation_array[i] and value_index < summation_array[i+2]:
+					summation_index = i
+					break
+			else:
+				if value_index >= summation_array[i] and value_index < summation_array[i+1]:
+					summation_index = i
+					break
+
+		return summation_index
+
+	def summationArrayCalculation(self, meta,sub_index,stimuli_index):
+		"""This function is used for creating a list that will be used later for identifying the corresponding stimuli for an instance in the meta_matrix_dict
+
+		Parameters
+		----------
+		meta: str
+			Is the parameter that is being considered
+		sub_index: int
+			Is the index of subject with regard to meta_matrix_dict 
+		sub_index: int
+			Is the index of subject with regard to meta_matrix_dict 
+		
+		Returns
+		-------
+		summation_array: list
+			list of values whose index will indicate which stimuli an instance will correspond to
 
 		"""
 
@@ -359,20 +390,10 @@ class Experiment:
 				summation_array.append(sum_value)
 
 		summation_array.append(10000)
-		summation_index = -1
 
-		for i, _ in enumerate(summation_array):
+		return summation_array
 
-			if summation_array[i+1] == -1:
-				if value_index >= summation_array[i] and value_index < summation_array[i+2]:
-					summation_index = i
-					break
-			else:
-				if value_index >= summation_array[i] and value_index < summation_array[i+1]:
-					summation_index = i
-					break
 
-		return summation_index
 
 	def fileWriting(self, writer, csvFile, pd_dataframe, values_list):
 		"""This function is used to write the statistical results into a csv file
@@ -533,10 +554,10 @@ class Experiment:
 				writer = csv.writer(csvFile)
 
 
-		meta_not_to_be_considered = ["pupil_size", "pupil_size_downsample","num_revisits", "first_pass_duration", "second_pass_duration"]
+		meta_not_to_be_considered = ["pupil_size", "pupil_size_downsample"]
 
-		# if "GazeAOI" not in json_data["Columns_of_interest"]["EyeTracker"]:
-		# 	meta_not_to_be_considered.extend(["num_revisits", "first_pass_duration", "second_pass_duration"])
+		sacc_flag=0
+		ms_flag=0
 
 		for sen in self.sensors:
 			for meta in Sensor.meta_cols[sen]:
@@ -564,9 +585,12 @@ class Experiment:
 
 				#For each subject
 				for sub_index, sub in enumerate(self.subjects):
-					#For each Question Type (NTBC: FIND OUT WHAT THE AGGREGATE_META CONTAINS)
+					#For each Question Type
 					for stimuli_index, stimuli_type in enumerate(sub.aggregate_meta):
-						#Value is an array (NTBC : Is it always an array or can it also be a single value?)
+
+						if meta in ["sacc_duration", "sacc_vel", "sacc_amplitude", "ms_duration", "ms_vel", "ms_amplitude"]:
+							summation_array = self.summationArrayCalculation(meta, sub_index, stimuli_index)
+						
 						value_array = self.meta_matrix_dict[1][meta][sub_index,stimuli_index]
 
 						index_extra = 0
@@ -579,7 +603,7 @@ class Experiment:
 									index_extra += 1
 									continue
 
-								proper_index = self.return_index(meta, value_index-index_extra, sub_index, stimuli_index)
+								proper_index = self.return_index(value_index-index_extra, summation_array)
 								stimulus_name = self.stimuli[stimuli_type][proper_index]
 							else:
 								stimulus_name = self.stimuli[stimuli_type][value_index]
