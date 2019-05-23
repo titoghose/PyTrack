@@ -54,6 +54,10 @@ class TestMethods(unittest.TestCase):
                         file_creation=True)
 
             exp.analyse(parameter_list={"all"},
+                        statistical_test="welch_ttest",
+                        file_creation=True)
+
+            exp.analyse(parameter_list={"all"},
                         statistical_test="ttest",
                         file_creation=True)
 
@@ -115,10 +119,7 @@ class TestMethods(unittest.TestCase):
                                 "Sampling_Freq": 1000,
                                 "Display_width": 1280,
                                 "Display_height": 1024,
-                                "aoi_left_x": 0,
-                                "aoi_left_y": 0,
-                                "aoi_right_x": 1280,
-                                "aoi_right_y": 1024
+                                "aoi": [0, 0, 1280, 1024]
                             }
                         }
 
