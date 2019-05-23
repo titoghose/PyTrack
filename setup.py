@@ -18,5 +18,5 @@ setuptools.setup(
         #"License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    install_requires=["numpy>=1.16.2", "scipy>=1.2.1", "matplotlib>=3.0.2", "pandas", "Pillow", "sqlalchemy", "statsmodels", "pingouin"]
+    install_requires=["numpy>=1.16.2", "scipy==1.2.1", "matplotlib>=3.0.2", "pandas", "Pillow", "sqlalchemy", "statsmodels", "pingouin"]
 )
