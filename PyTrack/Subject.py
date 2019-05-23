@@ -296,6 +296,13 @@ class Subject:
 
 		stimulus_object_dict = {}
 
+		aoi_dict = None
+		try:
+			csv_df = pd.read_csv(self.path + "/Data/" + self.name + ".csv", usecols=["Stim_Key", "Stim_presented_rect_CoOr"])
+			aoi_dict = [{key:value} for key, value in zip(csv_df["Stim_Key"], csv_df["Stim_presented_rect_CoOr"])]
+		except Exception as e:
+			print("AOI file not found for subject")
+
 		for category in stimuli_names:
 
 			stimulus_object_list = []
@@ -306,7 +313,12 @@ class Subject:
 
 				stimuli_data = data[start_time : end_time+1]
 
-				stimulus_object = Stimulus(self.path, stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file, self.name, self.aoi)
+				if aoi_dict != None and stimulus_name in aoi_dict:
+					aoi_coords = list(aoi_dict[stimulus_name])
+				else:
+					aoi_coords = self.aoi
+
+				stimulus_object = Stimulus(self.path, stimulus_name, category, sensors, stimuli_data, start_time, end_time, roi_time, json_file, self.name, aoi_coords)
 
 				stimulus_object_list.append(stimulus_object)
 

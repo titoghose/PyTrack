@@ -798,7 +798,7 @@ class Experiment:
 				canvas.draw_idle()
 
 			canvas = ax.figure.canvas
-			PS = PolygonSelector(ax, onselect, lineprops=dict(color='r', linestyle='-', linewidth=2, alpha=0.5), markerprops=dict(marker='o', markersize=7, mec='r', mfc='k', alpha=0.5))
+			_ = PolygonSelector(ax, onselect, lineprops=dict(color='r', linestyle='-', linewidth=2, alpha=0.5), markerprops=dict(marker='o', markersize=7, mec='r', mfc='k', alpha=0.5))
 			vertices = []
 
 			print("1) 'esc' KEY: START A NEW POLYGON")

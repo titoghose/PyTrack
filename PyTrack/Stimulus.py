@@ -292,17 +292,33 @@ class Stimulus:
 					gaze_x_no_blinks = gaze_x[pupil_size_no_blinks_indices]
 					gaze_y_no_blinks = gaze_y[pupil_size_no_blinks_indices]
 
-					# if eye == "left":
-					# 	plt.plot(gaze_x, gaze_y)
-
 					interp_gaze_x = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices), gaze_x_no_blinks)
 					interp_gaze_y = np.interp(np.arange(len(pupil_size)), sorted(pupil_size_no_blinks_indices), gaze_y_no_blinks)
 
-					# if eye == "left":
-					# 	plt.plot(interp_gaze_x, interp_gaze_y, alpha=0.5)
-
-					# plt.show()
 					new_gaze[eye] = {"x": interp_gaze_x, "y": interp_gaze_y}
+
+			# fig = plt.figure()
+			# ax = fig.add_subplot(121)
+			# ax2 = fig.add_subplot(122)
+			# ax.plot(range(len(pupil_size)), pupil_size, alpha=0.4)
+			# ax.plot(range(len(interp_pupil_size)), interp_pupil_size, alpha=0.8, linestyle='--')
+
+			# for i, j in zip(blink_onset, blink_offset):
+			# 	ax.axvline(i, color='g', linestyle='--')
+			# 	ax.axvline(j, color='g', linestyle='--')
+			# 	ax2.plot(gaze["left"]["x"][i:j], gaze["left"]["y"][i:j], color='g', alpha=0.4)
+
+
+			# rect = Rectangle((self.aoi_coords[0], self.aoi_coords[1]),
+			# 						(self.aoi_coords[2] - self.aoi_coords[0]),
+			# 						(self.aoi_coords[3] - self.aoi_coords[1]),
+			# 						color='r', fill=False, linestyle='--')
+			# ax2 = plt.gca()
+			# ax2.add_patch(rect)
+			# # ax2.plot(gaze["left"]["x"], gaze["left"]["y"], alpha=0.4)
+			# ax2.plot(new_gaze["left"]["x"], new_gaze["left"]["y"], alpha=0.8, linestyle='--')
+
+			# plt.show()
 
 		else:
 			interp_pupil_size = pupil_size
@@ -697,12 +713,17 @@ class Stimulus:
 				MS[s][7] = radius_x
 				MS[s][8] = radius_y
 
-		ms_count = 0
+			ms_count = num_ms
+
+		ms_count = num_ms
 		ms_duration = []
 
-		ms_count = len(MS)
 		for ms in MS:
 			ms_duration.append(ms[1] - ms[0])
+
+		if num_ms == 0:
+			MS = []
+
 		return np.array(MS), ms_count, ms_duration
 
 
@@ -737,8 +758,11 @@ class Stimulus:
 
 		if plot_ms:
 			fig2 = plt.figure()
+			fig2.add_subplot(111)
 
 		for fix_ind in range(len(fixation_indices["start"])):
+
+
 
 			all_MS = {"left" : None, "right" : None}
 			ms_count = {"left" : None, "right" : None}
@@ -768,7 +792,7 @@ class Stimulus:
 			all_bin_MS.append(MS)
 
 
-			if plot_ms:
+			if plot_ms and MS["NB"] != 0:
 
 				# Plot gaze and velocity with thresholds
 				fig = plt.figure()
@@ -777,48 +801,39 @@ class Stimulus:
 
 				plt.subplots_adjust(wspace=0.5)
 
+				# Plotting positions
 				a1.plot(smooth_gaze["left"]["x"][1:], smooth_gaze["left"]["y"][1:])
 				a1.set_xlabel("x")
 				a1.set_ylabel("y")
 				a1.set_title("gaze plot")
-				flag = -1
-				for i in range(len(MS["bin"])):
-					a1.plot(smooth_gaze["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], smooth_gaze["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r')
-					flag += 1
+				for i in range(MS["NB"]):
+					a1.plot(smooth_gaze["left"]["x"][int(MS["bin"][i][0]) : int(MS["bin"][i][1]) + 1], smooth_gaze["left"]["y"][int(MS["bin"][i][0]) : int(MS["bin"][i][1]) + 1], color='r')
 
+				e = Ellipse((0, 0), 2*MS["bin"][0][7], 2*MS["bin"][0][8], linestyle='--', color='g', fill=False)
+				a2.add_patch(e)
 
-				e = Ellipse((0, 0), 2*MS["bin"][0, 7], 2*MS["bin"][0, 8], linestyle='--', color='g', fill=False)
-				a2.add_artist(e)
+				# Plotting velocities
 				a2.plot(vel["left"]["x"], vel["left"]["y"], alpha=0.5)
 				a2.set_xlabel("vel-x")
 				a2.set_ylabel("vel-y")
 				a2.set_title("gaze velocity plot")
-				flag = -1
-				for i in range(len(MS["bin"])):
-					a2.plot(vel["left"]["x"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], vel["left"]["y"][int(MS["bin"][i, 0]) : int(MS["bin"][i, 1]) + 1], color='r')
-					flag += 1
+				for i in range(MS["NB"]):
+					a2.plot(vel["left"]["x"][int(MS["bin"][i][0]) : int(MS["bin"][i][1]) + 1], vel["left"]["y"][int(MS["bin"][i][0]) : int(MS["bin"][i][1]) + 1], color='r')
 
 
 				if not os.path.isdir(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/"):
 					os.makedirs(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/")
 
-				if flag != -1:
-					fig.savefig(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/" + self.name + "_" + str(fix_ind) + ".png", dpi=200)
-
-
+				fig.savefig(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/" + self.name + "_" + str(fix_ind) + ".png", dpi=200)
 				plt.close(fig)
 
-
-			if plot_ms:
-				# Plot main sequence i.e peak velocity vs peak amplitude
-				plt.xlabel("Amplitude (deg)")
-				plt.ylabel("Peak Velocity (deg/s)")
-				for ms in all_bin_MS:
-					for i in range(len(ms["bin"])):
-						peak_vel = (ms["bin"][i, 2] + ms["bin"][i, 11])/2
-						amp = (np.sqrt(ms["bin"][i, 5]**2 + ms["bin"][i, 6]**2) + np.sqrt(ms["bin"][i, 13]**2 + ms["bin"][i, 14]**2))/2
-
-						plt.scatter(amp, peak_vel, marker='o', facecolors='none', edgecolors='r')
+				ax = fig2.axes[0]
+				ax.set_xlabel("Amplitude (deg)")
+				ax.set_ylabel("Peak Velocity (deg/s)")
+				for i in range(MS["NB"]):
+					peak_vel = (MS["bin"][i][2] + MS["bin"][i][11])/2
+					amp = (np.sqrt(MS["bin"][i][5]**2 + MS["bin"][i][6]**2) + np.sqrt(MS["bin"][i][13]**2 + MS["bin"][i][14]**2))/2
+					ax.scatter(amp, peak_vel, marker='o', facecolors='none', edgecolors='r')
 
 		if plot_ms:
 			fig2.savefig(self.path + "/Subjects/" + self.subject_name + "/ms_main_seq" + self.name + ".png", dpi=200)
@@ -920,22 +935,22 @@ class Stimulus:
 
 				saccade_duration.append(end-start)
 
-				vel_x = self.position2Velocity(self.data["Gaze"]["left"]["x"][start:end], sampling_freq)
-				vel_y = self.position2Velocity(self.data["Gaze"]["left"]["y"][start:end], sampling_freq)
+				vel_x = self.position2Velocity(self.data["InterpGaze"]["left"]["x"][start:end], sampling_freq)
+				vel_y = self.position2Velocity(self.data["InterpGaze"]["left"]["y"][start:end], sampling_freq)
 
 				# Saccade peak velocity (vpeak)
 				vpeak = max(np.sqrt(vel_x**2 + vel_y**2))
 				saccade_peak_vel.append(vpeak)
 
 				# Saccade amplitude (dX,dY)
-				minx = min(self.data["Gaze"]["left"]["x"][start:end])
-				maxx = max(self.data["Gaze"]["left"]["x"][start:end])
-				miny = min(self.data["Gaze"]["left"]["y"][start:end])
-				maxy = max(self.data["Gaze"]["left"]["y"][start:end])
-				ix1 = np.argmin(self.data["Gaze"]["left"]["x"][start:end])
-				ix2 = np.argmax(self.data["Gaze"]["left"]["x"][start:end])
-				iy1 = np.argmin(self.data["Gaze"]["left"]["y"][start:end])
-				iy2 = np.argmax(self.data["Gaze"]["left"]["y"][start:end])
+				minx = min(self.data["InterpGaze"]["left"]["x"][start:end])
+				maxx = max(self.data["InterpGaze"]["left"]["x"][start:end])
+				miny = min(self.data["InterpGaze"]["left"]["y"][start:end])
+				maxy = max(self.data["InterpGaze"]["left"]["y"][start:end])
+				ix1 = np.argmin(self.data["InterpGaze"]["left"]["x"][start:end])
+				ix2 = np.argmax(self.data["InterpGaze"]["left"]["x"][start:end])
+				iy1 = np.argmin(self.data["InterpGaze"]["left"]["y"][start:end])
+				iy2 = np.argmax(self.data["InterpGaze"]["left"]["y"][start:end])
 				dX = np.sign(ix2 - ix1) * (maxx - minx)
 				dY = np.sign(iy2 - iy1) * (maxy - miny)
 				saccade_amplitude.append(np.sqrt(dX**2 + dY**2))
@@ -991,8 +1006,6 @@ class Stimulus:
 				if len(np.where(self.data["GazeAOI"][start:end] == 1)[0]) > int(0.9 * (end-start)):
 					inside_aoi[0] += 1
 					temp1.append(end - start)
-				else:
-					print("Hello")
 
 			if len(temp1) != 0:
 				inside_aoi[1] = np.max(temp1)
@@ -1107,7 +1120,7 @@ class Stimulus:
 		ax.imshow(img)
 
 		# Rectangle AOI
-		if len(self.aoi_coords) == 4 and isinstance(self.aoi_coords[0], float):
+		if len(self.aoi_coords) == 4 and (isinstance(self.aoi_coords[0], float) or isinstance(self.aoi_coords[0], int)):
 			rect = Rectangle((self.aoi_coords[0], self.aoi_coords[1]),
 									(self.aoi_coords[2] - self.aoi_coords[0]),
 									(self.aoi_coords[3] - self.aoi_coords[1]),
@@ -1219,7 +1232,7 @@ class Stimulus:
 		ax.imshow(img)
 
 		# Rectangle AOI
-		if len(self.aoi_coords) == 4 and isinstance(self.aoi_coords[0], float):
+		if len(self.aoi_coords) == 4 and (isinstance(self.aoi_coords[0], float) or isinstance(self.aoi_coords[0], int)):
 			rect = Rectangle((self.aoi_coords[0], self.aoi_coords[1]),
 									(self.aoi_coords[2] - self.aoi_coords[0]),
 									(self.aoi_coords[3] - self.aoi_coords[1]),
@@ -1281,7 +1294,7 @@ class Stimulus:
 
 		ax.imshow(img)
 		# Rectangle AOI
-		if len(self.aoi_coords) == 4 and isinstance(self.aoi_coords[0], float):
+		if len(self.aoi_coords) == 4 and (isinstance(self.aoi_coords[0], float) or isinstance(self.aoi_coords[0], int)):
 			rect = Rectangle((self.aoi_coords[0], self.aoi_coords[1]),
 									(self.aoi_coords[2] - self.aoi_coords[0]),
 									(self.aoi_coords[3] - self.aoi_coords[1]),
@@ -1746,7 +1759,8 @@ class Stimulus:
 		"""
 		patch = None
 		# Rectangle AOI
-		if len(self.aoi_coords) == 4 and isinstance(self.aoi_coords[0], float):
+
+		if len(self.aoi_coords) == 4 and (isinstance(self.aoi_coords[0], float) or isinstance(self.aoi_coords[0], int)):
 			patch = Rectangle((self.aoi_coords[0], self.aoi_coords[1]),
 									(self.aoi_coords[2] - self.aoi_coords[0]),
 									(self.aoi_coords[3] - self.aoi_coords[1]),
@@ -1852,7 +1866,7 @@ def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 	ax.imshow(img)
 
 	# Rectangle AOI
-	if len(aoi_coords) == 4 and isinstance(aoi_coords[0], float):
+	if len(aoi_coords) == 4 and (isinstance(aoi_coords[0], float) or isinstance(aoi_coords[0], int)):
 		rect = Rectangle((aoi_coords[0], aoi_coords[1]),
 								(aoi_coords[2]-aoi_coords[0]),
 								(aoi_coords[3]-aoi_coords[1]),
