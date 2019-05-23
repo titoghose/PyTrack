@@ -4,68 +4,77 @@
 
 # PyTrack
 
+This is a toolkit to analyse and visualize eye tracking data. It provides the following functionality:
+
+## Feature Extraction
+This involves extraction of parameters or meta-data related to blinks, fixations, saccades, microsaccades and pupil diameter. The features extracted are as follows:
+
+| Blink        |  Fixations   | Saccades  | Microsaccades | Pupil            | Revisits to AOI/ROI  |
+|------------  | -----------  | --------- | ------------- | ---------------- |--------------------- |
+| Count        | Count        | Count     | Count         | Size             | Count                |
+| Avg Duration | Avg Duration | Velocity  | Velocity      | Time to Peak     | First Pass Duration  |
+| Max Duration | Max Duration | Amplitude | Amplitude     | Peak Size        | Second Pass Duration |
+|              |              | Duration  | Duration      | Avg Size         |                      |
+|              |              |           |               | Slope            |                      |
+|              |              |           |               | Area Under Curve |                      |
+
+## Statistical Analysis
+After extraction of features, PyTrack can perform tests such as the student T-Test, Welch T-Test, ANOVA, RMANOVA, n-way ANOVA and Mixed ANOVA. The between and within group factors can be specified.
+
+## Visualization
+PyTrack can generate a variety of plots. The visualization is through an interactive GUI. The plots that can be generated are as follows:
+1. Fixation plot
+2. Individual subject gaze heat map
+3. Aggregate subject gaze heat map
+4. Dynamic pupil size and gaze plot
+5. Microsaccade position and velocity plot
+6. Microsaccade main sequence plot
+
 # Table of Contents
 1. [Documentation](#documentation)
-2. [Getting Started](#getting-started)
-   1. [Prerequisites](#prerequisites)
-   2. [Installing](#installing)
-3. [Running the tests](#running-the-tests)
-   1. [Experiment Design](#experiment-design)
-      1. [Setup](#setup)
-      2. [Using PyTrack](#using-pytrack)
-      3. [Example Use](#example-use)
-      4. [Advanced Functionality](#advanced-functionality)
-   2. [Stand-alone Design](#stand-alone-design)
-4. [Authors](#authors)
-5. [License](#license)
-6. [Acknowledgments](#acknowledgments)
+2. [Installation](#installation)
+3. [Sample Data](#sample-data)
+4. [Using PyTrack](#using-pytrack)
+    1. [Setup](#setup)
+    2. [Running PyTrack](#running-pytrack)
+5. [Advanced Functionality](#advanced-functionality)
+    1. [Statistical Tests](#statistical-tests)
+    2. [Accessing extracted features as a dictionary](#accessing-extracted-features-as-a-dictionary)
+    3. [Using PyTrack in Stand-alone mode](#using-pytrack-in-stand-alone-mode)
+6. [Authors](#authors)
+7. [License](#license)
+8. [Acknowledgments](#acknowledgments)
 
+# Documentation
+The detailed documentation for the methods and classes of PyTrack can be found [here](https://pytrack-ntu.readthedocs.io/en/latest/)
 
-This is a framework to analyse and visualize eye tracking data. It offers 2 designs of analysis:
-* **Experiment Design**: Analyse an entire experiment with 1 or more subjects/participants presented with 1 or more stimuli.
-* **Stand-alone Design**: Analyse a single stimulus for a single person.
+# Installation
 
-
-As of now, it supports data collected using SR Research EyeLink, SMI and Tobii eye trackers. The framework contains a *formatBridge* function that converts these files into a base format and then performs analysis on it.
-
-
-## Documentation
-
-The detailed documentation of the project with explanation of all its modules can be found [here](https://pytrack-ntu.readthedocs.io/en/latest/).
-
-
-## Getting Started
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
-
-### Prerequisites
-
-The framework uses Python 3.x. For systems running Linux or Mac OS, it should be pre-installed. For Windows users, in case you do not have it installed, get it from [here](https://www.python.org/downloads/).
-
-
-### Installing
-
-To install ***PyTrack*** on your system, it can be done with one simple step:
+PyTrack is built for Python3 because support for the Python2 is going to be stopped at the end of 2019. In order to install PyTrack please use any of the following:
 
 ```
+python3 -m pip install PyTrack-NTU
 pip install PyTrack-NTU
+pip3 install PyTrack-NTU
 ```
 
-PyTrack uses Python 3.x. Hence, use pip for Python 3.x.
+Please make sure that pip is for Python3 and not Python2. Python3  can be found [here](https://www.python.org/downloads/) or Anaconda Python3 can be found [here](https://www.anaconda.com/distribution/).
 
-## Running the tests
+**NOTE:** Python3 can be installed alongside Python2
 
-In order to test ***PyTrack***, some sample data files can be found [here](https://drive.google.com/open?id=1tWD69hurELVuVRFzizCbukWnr22RZrnp).
+# Sample Data
+In order to test the toolkit some sample data in SMI, EyeLink and Tobii formats can be found [here](https://drive.google.com/open?id=1tWD69hurELVuVRFzizCbukWnr22RZrnp). The .txt file in the folder describes the data found. The SMI and Tobii files have been taken from [here](http://www2.hu-berlin.de/eyetracking-eeg/testdata.html).
 
-To get started, first you need to choose which design you want to run the framework in. If you wish to use the *Experiment Design*, see [this](#experiment-design). If you wish to use the *Stand-alone Design* see [this](#stand-alone-design).
+# Using PyTrack
 
-### Experiment Design
+## Setup
 
-#### Setup
+Before running the framework, lets setup the folder so PyTrack can read and save all the generated figures in one central location and things are organised.
 
-Before running the framework, lets setup the folder so ***PyTrack*** can read and save all the generated figures in one central location and things are organised.
+Create a directory structure like the one shown below. It is essential for the listed directories to be present for the proper functioning of PyTrack.
 
-Create a directory structure like the one shown below. It is essential for the listed directories to be present for the proper functioning of ***PyTrack***.
+**NOTE:** The sample data has a folder called NTU_Experiment which is already organised in the following manner. It can be used as reference.
+
 ```
 [Experiment-Name]
 |
@@ -82,7 +91,7 @@ Create a directory structure like the one shown below. It is essential for the l
 └── [Experiment-Name].json
 
 ```
-*[Experiment-Name]* stands for the name of your experiment. Lets assume that your experiment name is "*NTU_Experiment*". The rest of the steps will use this alias as the *[Experiment-Name]* folder.
+*[Experiment-Name]* stands for the name of your experiment. The rest of the steps will use *NTU_Experiment* as the *[Experiment-Name]* folder.
 
 Now, follow these steps:
 
@@ -90,20 +99,22 @@ Now, follow these steps:
 
     eg. *waffle_buttersnaps.asc* or *subject_001.asc*
 
-2. For proper visualization of gaze data, its best if you include the stimuli presented during your experiment inside the *Stimuli* folder. Make sure the images have either **jpg, jpeg** or **png** extensions.
+2. For proper visualization of gaze data, its best if you include the stimuli presented during your experiment inside the *Stimuli* folder. Make sure the images have either **jpg, jpeg** or **png** extensions and the names match the names of the stimuli as present in your recorded data.
 
     eg. *stim_1.jpg* or *random_picture.png*
 
-3. The last and final step to setup the experiment directory is to include the experiment description json file. This file should contain the essential details of your experiment. It contains specifications regarding your experiment suchas the stimuli you wish to analyse or the participants/subjects you wish to include. Mentioned below is the json file structure. The content below can be copied and pasted in a file called *NTU_Experiment*.json (basically the name of your experiment with a json extension).
+3. The last and final step to setup the experiment directory is to include the experiment description json file. This file should contain the essential details of your experiment. It contains specifications regarding your experiment such as the stimuli you wish to analyse or the participants/subjects you wish to include. Mentioned below is the json file structure. The content below can be copied and pasted in a file called *NTU_Experiment*.json
 
     * "*Experiment_name*" should be the same name as the json file without the extension and "*Path*" should be the absolute path to your experiment directory without the final "/" at the end.
-    * The subjects should be added under the "*Subjects*" field. You may specify one or more groups of division for your subjects (recommended for aggregate between group statistical analysis). **There must be atleast 1 group**.
-    * The stimuli names should be added under the "*Stimuli*" field and again you may specify one or more types (recommended for aggregate between stimulus type statistical analysis). **There must be atleast 1 type**.
-    * The "*Control_Questions*" field is optional. In case you have some stimuli that should be used to standardise/normalise features extracted from all stimuli, sepcify the names here. **These stimuli must be present under the "*Stimuli*" field under one of the types**.
+    * The subjects should be added under the "*Subjects*" field. You may specify one or more groups of division for your subjects (recommended for between group statistical analysis). **There must be atleast 1 group**.
+    * The stimuli names should be added under the "*Stimuli*" field and again you may specify one or more types (recommended for between/within stimulus type statistical analysis). **There must be atleast 1 type**.
+    * The "*Control_Questions*" field is optional. In case you have some stimuli that should be used to standardise/normalise features extracted from all stimuli, specify the names here. **These stimuli must be present under the "*Stimuli*" field under one of the types**.
     * **The field marked "*Columns_of_interest*" should not be altered**.
     * Under "*Analysis_Params*", just change the values of "Sampling_Freq", "Display_height" and "Display_width" to match the values of your experiment.
 
-    ***Note***: If you wish to analyse only a subset of your stimuli or subjects, specify only the ones of interest in the json file. The analysis and visualization will be done only for the ones mentioned in the json file.
+    **Note**: If you wish to analyse only a subset of your stimuli or subjects, specify only the ones of interest in the json file. The analysis and visualization will be done only for the ones mentioned in the json file.
+
+**NOTE:** A sample json file is present in the NTU_Experiment folder in the sample data. You can just edit it to make your work simpler.
 
 ```json
 {
@@ -157,96 +168,76 @@ Now, follow these steps:
 }
 
 ```
-**NOTE: For some advanced functionality on analysis read [ADVANCED FUNCTIONALITY](#advanced-functionality). If only basic functionality is desired, you may ignore it.**
+
+## Running PyTrack
+
+**NOTE:** All sample segments shown below are for the NTU_Experiment folder in the sample data.
+
+1. In order to use the features, the **first step is to convert the raw data into a readable format**. In order to do so, the following code segment can be used:
+
+    ```python
+    from PyTrack.formatBridge import generateCompatibleFormat
+
+    generateCompatibleFormat(exp_path="complete/path/to/NTU_Experiment",
+                            device="eyelink",
+                            stim_list_mode='NA',
+                            start='start_trial',
+                            stop='stop_trial',
+                            eye='B')
+
+    ```
+
+    To get a detailed understanding of the parameters of *generateCompatibleFormats* and modify it to your needs see the documentation [here](https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html#formatBridge.generateCompatibleFormat).
+
+2. The **second step is to create an object of the Experiment class**.
+
+    ```python
+    from PyTrack.Experiment import Experiment
+
+    # Creating an object of the Experiment class
+    exp = Experiment(json_file="complete/path/to/NTU_Experiment/NTU_Experiment.json")
+    ```
+
+3. Now you can run the **feature extraction and statistical tests**
+
+    ```python
+    # Instantiate the meta_matrix_dict of an Experiment to find and extract all features from the raw data
+    exp.metaMatrixInitialisation()
+
+    # Calling the function for the statistical analysis of the data
+    exp.analyse(parameter_list={"all"},
+                between_factor_list=["Subject_type"],
+                within_factor_list=["Stimuli_type"],
+                statistical_test="anova",
+                file_creation=True)
+
+    # Does not run any statistical test. Just saves all the data as csv files.
+    exp.analyse(parameter_list={"all"},
+                statistical_test="None",
+                file_creation=True)
+
+    ```
+    To get a detailed understanding of the parameters of the *analyse* function: [here](https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html#experiment.analyse)
+
+    To get a detailed understanding of the parameters of the *metaMatrixInitialisation* function: [here](https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html#experiment.metaMatrixInitialisation)
+
+4. For **visualization**
+
+    ```python
+    # This function call will open up a GUI which you can use to navigate the entire visualization process
+    exp.visualizeData()
+    ```
 
 
-#### Using PyTrack
+# Advanced Functionality
 
-This involves less than 10 lines of python code. However, in case you want to do more detailed analysis, it may involve a few more lines.
-
-Using *formatBridge* majorly has 3 cases.:
-
-1. **Explicitly specify the stimulus order for each subject** as a list to the *generateCompatibleFormats* function. This case should be used when the order of stimuli is randomised for every participant. In this case, each participant needs a file specifying the stimulus presentation order. Hence, create a folder inside the *Data* folder called ***stim*** and place individual .txt files with the same names as the subject/participant names with the a new stimulus name on each line. Finally, the *stim_list_mode* parameter in the *generateCompatibleFormat* function needs to be set as "diff" (See [Example](#example-use)).
-
-   eg. If subject data file is *subject_001.asc*, the file in the stim folder should be *subject_001.txt*
-
-   *Note: Yes we understand this is a tedious task, but this is the only way we can understand the order of the stimulus which is needed for conclusive analysis and visualization. **However, if you specify the stimulus name for every event in the message column of your data in this format: "Stim Key: [stim_name]", we can extract it automatically. WE RECOMMEND THIS FOR BEST USER EXPERIENCE.***
-
-2. **Explicitly specify the stimulus order for the entire experiment**. This is for the case where the same order of stimuli are presented to all the participants. Just create a file called *stim_file.txt* and place it inside the *Data* folder. Finally, the *stim_list_mode* parameter in the *generateCompatibleFormat* function needs to be set as "common" (See [Example](#example-use)).
-
-3. **Do not sepcify any stimulus order list**. In this case, the output of the statistical analysis will be inconclusive and the visualization of gaze will be on a black screen instead of the stimulus image. The *stim_list_mode* parameter in the *generateCompatibleFormat* function needs to be set as "NA". However, you can still extract the metadata and features extracted for each participant but the names will not make any sense. ***WE DO NOT RECOMMEND THIS***.
-
-
-#### Example Use
-
-See [documentation](https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html) for a detailed understanding of each function.
-
-**Converting to the correct format:**
-
-```python
-from PyTrack.formatBridge import generateCompatibleFormat
-
-# function to convert data to generate database in base format for experiment done using EyeLink on both eyes and the stimulus name specified in the message section
-generateCompatibleFormat(exp_path="abcd/efgh/NTU_Experiment/",
-                        device="eyelink",
-                        stim_list_mode='NA',
-                        start='start_trial',
-                        stop='stop_trial',
-                        eye='B')
-
-```
-
-**Running the analysis or extracting data:**
-
-```python
-from PyTrack.Experiment import Experiment
-
-# Creating an object of the Experiment class
-exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
-
-# Instantiate the meta_matrix_dict of an Experiment to find and extract all features from the raw data
-exp.metaMatrixInitialisation(standardise_flag=False,
-                              average_flag=False)
-
-# Calling the function for the statistical analysis of the data
-# file_creation=True. Hence, the output of the data used to run the tests and the output of the tests will be stored in in the 'Results' folder inside your experiment folder
-exp.analyse(parameter_list={"all"},
-            between_factor_list=["Subject_type"],
-            within_factor_list=["Stimuli_type"],
-            statistical_test="anova",
-            file_creation=True)
-
-# Does not run any test. Just saves all the data as csv files.
-exp.analyse(parameter_list={"all"},
-            statistical_test="None",
-            file_creation=True)
-
-```
-
-**Visualizing the data:**
-
-```python
-from PyTrack.Experiment import Experiment
-
-# Creating an object of the Experiment class
-exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
-
-# This function call will open up a GUI which you can use to navigate the entire visualization process
-exp.visualizeData()
-
-```
-
-
-#### Advanced Functionality
-
-**THIS SECTION IS ONLY FOR ADVANCED STATISTICAL ANALYSIS FUNCTIONALITY. IGNORE IT IF THE BASIC ANALYSIS IS SUFFICIENT FOR YOU.**
-
+## Statistical Tests
 The Experiment class contains a function called analyse() which is used to perform statistical analysis (eg: ANOVA or T test), by default there is only 1 between group factor ("Subject_type") and 1 within group factor ("Stimuli_type") that is considered. If additional factors need to be considered they need to added to the json file.
 
-* For example if Gender is to be considered as an additional between group factor then in the json file, under "Subjects", for each subject, a corresponding dicitionary must be created where you mention the factor name and the corresponding value (eg: Subject_name: {"Gender" : "M"}). Please also note that the square brackets ('[', ']') after group type need to be changed to curly brackets ('{', '}').
-* This must be similarly done for Stimuli, if any additional within group factor that describes the stimuli needs to be added. For example, if you are showing WORDS and PICTURES to elicit different responses from a user and you additonally have 2 different brightness levels ("High" and "Low") of the stimuli, you could consider Type1 and Type2 to be the PICTuRE and WORD gropus and mention Brightness as an additional within group factor.
+* For example if Gender is to be considered as an additional between group factor then in the json file, under "Subjects", for each subject, a corresponding dicitionary must be created where you mention the factor name and the corresponding value. Please also note that the square brackets ('[', ']') after group type need to be changed to curly brackets ('{', '}').
 
-The below code snippet just shows the changes that are to be done for Subject and Stimuli sections of the json file, the other sections remain the same.
+* Similarly for Stimuli, for example, if you are showing Words and Pictures to elicit different responses from a user and you additonally have 2 different brightness levels ("High" and "Low") then mention Brightness as an additional within group factor.
+
 
 ```json
 {
@@ -273,59 +264,50 @@ The below code snippet just shows the changes that are to be done for Subject an
 }
 
 ```
-
-**The snippet at the bottom allows the use of advanced functionality:**
+Sample code segment to use the advanced statistical test:
 
 ```python
 from PyTrack.Experiment import Experiment
 
-# Creating an object of the Experiment class
 exp = Experiment(json_file="abcd/efgh/NTU_Experiment/NTU_Experiment.json")
 
-# Instantiate the meta_matrix_dict of an Experiment to find and extract all features from the raw data
-exp.metaMatrixInitialisation(standardise_flag=False,
-                              average_flag=False)
+exp.metaMatrixInitialisation()
 
-# Calling the function for advanced statistical analysis of the data
-# file_creation=True. Hence, the output of the data used to run the tests and the output of the tests will be stored in in the 'Results' folder inside your experiment folder
-
-#############################################################
-## 1. Running anova on advanced between and within factors ##
-#############################################################
 exp.analyse(parameter_list={"all"},
             between_factor_list=["Subject_type", "Gender"],
             within_factor_list=["Stimuli_type", "Brightness"],
             statistical_test="anova",
             file_creation=True)
 
-#############################################################
-## 2. Running no tests. Just storing analysis data in Results folder ##
-#############################################################
-exp.analyse(statistical_test="None",
-            file_creation=True)
+```
 
+## Accessing extracted features as a dictionary
 
-# In case you want the data for a particular participant/subject as a dictionary of values, use this
+In case you wish to get the extracted features for a particilar Subject on a particular Stimulus:
 
-subject_name = "Sub_001" #specify your own subject's name (must be in json file)
-stimulus_name = "Stim_1" #specify your own stimulus name (must be in json file)
+```python
+from PyTrack.Experiment import Experiment
+
+exp = Experiment(json_file="complete/path/to/NTU_Experiment/NTU_Experiment.json")
+
+subject_name = "sub_333" #specify your own subject's name (must be in json file)
+stimulus_name = "Alpha1" #specify your own stimulus name (must be in json file)
 
 # Access metadata dictionary for particular subject and stimulus
+exp.metaMatrixInitialisation()
 single_meta = exp.getMetaData(sub=subject_name,
                               stim=stimulus_name)
 
 # Access metadata dictionary for particular subject and averaged for stimulus types
+exp.metaMatrixInitialisation(average_flag=True)
 agg_type_meta = exp.getMetaData(sub=subject_name,
                                  stim=None)
 
 ```
 
+## Using PyTrack in Stand-alone mode
+The stand-alone design requires only interaction with tyhe Stimulus class. This is recommended if you wish to extract features or visualize data for only 1 subject on a particular stimulus.
 
-### Stand-alone Design
-
-The stand-alone design requires only interaction with tyhe Stimulus class. This is recommended if you wish to extract features or visualize data for only 1 subject on a particular stimulus. If not, look at [Experiment Design](#experiment-design)
-
-**Here is a sample code snippet explaining the functionality:**
 
 ```python
 from PyTrack.Stimulus import Stimulus
@@ -335,26 +317,22 @@ import numpy as np
 
 
 # function to convert data to generate csv file for data file recorded using EyeLink on both eyes and the stimulus name specified in the message section
-generateCompatibleFormat(exp_path="/path/to/data/file/in/raw/format",
-                        device="eyelink",
+generateCompatibleFormat(exp_path="/path/to/smi_eyetracker_freeviewing.txt",
+                        device="smi",
                         stim_list_mode='NA',
-                        start='start_trial',
-                        stop='stop_trial',
-                        eye='B')
+                        start='12',
+                        stop='99')
 
-df = pd.read_csv("/path/to/enerated/data/file/in/csv/format")
+df = pd.read_csv("/path/to/smi_eyetracker_freeviewing.csv")
 
-# Dictionary containing details of recording. Please change the values according to your experiment. If no AOI is desired, set aoi_left values to (0, 0) and aoi_right to the same as Display_width and Display_height
+# Dictionary containing details of recording. Please change the values according to your experiment. If no AOI is desired, set aoi value to [0, 0, Display_width, Display_height]
 sensor_dict = {
                   "EyeTracker":
                   {
                      "Sampling_Freq": 1000,
                      "Display_width": 1280,
                      "Display_height": 1024,
-                     "aoi_left_x": 390,
-                     "aoi_left_y": 497,
-                     "aoi_right_x": 759,
-                     "aoi_right_y": 732
+                     "aoi": [390, 497, 759, 732]
                   }
                }
 
@@ -367,27 +345,33 @@ stim = Stimulus(path="path/to/experiment/folder",
 stim.findEyeMetaData()
 features = stim.sensors["EyeTracker"].metadata  # Getting dictioary of found metadata/features
 
+# Visualization of plots
 stim.gazePlot(save_fig=True)
 stim.gazeHeatMap(save_fig=True)
-stim.findMicrosaccades(plot_ms=True)
 stim.visualize()
 
-```
+# Extracting features
+MS, ms_count, ms_duration = stim.findMicrosaccades(plot_ms=True)
 
-## Authors
+```
+See the stimulus class for more details on the functions: [here](https://pytrack-ntu.readthedocs.io/en/latest/PyTrack.html#Stimulus.Stimulus)
+
+
+# Authors
 
 * **Upamanyu Ghose** ([github](https://github.com/titoghose) | [email](titoghose@gmail.com))
 * **Arvind A S** ([github](https://github.com/arvindas) | [email](96arvind@gmail.com))
 
 See also the list of [contributors](https://github.com/titoghose/PyTrack/contributors) who participated in this project.
 
-## License
+# License
 
-This project is licensed under the GNU GPL v3 License - see the [LICENSE.txt](LICENSE.txt) file for details
+This project is licensed under the GPL3 License - see the [LICENSE.txt](LICENSE.txt) file for details
 
-## Acknowledgments
+# Acknowledgments
 
 * The formatsBridge module was adapted from the work done by [Edwin Dalmaijer](https://github.com/esdalmaijer) in [PyGazeAnalyser](https://github.com/esdalmaijer/PyGazeAnalyser/).
 
 * This work was done under the supervision of [Dr. Chng Eng Siong](http://www.ntu.edu.sg/home/aseschng/) - School of Computer Science and Engineering NTU and in collaboration with [Dr. Xu Hong](http://www.ntu.edu.sg/home/xuhong/) - School of Humanitites and Social Sciences NTU.
 * We extend our thanks to the **Department of Computer Science and Engineering Manipal Isntitute of Technology**[[link]](https://manipal.edu/mit/department-faculty/department-list/computer-science-and-engineering.html) and the **Department of Computer Science and Information Systems BITS Pilani, Hyderabad Campus** [[link]](https://www.bits-pilani.ac.in/hyderabad/computerscience/ComputerScience).
+
