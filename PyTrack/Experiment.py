@@ -503,9 +503,11 @@ class Experiment:
 		statistical_test: str {"Mixed_anova","RM_anova","ttest","anova","None"} (optional)
 			Name of the statistical test that has to be performed.
 				NOTE:
+
 				- ttest: There are 3 options for ttest, and your choice of factors must comply with one of those options, for more information, please see description of `ttest_type` variable given below.
 				- Mixed_anova: Only 1 between group factor and 1 within group factor can be considered at any point of time
 				- anova: Any number of between group factors can be considered for analysis
+				
 				- RM_anova: Upto 2 within group factors can be considered at any point of time
 		file_creation: bool (optional)
 			Indicates whether a csv file containing the statistical results should be created.
@@ -522,6 +524,8 @@ class Experiment:
 
 		Examples
 		--------
+		Testing yamana tamana lamana
+
 		For calculating Mixed ANOVA, on all the parameters, with standardisation, NOT averaging across stimuli of the same type
 		and considering Subject_type and Stimuli_type as between and within group factors respectively
 
