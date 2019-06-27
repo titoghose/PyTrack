@@ -85,7 +85,7 @@ Sample Data
 
 In order to test the toolkit some sample data in SMI, EyeLink and Tobii
 formats can be found
-`here <https://drive.google.com/open?id=1tWD69hurELVuVRFzizCbukWnr22RZrnp>`__.
+`here <https://osf.io/f9mey/files/>`__.
 The .txt file in the folder describes the data found. The SMI and Tobii
 files have been taken from
 `here <http://www2.hu-berlin.de/eyetracking-eeg/testdata.html>`__.

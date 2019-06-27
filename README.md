@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/titoghose/PyTrack.svg?branch=master)](https://travis-ci.org/titoghose/PyTrack)
 [![codecov](https://codecov.io/gh/titoghose/PyTrack/branch/master/graph/badge.svg)](https://codecov.io/gh/titoghose/PyTrack)
-[![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/)](https://pytrack-ntu.readthedocs.io/en/latest/)
+[![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/?style=flat-square)](https://pytrack-ntu.readthedocs.io/en/latest/?badge=latest)
 
 # PyTrack
 
@@ -63,7 +63,7 @@ Please make sure that pip is for Python3 and not Python2. Python3  can be found 
 **NOTE:** Python3 can be installed alongside Python2
 
 # Sample Data
-In order to test the toolkit some sample data in SMI, EyeLink and Tobii formats can be found [here](https://drive.google.com/open?id=1tWD69hurELVuVRFzizCbukWnr22RZrnp). The .txt file in the folder describes the data found. The SMI and Tobii files have been taken from [here](http://www2.hu-berlin.de/eyetracking-eeg/testdata.html).
+In order to test the toolkit some sample data in SMI, EyeLink and Tobii formats can be found [here](https://osf.io/f9mey/files/). The .txt file in the folder describes the data found. The SMI and Tobii files have been taken from [here](http://www2.hu-berlin.de/eyetracking-eeg/testdata.html).
 
 # Using PyTrack
 
@@ -370,8 +370,11 @@ This project is licensed under the GPL3 License - see the [LICENSE.txt](LICENSE.
 
 # Acknowledgments
 
+* We would like to thank [Dr. Dominique Makowski](https://dominiquemakowski.github.io/) for helping us develop this toolkit.
+
 * The formatsBridge module was adapted from the work done by [Edwin Dalmaijer](https://github.com/esdalmaijer) in [PyGazeAnalyser](https://github.com/esdalmaijer/PyGazeAnalyser/).
 
 * This work was done under the supervision of [Dr. Chng Eng Siong](http://www.ntu.edu.sg/home/aseschng/) - School of Computer Science and Engineering NTU and in collaboration with [Dr. Xu Hong](http://www.ntu.edu.sg/home/xuhong/) - School of Humanitites and Social Sciences NTU.
+
 * We extend our thanks to the **Department of Computer Science and Engineering Manipal Isntitute of Technology**[[link]](https://manipal.edu/mit/department-faculty/department-list/computer-science-and-engineering.html) and the **Department of Computer Science and Information Systems BITS Pilani, Hyderabad Campus** [[link]](https://www.bits-pilani.ac.in/hyderabad/computerscience/ComputerScience).
 
