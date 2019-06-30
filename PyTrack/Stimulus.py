@@ -57,6 +57,8 @@ class Stimulus:
 
 	def __init__(self, path, name="id_rather_not", stim_type="doesnt_matter", sensor_names=["EyeTracker"], data=None, start_time=0, end_time=-1, roi_time=-1, json_file=None, subject_name="buttersnaps", aoi=None):
 
+		path = path.replace("\\", "/")
+
 		self.name = name
 		self.path = path
 		self.stim_type = stim_type
@@ -1836,6 +1838,7 @@ def groupHeatMap(sub_list, stim_name, json_file, save_fig=False):
 	with open(json_file) as json_f:
 		json_data = json.load(json_f)
 		path = json_data["Path"]
+		path = path.replace("\\", "/")
 		width = json_data["Analysis_Params"]["EyeTracker"]["Display_width"]
 		height = json_data["Analysis_Params"]["EyeTracker"]["Display_height"]
 		aoi_coords = json_data["Analysis_Params"]["EyeTracker"]["aoi"]

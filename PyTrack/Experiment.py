@@ -124,8 +124,12 @@ class Experiment:
 
 	def __init__(self, json_file, reading_method="SQL", aoi="NA"):
 
+		json_file = json_file.replace("\\", "/")
+
 		with open(json_file, "r") as json_f:
 			json_data = json.load(json_f)
+
+		json_data["Path"] = json_data["Path"].replace("\\", "/")
 
 		self.path = json_data["Path"]
 		self.name = json_data["Experiment_name"]
