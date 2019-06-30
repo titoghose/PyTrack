@@ -764,8 +764,6 @@ class Stimulus:
 
 		for fix_ind in range(len(fixation_indices["start"])):
 
-
-
 			all_MS = {"left" : None, "right" : None}
 			ms_count = {"left" : None, "right" : None}
 			ms_duration = {"left" : None, "right" : None}
@@ -807,9 +805,11 @@ class Stimulus:
 				a1.plot(smooth_gaze["left"]["x"][1:], smooth_gaze["left"]["y"][1:])
 				a1.set_xlabel("x")
 				a1.set_ylabel("y")
-				a1.set_title("gaze plot")
+				a1.set_title("Gaze Plot	")
 				for i in range(MS["NB"]):
 					a1.plot(smooth_gaze["left"]["x"][int(MS["bin"][i][0]) : int(MS["bin"][i][1]) + 1], smooth_gaze["left"]["y"][int(MS["bin"][i][0]) : int(MS["bin"][i][1]) + 1], color='r')
+				# a1.set_xlim([-0.35, 0.25])
+				# a1.set_ylim([-0.2, 1.25])
 
 				e = Ellipse((0, 0), 2*MS["bin"][0][7], 2*MS["bin"][0][8], linestyle='--', color='g', fill=False)
 				a2.add_patch(e)
@@ -818,10 +818,11 @@ class Stimulus:
 				a2.plot(vel["left"]["x"], vel["left"]["y"], alpha=0.5)
 				a2.set_xlabel("vel-x")
 				a2.set_ylabel("vel-y")
-				a2.set_title("gaze velocity plot")
+				a2.set_title("Gaze Velocity Plot")
 				for i in range(MS["NB"]):
 					a2.plot(vel["left"]["x"][int(MS["bin"][i][0]) : int(MS["bin"][i][1]) + 1], vel["left"]["y"][int(MS["bin"][i][0]) : int(MS["bin"][i][1]) + 1], color='r')
-
+				# a2.set_xlim([-25, 40])
+				# a2.set_ylim([-65, 70])
 
 				if not os.path.isdir(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/"):
 					os.makedirs(self.path + "/Subjects/" + self.subject_name + "/ms_gaze_vel/")
@@ -1090,7 +1091,7 @@ class Stimulus:
 		return tuple(inside_aoi)
 
 
-	def gazePlot(self, save_fig=False, show_fig=True):
+	def gazePlot(self, save_fig=False, show_fig=True, save_data=False):
 		"""Function to plot eye gaze with numbered fixations.
 
 		Internal function of class that uses its `data` member variable. Can be invoked by an object of the class.
@@ -1101,6 +1102,8 @@ class Stimulus:
 			Save the gaze plot figure or not (Defaults to ``False``). If ``True``, will be saved in the Subjects folder of the experiment folder
 		show_fig : bool
 			Display the gaze plot figure or not (Defaults to ``True``).
+		save_data : bool
+			Save the data used for plotting as a csv file.
 
 		"""
 
@@ -1128,6 +1131,7 @@ class Stimulus:
 									(self.aoi_coords[3] - self.aoi_coords[1]),
 									color='r', fill=False, linestyle='--')
 			ax.add_patch(rect)
+			print(rect.get_verts())
 
 		# Circle AOI
 		elif len(self.aoi_coords) == 3:
@@ -1136,12 +1140,14 @@ class Stimulus:
 								self.aoi_coords[2],
 								color='r', fill=False, linestyle='--')
 			ax.add_patch(ellipse)
+			print(ellipse.get_verts())
 
 		# Polygon AOI
 		else:
 			xy = np.asarray(self.aoi_coords)
 			poly = Polygon(xy, color='r', fill=False, linestyle='--')
 			ax.add_patch(poly)
+			print(poly.get_verts())
 
 
 		fixation_dict = self.findFixations()
@@ -1163,10 +1169,15 @@ class Stimulus:
 		ax.plot(self.data["InterpGaze"]["left"]["x"], self.data["InterpGaze"]["left"]["y"], 'r-')
 
 		i = 0
+		exp_data = {"ind":[], "x":[], "y":[], "gaze_x":self.data["InterpGaze"]["left"]["x"], "gaze_y":self.data["InterpGaze"]["left"]["y"]}
 		for x, y in zip(fixation_gaze_x, fixation_gaze_y):
 			ax.plot(np.mean(x), np.mean(y), 'go', markersize=15, alpha=0.7)
+			exp_data["ind"].append(i)
+			exp_data["x"].append(np.mean(x))
+			exp_data["y"].append(np.mean(y))
 			ax.text(np.mean(x), np.mean(y), str(i), fontsize=10, color='w')
 			i += 1
+
 
 		ax.set_xlim(0, int(self.width))
 		ax.set_ylim(int(self.height), 0)
@@ -1177,10 +1188,16 @@ class Stimulus:
 		if save_fig:
 			fig.savefig(self.path + "/Subjects/" + self.subject_name + "/gaze_plot_" + self.name + ".png", dpi=300)
 
+		if save_data:
+			max_len = max([len(exp_data[x]) for x in exp_data])
+			for key in exp_data:
+				exp_data[key] = np.pad(exp_data[key], (0, max_len - len(exp_data[key])), 'constant', constant_values=float('nan'))
+			pd.DataFrame().from_dict(exp_data).to_csv(self.path + "/Subjects/" + self.subject_name + "/gaze_plot_data_" + self.name + ".csv")
+
 		plt.close(fig)
 
 
-	def gazeHeatMap(self, save_fig=False, show_fig=True):
+	def gazeHeatMap(self, save_fig=False, show_fig=True, save_data=False):
 		"""Function to plot heat map of gaze.
 
 		Internal function of class that uses its `data` member variable. Can be invoked by an object of the class.
@@ -1191,6 +1208,8 @@ class Stimulus:
 			Save the heat map figure or not (Defaults to ``False``). If ``True``, will be saved in the Subjects folder of the experiment folder
 		show_fig : bool
 			Display the heat map figure or not (Defaults to ``True``).
+		save_data : bool
+			Save the data used for plotting as a csv file.
 
 		"""
 
@@ -1269,10 +1288,17 @@ class Stimulus:
 		plt.close(fig)
 
 
-	def visualize(self, show=True):
+	def visualize(self, show=True, save_data=False):
 		"""Function to create dynamic plot of gaze and pupil size.
 
 		Internal function of class that uses its `data` member variable. Does not take any input and can be invoked by an object of the class.
+
+		Paramaters
+		----------
+		show : bool
+			Open figure after plotting the data or not.
+		save_data : bool
+			Save the data used for plotting as a csv file.
 
 		"""
 		if self.data == None:

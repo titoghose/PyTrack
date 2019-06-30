@@ -1,6 +1,7 @@
 [![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/?version=latest)](https://pytrack-ntu.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/titoghose/PyTrack.svg?branch=master)](https://travis-ci.org/titoghose/PyTrack)
 [![codecov](https://codecov.io/gh/titoghose/PyTrack/branch/master/graph/badge.svg)](https://codecov.io/gh/titoghose/PyTrack)
+[![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/?style=flat-square)](https://pytrack-ntu.readthedocs.io/en/latest/?badge=latest)
 
 # PyTrack
 
@@ -31,19 +32,24 @@ PyTrack can generate a variety of plots. The visualization is through an interac
 6. Microsaccade main sequence plot
 
 # Table of Contents
-1. [Documentation](#documentation)
-2. [Installation](#installation)
-3. [Sample Data](#sample-data)
-4. [Using PyTrack](#using-pytrack)
-    1. [Setup](#setup)
-    2. [Running PyTrack](#running-pytrack)
-5. [Advanced Functionality](#advanced-functionality)
-    1. [Statistical Tests](#statistical-tests)
-    2. [Accessing extracted features as a dictionary](#accessing-extracted-features-as-a-dictionary)
-    3. [Using PyTrack in Stand-alone mode](#using-pytrack-in-stand-alone-mode)
-6. [Authors](#authors)
-7. [License](#license)
-8. [Acknowledgments](#acknowledgments)
+- [PyTrack](#PyTrack)
+  - [Feature Extraction](#Feature-Extraction)
+  - [Statistical Analysis](#Statistical-Analysis)
+  - [Visualization](#Visualization)
+- [Table of Contents](#Table-of-Contents)
+- [Documentation](#Documentation)
+- [Installation](#Installation)
+- [Sample Data](#Sample-Data)
+- [Using PyTrack](#Using-PyTrack)
+  - [Setup](#Setup)
+  - [Running PyTrack](#Running-PyTrack)
+- [Advanced Functionality](#Advanced-Functionality)
+  - [Statistical Tests](#Statistical-Tests)
+  - [Accessing extracted features as a dictionary](#Accessing-extracted-features-as-a-dictionary)
+  - [Using PyTrack in Stand-alone mode](#Using-PyTrack-in-Stand-alone-mode)
+- [Authors](#Authors)
+- [License](#License)
+- [Acknowledgments](#Acknowledgments)
 
 # Documentation
 The detailed documentation for the methods and classes of PyTrack can be found [here](https://pytrack-ntu.readthedocs.io/en/latest/)
@@ -63,7 +69,7 @@ Please make sure that pip is for Python3 and not Python2. Python3  can be found 
 **NOTE:** Python3 can be installed alongside Python2
 
 # Sample Data
-In order to test the toolkit some sample data in SMI, EyeLink and Tobii formats can be found [here](https://drive.google.com/open?id=1tWD69hurELVuVRFzizCbukWnr22RZrnp). The .txt file in the folder describes the data found. The SMI and Tobii files have been taken from [here](http://www2.hu-berlin.de/eyetracking-eeg/testdata.html).
+In order to test the toolkit some sample data in SMI, EyeLink and Tobii formats can be found [here](https://osf.io/f9mey/files/). The .txt file in the folder describes the data found. The SMI and Tobii files have been taken from [here](http://www2.hu-berlin.de/eyetracking-eeg/testdata.html).
 
 # Using PyTrack
 
@@ -178,6 +184,9 @@ Now, follow these steps:
     ```python
     from PyTrack.formatBridge import generateCompatibleFormat
 
+    # For windows the path will look like 
+    #    a. exp_path="complete\\path\\to\\NTU_Experiment"
+    # or b. exp_path=r"complete\path\to\NTU_Experiment"
     generateCompatibleFormat(exp_path="complete/path/to/NTU_Experiment",
                             device="eyelink",
                             stim_list_mode='NA',
@@ -370,7 +379,7 @@ This project is licensed under the GPL3 License - see the [LICENSE.txt](LICENSE.
 
 # Acknowledgments
 
-* We would like to thank [Dr.Dominique Makowski](https://dominiquemakowski.github.io/) for helping us develop this toolkit.
+* We would like to thank [Dr. Dominique Makowski](https://dominiquemakowski.github.io/) for helping us develop this toolkit.
 
 * The formatsBridge module was adapted from the work done by [Edwin Dalmaijer](https://github.com/esdalmaijer) in [PyGazeAnalyser](https://github.com/esdalmaijer/PyGazeAnalyser/).
 

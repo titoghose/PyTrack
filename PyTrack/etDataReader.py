@@ -590,6 +590,8 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 	fixation_flag = 0
 	saccade_flag = 0
 	blink_flag = 0
+	cont_flag = -1
+	last_time = 0
 
 	which_eye = ''
 	if eye == 'B':
@@ -599,14 +601,23 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 
 	# loop through all lines
 	for line in raw:
-
+		# print(line)
 		# check if trial has already started
 		if started:
 			# only check for stop if there is one
 			if stop != None:
-				if stop in line:
-					started = False
-					trialend = True
+				if stop in line or last_time == cont_flag:
+					t = -1
+					if line[0:3] == "MSG":
+						ms = line.find(" ")
+						t = int(line[4:ms])
+
+					if trackertime[-1] < t:
+						cont_flag = t
+					else:
+						cont_flag = -1
+						started = False
+						trialend = True
 			# check for new start otherwise
 			else:
 				if (start in line) or (line == finalline):
@@ -795,6 +806,7 @@ def read_edf(filename, start, stop=None, missing=0.0, debug=False, eye="B"):
 
 				time.append(int(l[0])-starttime)
 				trackertime.append(int(l[0]))
+				last_time = int(l[0])
 
 
 	# # # # #

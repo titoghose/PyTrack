@@ -124,7 +124,9 @@ def toBase(et_type, filename, stim_list=None, start='START', stop=None, eye='B')
         del(temp_dict)
 
         i += 1
+        print("Progress: %.2f" % ((i*100)/len(data)), end="\r")
 
+    print()
     return df
 
 
