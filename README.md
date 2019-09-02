@@ -1,3 +1,4 @@
+[![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/?version=latest)](https://pytrack-ntu.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/titoghose/PyTrack.svg?branch=master)](https://travis-ci.org/titoghose/PyTrack)
 [![codecov](https://codecov.io/gh/titoghose/PyTrack/branch/master/graph/badge.svg)](https://codecov.io/gh/titoghose/PyTrack)
 [![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/?style=flat-square)](https://pytrack-ntu.rtfd.io)
@@ -33,19 +34,24 @@ PyTrack can generate a variety of plots. The visualization is through an interac
 
 
 # Table of Contents
-1. [Documentation](#documentation)
-2. [Installation](#installation)
-3. [Sample Data](#sample-data)
-4. [Using PyTrack](#using-pytrack)
-    1. [Setup](#setup)
-    2. [Running PyTrack](#running-pytrack)
-5. [Advanced Functionality](#advanced-functionality)
-    1. [Statistical Tests](#statistical-tests)
-    2. [Accessing extracted features as a dictionary](#accessing-extracted-features-as-a-dictionary)
-    3. [Using PyTrack in Stand-alone mode](#using-pytrack-in-stand-alone-mode)
-6. [Authors](#authors)
-7. [License](#license)
-8. [Acknowledgments](#acknowledgments)
+- [PyTrack](#PyTrack)
+  - [Feature Extraction](#Feature-Extraction)
+  - [Statistical Analysis](#Statistical-Analysis)
+  - [Visualization](#Visualization)
+- [Table of Contents](#Table-of-Contents)
+- [Documentation](#Documentation)
+- [Installation](#Installation)
+- [Sample Data](#Sample-Data)
+- [Using PyTrack](#Using-PyTrack)
+  - [Setup](#Setup)
+  - [Running PyTrack](#Running-PyTrack)
+- [Advanced Functionality](#Advanced-Functionality)
+  - [Statistical Tests](#Statistical-Tests)
+  - [Accessing extracted features as a dictionary](#Accessing-extracted-features-as-a-dictionary)
+  - [Using PyTrack in Stand-alone mode](#Using-PyTrack-in-Stand-alone-mode)
+- [Authors](#Authors)
+- [License](#License)
+- [Acknowledgments](#Acknowledgments)
 
 # Documentation
 The detailed documentation for the methods and classes of PyTrack can be found [here](https://pytrack-ntu.readthedocs.io/en/latest/)
@@ -180,6 +186,9 @@ Now, follow these steps:
     ```python
     from PyTrack.formatBridge import generateCompatibleFormat
 
+    # For windows the path will look like 
+    #    a. exp_path="complete\\path\\to\\NTU_Experiment"
+    # or b. exp_path=r"complete\path\to\NTU_Experiment"
     generateCompatibleFormat(exp_path="complete/path/to/NTU_Experiment",
                             device="eyelink",
                             stim_list_mode='NA',

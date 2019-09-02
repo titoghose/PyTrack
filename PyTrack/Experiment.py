@@ -124,8 +124,12 @@ class Experiment:
 
 	def __init__(self, json_file, reading_method="SQL", aoi="NA"):
 
+		json_file = json_file.replace("\\", "/")
+
 		with open(json_file, "r") as json_f:
 			json_data = json.load(json_f)
+
+		json_data["Path"] = json_data["Path"].replace("\\", "/")
 
 		self.path = json_data["Path"]
 		self.name = json_data["Experiment_name"]
@@ -489,23 +493,26 @@ class Experiment:
 		parameter_list: set (optional)
 			Set of the different indicators/parameters (Pupil_size, Blink_rate) on which statistical analysis is to be performed, by default it will be "all" so that all the parameter are considered.
 		between_factor_list: list(str) (optional)
-			List of between group factors, by default it will only contain "Subject_type"
-			If any additional parameter (eg: Gender) needs to be considered, then the list will be: between_factor_list = ["Subject_type", "Gender"]
+			List of between group factors, by default it will only contain "Subject_type".
+			If any additional parameter (eg: Gender) needs to be considered, then the list will be: between_factor_list = ["Subject_type", "Gender"].
 			DO NOT FORGET TO INCLUDE "Subject_type", if you wish to consider "Subject_type" as a between group factor.
 			Eg: between_factor_list = ["factor_x"] will no longer consider "Subject_type" as a factor.
 			Please go through the README FILE to understand how the JSON FILE is to be written for between group factors to be considered.
 		within_factor_list: list(str) (optional)
 			List of within group factors, by default it will only contain "Stimuli_type"
-			If any additional parameter, needs to be considered, then the list will be: between_factor_list = ["Subject_type", "factor_X"]
+			If any additional parameter, needs to be considered, then the list will be: between_factor_list = ["Subject_type", "factor_X"].
 			DO NOT FORGET TO INCLUDE "Stimuli_type", if you wish to consider "Stimuli_type" as a within group factor.
 			Eg: within_factor_list = ["factor_x"] will no longer consider "Stimuli_type" as a factor.
 			Please go through how the README FILE to understand how the JSON FILE is to be written for within group factors to be considered.
 		statistical_test: str {"Mixed_anova","RM_anova","ttest","anova","None"} (optional)
 			Name of the statistical test that has to be performed.
 				NOTE:
+
 				- ttest: There are 3 options for ttest, and your choice of factors must comply with one of those options, for more information, please see description of `ttest_type` variable given below.
+				- Welch_ttest: There are 2 options for Welch Ttest, and your choice of factors must comply with one of those options, for more information, please see description of `ttest_type` variable given below.
 				- Mixed_anova: Only 1 between group factor and 1 within group factor can be considered at any point of time
 				- anova: Any number of between group factors can be considered for analysis
+				
 				- RM_anova: Upto 2 within group factors can be considered at any point of time
 		file_creation: bool (optional)
 			Indicates whether a csv file containing the statistical results should be created.
@@ -514,14 +521,24 @@ class Experiment:
 				A directory called "Results" will be created within the Directory whose path is mentioned in the json file and the csv files will be stored within "Results" directory.
 				If any previous file by the same name exists, it will be overwritten.
 		ttest_type: int {1,2,3} (optional)
-			Indicates what type of parameters will be considered for the ttest
+			Indicates what type of parameters will be considered for the ttest and Welch Ttest
 				NOTE:
+				For ttest-
+
 				- 1: Upto 2 between group factors will be considered for ttest
 				- 2: 1 within group factor will be considered for ttest
+				
 				- 3: 1 within group and 1 between group factor will be considered for ttest
+
+				For Welch ttest-
+
+				- 1: Will consider the first factor in 'between_factor_list'
+
+				- 2: Will consider the first factor in 'within_factor_list' 
 
 		Examples
 		--------
+
 		For calculating Mixed ANOVA, on all the parameters, with standardisation, NOT averaging across stimuli of the same type
 		and considering Subject_type and Stimuli_type as between and within group factors respectively
 

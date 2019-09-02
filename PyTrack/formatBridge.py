@@ -267,6 +267,8 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
 
     """
 
+    exp_path = exp_path.replace("\\", "/")
+
     if os.path.isdir(exp_path):
 
         exp_info = exp_path + "/" + exp_path.split("/")[-1] + ".json"
