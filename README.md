@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/titoghose/PyTrack.svg?branch=master)](https://travis-ci.org/titoghose/PyTrack)
 [![codecov](https://codecov.io/gh/titoghose/PyTrack/branch/master/graph/badge.svg)](https://codecov.io/gh/titoghose/PyTrack)
-[![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/?style=flat-square)](https://pytrack-ntu.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/?style=flat-square)](https://pytrack-ntu.rtfd.io)
 
 # PyTrack
 
@@ -29,6 +29,8 @@ PyTrack can generate a variety of plots. The visualization is through an interac
 4. Dynamic pupil size and gaze plot
 5. Microsaccade position and velocity plot
 6. Microsaccade main sequence plot
+
+
 
 # Table of Contents
 1. [Documentation](#documentation)

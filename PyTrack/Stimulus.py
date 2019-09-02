@@ -79,8 +79,10 @@ class Stimulus:
 			self.aoi_coords = aoi
 			with open(self.json_file) as json_f:
 				json_data = json.load(json_f)
+
 			self.width = json_data["Analysis_Params"]["EyeTracker"]["Display_width"]
 			self.height = json_data["Analysis_Params"]["EyeTracker"]["Display_height"]
+			self.sampling_freq = json_data["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
 			if self.start_time == -1:
 				self.data = None
 			else:
@@ -91,6 +93,7 @@ class Stimulus:
 			self.aoi_coords = sensor_names["EyeTracker"]["aoi"]
 			self.width = sensor_names["EyeTracker"]["Display_width"]
 			self.height = sensor_names["EyeTracker"]["Display_height"]
+			self.sampling_freq = sensor_names["EyeTracker"]["Sampling_Freq"]
 			self.data = self.getDataStandAlone(data, sensor_names)
 
 
@@ -831,6 +834,8 @@ class Stimulus:
 				ax = fig2.axes[0]
 				ax.set_xlabel("Amplitude (deg)")
 				ax.set_ylabel("Peak Velocity (deg/s)")
+				ax.set_xlim(0.02, 1.5)
+				ax.set_ylim(5, 200)
 				for i in range(MS["NB"]):
 					peak_vel = (MS["bin"][i][2] + MS["bin"][i][11])/2
 					amp = (np.sqrt(MS["bin"][i][5]**2 + MS["bin"][i][6]**2) + np.sqrt(MS["bin"][i][13]**2 + MS["bin"][i][14]**2))/2
@@ -980,7 +985,7 @@ class Stimulus:
 			Response time in milliseconds
 
 		"""
-		return len(self.data["ETRows"] * (1000/sampling_freq))
+		return ((len(self.data["ETRows"]) - 1) * (1000/sampling_freq))
 
 
 	def findFixationParams(self):
@@ -1518,7 +1523,7 @@ class Stimulus:
 		return first_pass_duration, second_pass_duration
 
 
-	def findEyeMetaData(self, sampling_freq=1000):
+	def findEyeMetaData(self):
 		"""Function to find all metadata/features of eye tracking data.
 
 		Internal function of class that uses its `data` member variable. Can be invoked by an object of the class. The metadata is stored in the sensor object of the class and can be accessed in the following manner.
@@ -1537,7 +1542,7 @@ class Stimulus:
 
 		"""
 
-		self.response_time = self.findResponseTime()
+		self.response_time = self.findResponseTime(sampling_freq=self.sampling_freq)
 		self.sensors["EyeTracker"].metadata["response_time"] = self.response_time
 
 		# Pupil Features
@@ -1563,14 +1568,14 @@ class Stimulus:
 		self.sensors["EyeTracker"].metadata["avg_fixation_duration"] = avg_fix_cnt
 
 		# Saccade Features
-		saccade_count, saccade_duration, saccade_peak_vel, saccade_amplitude = self.findSaccadeParams(sampling_freq)
+		saccade_count, saccade_duration, saccade_peak_vel, saccade_amplitude = self.findSaccadeParams(self.sampling_freq)
 		self.sensors["EyeTracker"].metadata["sacc_count"] = saccade_count
 		self.sensors["EyeTracker"].metadata["sacc_duration"] = saccade_duration
 		self.sensors["EyeTracker"].metadata["sacc_vel"] = saccade_peak_vel
 		self.sensors["EyeTracker"].metadata["sacc_amplitude"] = saccade_amplitude
 
 		# Microsaccade Features
-		_, ms_count, ms_duration, ms_vel, ms_amp = self.findMicrosaccades()
+		_, ms_count, ms_duration, ms_vel, ms_amp = self.findMicrosaccades(sampling_freq=self.sampling_freq)
 		self.sensors["EyeTracker"].metadata["ms_count"] = ms_count
 		self.sensors["EyeTracker"].metadata["ms_duration"] = ms_duration
 		self.sensors["EyeTracker"].metadata["ms_vel"] = ms_vel
@@ -1617,8 +1622,6 @@ class Stimulus:
 		with open(self.json_file) as jf:
 			contents = json.load(jf)
 
-		columns_of_interest = contents["Columns_of_interest"]["EyeTracker"]
-
 		extracted_data = {	"ETRows" : None,
 							"FixationSeq" : None,
 							"Gaze" : None,
@@ -1632,7 +1635,6 @@ class Stimulus:
 			if col_class == "EyeTracker":
 				et_sfreq = contents["Analysis_Params"]["EyeTracker"]["Sampling_Freq"]
 
-				a = datetime.now()
 				self.sensors.update({col_class : Sensor(col_class, et_sfreq)})
 				l_gazex_df = np.array(data.GazeLeftx)
 				l_gazey_df = np.array(data.GazeLefty)
@@ -1661,8 +1663,8 @@ class Stimulus:
 				pupil_size_l = np.squeeze(np.array([pupil_size_l_df[i] for i in sorted(et_rows)], dtype="float32"))
 
 				# Fixing Blinks and interpolating pupil size and gaze data
-				blinks_l, interp_pupil_size_l, new_gaze_l = self.findBlinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
-				blinks_r, interp_pupil_size_r, new_gaze_r = self.findBlinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
+				blinks_l, interp_pupil_size_l, new_gaze_l = self.findBlinks(pupil_size_l, gaze=gaze, sampling_freq=self.sampling_freq, interpolate=True, concat=True)
+				blinks_r, interp_pupil_size_r, new_gaze_r = self.findBlinks(pupil_size_r, gaze=gaze, sampling_freq=self.sampling_freq, interpolate=True, concat=True)
 				interp_pupil_size = np.mean([interp_pupil_size_r, interp_pupil_size_l], axis=0)
 
 				gaze_aoi = self.setAOICol([gaze_aoi_df, new_gaze_l["left"]["x"], new_gaze_l["left"]["y"]])
@@ -1751,8 +1753,8 @@ class Stimulus:
 				pupil_size_l = np.squeeze(np.array([pupil_size_l_df[i] for i in sorted(et_rows)], dtype="float32"))
 
 				# Fixing Blinks and interpolating pupil size and gaze data
-				blinks_l, interp_pupil_size_l, new_gaze_l = self.findBlinks(pupil_size_l, gaze=gaze, interpolate=True, concat=True)
-				blinks_r, interp_pupil_size_r, new_gaze_r = self.findBlinks(pupil_size_r, gaze=gaze, interpolate=True, concat=True)
+				blinks_l, interp_pupil_size_l, new_gaze_l = self.findBlinks(pupil_size_l, gaze=gaze, sampling_freq=self.sampling_freq, interpolate=True, concat=True)
+				blinks_r, interp_pupil_size_r, new_gaze_r = self.findBlinks(pupil_size_r, gaze=gaze, sampling_freq=self.sampling_freq, interpolate=True, concat=True)
 				interp_pupil_size = np.mean([interp_pupil_size_r, interp_pupil_size_l], axis=0)
 
 				gaze_aoi = self.setAOICol([gaze_aoi_df, new_gaze_l["left"]["x"], new_gaze_l["left"]["y"]])
