@@ -195,7 +195,7 @@ class Stimulus:
 		blink_offset = []
 		blinks = {"blink_onset": blink_onset, "blink_offset": blink_offset}
 
-		sampling_interval = 1000 // sampling_freq
+		sampling_interval = 1000 / sampling_freq
 
 		missing_data = np.array(pupil_size == -1, dtype="float32")
 		difference = self.diff(missing_data)
@@ -220,7 +220,7 @@ class Stimulus:
 			blink_offset = np.hstack((blink_offset, len(pupil_size) - 1))
 
 		ms_4_smoothing = 10
-		samples2smooth = ms_4_smoothing // sampling_interval
+		samples2smooth = int(ms_4_smoothing / sampling_interval)
 		smooth_pupil_size = np.array(self.smooth(pupil_size, samples2smooth), dtype='float32')
 
 		smooth_pupil_size[np.where(smooth_pupil_size == -1)[0]] = float('nan')
