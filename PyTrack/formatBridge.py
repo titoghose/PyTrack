@@ -110,10 +110,13 @@ def toBase(et_type, filename, stim_list=None, start='START', stop=None, eye='B')
 
         cnt = 0
         for e in d['events']['Eblk']:
-            ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
-            ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
-            temp_dict['Blink'][ind_start : ind_end + 1] = cnt
-            cnt += 1
+            try:
+                ind_start = np.where(temp_dict['Timestamp'] == e[0])[0][0]
+                ind_end = np.where(temp_dict['Timestamp'] == e[1])[0][0]
+                temp_dict['Blink'][ind_start : ind_end + 1] = cnt
+                cnt += 1
+            except Exception as exception:
+                print("Error found in formatBridge toBase: "+str(exception))
 
         for m in d['events']['msg']:
             if 'Stim Key' in m[1]:
