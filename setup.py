@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PyTrack-NTU",
-    version="1.0.1",
+    version="1.0.2",
     author="Upamanyu Ghose, Arvind Srinivasan",
     author_email="titoghose@gmail.com, 96arvind@gmail.com",
     description="An end-to-end python analysis toolkit for eye tracking",
