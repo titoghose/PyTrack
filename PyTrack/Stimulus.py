@@ -415,10 +415,12 @@ class Stimulus:
 
 		n = len(gaze)
 		velocity = np.zeros(gaze.shape)
-
-		velocity[2:n-2] = (gaze[4:n] + gaze[3:n-1] - gaze[1:n-3] - gaze[0:n-4]) * (sampling_freq/6.0)
-		velocity[1] = (gaze[2] - gaze[0]) * (sampling_freq/2.0)
-		velocity[n-2] = (gaze[n-1] - gaze[n-3]) * (sampling_freq/2.0)
+		try:
+			velocity[2:n-2] = (gaze[4:n] + gaze[3:n-1] - gaze[1:n-3] - gaze[0:n-4]) * (sampling_freq/6.0)
+			velocity[1] = (gaze[2] - gaze[0]) * (sampling_freq/2.0)
+			velocity[n-2] = (gaze[n-1] - gaze[n-3]) * (sampling_freq/2.0)
+		except Exception as e:
+			print("Error found in Stimulus position2Velocity: " + str(e))
 
 		return velocity
 
@@ -447,7 +449,10 @@ class Stimulus:
 		smooth_gaze = np.zeros(gaze.shape)
 
 		smooth_gaze[0] = gaze[0]
-		vel[1] = vel[1] + smooth_gaze[0]
+		try:
+			vel[1] = vel[1] + smooth_gaze[0]
+		except Exception as e:
+			print("Error found in Stimulus smoothGaze: "+ str(e))
 		smooth_gaze = np.cumsum(vel)
 
 		return smooth_gaze
