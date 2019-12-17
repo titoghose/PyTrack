@@ -212,7 +212,7 @@ class Stimulus:
 			return blinks, pupil_size, gaze
 
 		# Edge Case 2: the data starts with a blink. In this case, blink onset will be defined as the first missing value.
-		if ((len(blink_onset) > 0 and blink_onset[0] > 0) or (len(blink_onset) < len(blink_offset))) and pupil_size[0] == -1:
+		if ((len(blink_onset) < len(blink_offset)) or ((len(blink_onset) == len(blink_offset)) and (blink_onset[0] > blink_offset[0]))) and pupil_size[0] == -1:
 			blink_onset = np.hstack((0, blink_onset))
 
 		# Edge Case 3: the data ends with a blink. In this case, blink offset will be defined as the last missing sample
