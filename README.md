@@ -1,3 +1,7 @@
+# &#x26a0; There is currently an issue with the dependencies which is causing errors while installing and using the package. I am working on it and will release an update soon. Sorry!
+
+
+
 [![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/?version=latest)](https://pytrack-ntu.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/titoghose/PyTrack.svg?branch=master)](https://travis-ci.org/titoghose/PyTrack)
 [![codecov](https://codecov.io/gh/titoghose/PyTrack/branch/master/graph/badge.svg)](https://codecov.io/gh/titoghose/PyTrack)
