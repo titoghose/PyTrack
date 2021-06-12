@@ -1,5 +1,7 @@
 # &#x26a0; There is currently an issue with the dependencies which is causing errors while installing and using the package. I am working on it and will release an update soon. Sorry!
 
+## Expected to be back up on 20th June 2021 (support for Python 3.8)
+
 
 
 <!-- [![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/?version=latest)](https://pytrack-ntu.readthedocs.io/en/latest/?badge=latest)
