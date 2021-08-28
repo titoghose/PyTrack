@@ -1,10 +1,7 @@
-# &#x26a0; There is currently an issue with the dependencies which is causing errors while installing and using the package. I am working on it and will release an update soon. Sorry!
-
-## Expected to be back up on 20th June 2021 (support for Python 3.8)
 
 
 
-<!-- [![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/?version=latest)](https://pytrack-ntu.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/?version=latest)](https://pytrack-ntu.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/titoghose/PyTrack.svg?branch=master)](https://travis-ci.org/titoghose/PyTrack)
 [![codecov](https://codecov.io/gh/titoghose/PyTrack/branch/master/graph/badge.svg)](https://codecov.io/gh/titoghose/PyTrack)
 [![Documentation Status](https://readthedocs.org/projects/pytrack-ntu/badge/?style=flat-square)](https://pytrack-ntu.rtfd.io)
@@ -393,5 +390,5 @@ This project is licensed under the GPL3 License - see the [LICENSE.txt](LICENSE.
 
 * This work was done under the supervision of [Dr. Chng Eng Siong](http://www.ntu.edu.sg/home/aseschng/) - School of Computer Science and Engineering NTU and in collaboration with [Dr. Xu Hong](http://www.ntu.edu.sg/home/xuhong/) - School of Humanitites and Social Sciences NTU.
 
-* We extend our thanks to the **Department of Computer Science and Engineering Manipal Isntitute of Technology**[[link]](https://manipal.edu/mit/department-faculty/department-list/computer-science-and-engineering.html) and the **Department of Computer Science and Information Systems BITS Pilani, Hyderabad Campus** [[link]](https://www.bits-pilani.ac.in/hyderabad/computerscience/ComputerScience). -->
+* We extend our thanks to the **Department of Computer Science and Engineering Manipal Isntitute of Technology**[[link]](https://manipal.edu/mit/department-faculty/department-list/computer-science-and-engineering.html) and the **Department of Computer Science and Information Systems BITS Pilani, Hyderabad Campus** [[link]](https://www.bits-pilani.ac.in/hyderabad/computerscience/ComputerScience).
 
