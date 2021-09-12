@@ -19,6 +19,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=["numpy==1.16.2", "scipy==1.2.1", "matplotlib==3.0.2", 
-        "pandas==0.24.0", "Pillow==5.4.0", "sqlalchemy==1.2.15", 
+        "pandas==0.24.0", "Pillow>=5.4.0", "sqlalchemy>=1.2.15", 
         "statsmodels==0.9.0", "pingouin==0.2.2"]
 )
