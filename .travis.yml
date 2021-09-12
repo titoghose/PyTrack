@@ -20,5 +20,5 @@ after_success:
   - coverage xml
   - codecov
 branches:
-    - master
-    - lwv
+  - master
+  - lwv
