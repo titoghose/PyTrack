@@ -275,7 +275,7 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
     if os.path.isdir(exp_path):
 
         exp_info = exp_path + "/" + exp_path.split("/")[-1] + ".json"
-        data_path = exp_path + "/Data/"
+        data_path = exp_path + "/Data"
         if not os.path.isdir(data_path + "/csv_files/"):
             os.makedirs(data_path + "/csv_files/")
 
@@ -292,13 +292,19 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
             if f.split(".")[-1] not in ["csv", "asc", "txt", "tsv"]:
                 continue
 
-            print("Converting to base csv format    : ", f)
+            csv_fname = data_path + "/csv_files/" + f.split(".")[0] + ".csv"
 
-            if stim_list_mode == "diff":
-                stim = np.loadtxt(data_path + "/stim/" + f.split(".")[0] + ".txt", dtype=str)
+            if os.path.isfile(csv_fname):
+                print("CSV file already exists    : ", csv_fname)
 
-            df = convertToBase(data_path + "/" + f, sensor_type='EyeTracker', device=device, stim_list=stim, start=start, stop=stop, eye=eye)
-            df.to_csv(data_path + "/csv_files/" + f.split(".")[0] + ".csv")
+            else:
+                print("Converting to base csv format    : ", f)
+
+                if stim_list_mode == "diff":
+                    stim = np.loadtxt(data_path + "/stim/" + f.split(".")[0] + ".txt", dtype=str)
+
+                df = convertToBase(data_path + "/" + f, sensor_type='EyeTracker', device=device, stim_list=stim, start=start, stop=stop, eye=eye)
+                df.to_csv(csv_fname)
 
         source_folder = data_path + "/csv_files/"
 

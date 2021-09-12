@@ -2,7 +2,7 @@ language: python
 notifications:
   email: false
 python:
-  - "3.6"
+  - "3.6.8"
 os:
   - linux
 install:
@@ -21,4 +21,4 @@ after_success:
   - codecov
 branches:
     - master
-    - tito
+    - lwv

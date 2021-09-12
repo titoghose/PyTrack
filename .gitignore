@@ -19,6 +19,11 @@
 .vscode
 PyTrack/__pycache__/
 docs/_build/*
+docs/build/*
 dist
 *.egg-info
 build
+test_exp.py
+test_sa.py
+PyTrack_Sample_Data/
+PyTrack_Sample_Data/*

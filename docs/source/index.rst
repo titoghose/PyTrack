@@ -2,8 +2,9 @@ PyTrack
 =======
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
-   Introduction
+   Intro
+   Getting_started
    License
    PyTrack
