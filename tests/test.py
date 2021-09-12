@@ -116,7 +116,7 @@ class TestMethods(unittest.TestCase):
             sensor_dict = {
                             "EyeTracker":
                             {
-                                "Sampling_Freq": 1000,
+                                "Sampling_Freq": 2000,
                                 "Display_width": 1280,
                                 "Display_height": 1024,
                                 "aoi": [0, 0, 1280, 1024]
