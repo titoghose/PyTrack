@@ -255,9 +255,9 @@ class Subject:
 		try:
 			start = min(index)
 			end = max(index)
-			if end - start < 1000:
-				start = -1
-				end = -1
+			# if end - start < 1000:
+			# 	start = -1
+			# 	end = -1
 			roi = -1
 		except:
 			start = -1

@@ -617,6 +617,9 @@ class Stimulus:
 		"""
 
 		MINDUR = int((sampling_freq / 1000) * 6)
+		if MINDUR < 2:
+			return np.zeros((1, 9)), 0, []
+			
 		gaze_x = gaze["x"]
 		gaze_y = gaze["y"]
 

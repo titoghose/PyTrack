@@ -154,7 +154,7 @@ class Experiment:
 		self.columns = self.columnsArrayInitialisation()
 		self.stimuli = self.stimuliArrayInitialisation() #dict of names of stimuli demarcated by category
 		self.subjects = self.subjectArrayInitialisation(reading_method) #list of subject objects
-		self.meta_matrix_dict = (np.ndarray(len(self.subjects), dtype=str), dict())
+		self.meta_matrix_dict = (['',]*len(self.subjects), dict())
 
 		if not os.path.isdir(self.path + '/Subjects/'):
 			os.makedirs(self.path + '/Subjects/')

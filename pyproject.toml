@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PyTrack-NTU"
+version = "1.1.1"
+authors = [
+  { name="Upamanyu Ghose", email="titoghose@gmail.com" },
+  { name="Arvind Srinivasan", email="96arvind@gmail.com" },
+]
+description="An end-to-end python analysis toolkit for eye tracking"
+readme = "README.md"
+license = { file="LICENSE.txt" }
+requires-python = ">=3.6"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/titoghose/PyTrack"
