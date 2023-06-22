@@ -123,7 +123,7 @@ def toBase(et_type, filename, stim_list=None, start='START', stop=None, eye='B')
                 temp_dict['StimulusName'] = [m[1].strip("\n").split(":")[1].strip(" ")] * len(temp_dict['Timestamp'])
                 break
 
-        df = df.append(pd.DataFrame.from_dict(temp_dict, orient='index').transpose(), ignore_index=True, sort=False)
+        df = pd.concat([df, pd.DataFrame.from_dict(temp_dict, orient='index').transpose()], ignore_index=True, sort=False)
         del(temp_dict)
 
         i += 1
