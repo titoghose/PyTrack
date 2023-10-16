@@ -323,4 +323,4 @@ def generateCompatibleFormat(exp_path, device, stim_list_mode="NA", start='START
             stim = np.loadtxt("stim_file.txt", dtype=str)
 
         df = convertToBase(data_path, sensor_type='EyeTracker', device=device, stim_list=stim, start=start, stop=stop, eye=eye)
-        df.to_csv(data_path.split(".")[0] + ".csv")
+        df.to_csv(data_path.replace(data_path.split(".")[-1],"csv"))
