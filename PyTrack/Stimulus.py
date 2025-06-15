@@ -217,7 +217,7 @@ class Stimulus:
 		# Edge Case 2: 
 		# The data starts with a blink. In this case, blink onset will be 
 		# defined as the first missing value.
-		if length_blinks>0 and pupil_size[0]==-1 and blink_onset[0]>0:
+		if length_blinks>0 and pupil_size[0]==-1 and ((not blink_onset) or blink_onset[0]>0):
 			blink_onset = np.insert(blink_onset, 0, 0)
 		
 		# Edge Case 3: 
